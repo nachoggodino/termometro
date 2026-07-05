@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-05T00:00:00.000Z",
+  "title": "Design System: Termometro de Madrid",
+  "extensions": {
+    "northStar": "The Civic Thermometer",
+    "register": "product",
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Pure White",
+        "canonical": "oklch(1.000 0.000 0)",
+        "notes": "Default light background. Do not warm-tint it."
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Civic Green",
+        "canonical": "oklch(0.520 0.125 160)",
+        "notes": "Independent primary action color, intentionally separate from Metro red/blue."
+      },
+      "heat-fresco": {
+        "role": "status",
+        "displayName": "Fresco Blue",
+        "canonical": "oklch(0.680 0.145 235)",
+        "tonalRamp": [
+          "oklch(0.955 0.030 235)",
+          "oklch(0.820 0.090 235)",
+          "oklch(0.680 0.145 235)",
+          "oklch(0.470 0.150 235)"
+        ]
+      },
+      "heat-calor": {
+        "role": "status",
+        "displayName": "Calor Amber",
+        "canonical": "oklch(0.720 0.165 72)",
+        "tonalRamp": [
+          "oklch(0.965 0.040 72)",
+          "oklch(0.830 0.110 72)",
+          "oklch(0.720 0.165 72)",
+          "oklch(0.500 0.145 72)"
+        ]
+      },
+      "heat-infierno": {
+        "role": "status",
+        "displayName": "Infierno Red",
+        "canonical": "oklch(0.590 0.210 32)",
+        "tonalRamp": [
+          "oklch(0.955 0.040 32)",
+          "oklch(0.760 0.130 32)",
+          "oklch(0.590 0.210 32)",
+          "oklch(0.420 0.180 32)"
+        ]
+      }
+    },
+    "motion": {
+      "durationFast": "150ms",
+      "durationBase": "200ms",
+      "durationSlow": "250ms",
+      "easeOut": "cubic-bezier(0.16, 1, 0.3, 1)",
+      "rules": [
+        "Motion conveys state, never decoration.",
+        "Heat shimmer is allowed only after heat state selection or on critical dashboard feedback.",
+        "All motion must support prefers-reduced-motion."
+      ]
+    },
+    "breakpoints": {
+      "mobile": "0px",
+      "tablet": "768px",
+      "desktop": "1024px",
+      "wide": "1280px"
+    },
+    "componentMeta": {
+      "lineChip": {
+        "states": [
+          "unselected neutral with line mark",
+          "selected line fill with check icon and contrast-correct text",
+          "focus ring not color-only"
+        ]
+      },
+      "heatSelector": {
+        "states": [
+          "three equal-size options",
+          "Calor selected by default",
+          "detail panel changes after selection",
+          "Infierno not visually baited before selection"
+        ]
+      },
+      "dashboardModule": {
+        "requirements": [
+          "title",
+          "active range",
+          "legend",
+          "data body",
+          "key takeaway",
+          "Termometro attribution for shareable modules"
+        ]
+      }
+    },
+    "rules": {
+      "do": [
+        "Use vertical mobile dashboard sections.",
+        "Use tooltips for methodology details.",
+        "Use heat colors only for heat meaning.",
+        "Keep all strings in locale dictionaries."
+      ],
+      "dont": [
+        "Do not mimic Metro de Madrid official identity.",
+        "Do not use cartoon flames or full heat backgrounds.",
+        "Do not hide L1/L5 behind network averages.",
+        "Do not use glassmorphism or oversized rounded cards."
+      ]
+    }
+  }
+}

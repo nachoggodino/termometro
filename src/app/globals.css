@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.19 0.018 160);
+  --surface: oklch(0.972 0.004 160);
+  --surface-raised: oklch(0.992 0.001 160);
+  --muted: oklch(0.45 0.014 160);
+  --border: oklch(0.885 0.006 160);
+  --primary: oklch(0.52 0.125 160);
+  --primary-contrast: oklch(0.99 0 0);
+  --metro-red: oklch(0.56 0.21 28);
+  --metro-blue: oklch(0.53 0.18 250);
+  --heat-fresco: oklch(0.68 0.145 235);
+  --heat-fresco-soft: oklch(0.955 0.03 235);
+  --heat-calor: oklch(0.72 0.165 72);
+  --heat-calor-soft: oklch(0.965 0.04 72);
+  --heat-infierno: oklch(0.59 0.21 32);
+  --heat-infierno-soft: oklch(0.955 0.04 32);
+  --success: oklch(0.555 0.13 150);
+  --warning: oklch(0.71 0.16 76);
+  --danger: oklch(0.565 0.21 30);
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.105 0 0);
+  --foreground: oklch(0.955 0 0);
+  --surface: oklch(0.17 0 0);
+  --surface-raised: oklch(0.22 0 0);
+  --muted: oklch(0.7 0 0);
+  --border: oklch(0.315 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-contrast: var(--primary-contrast);
+  --color-heat-fresco: var(--heat-fresco);
+  --color-heat-fresco-soft: var(--heat-fresco-soft);
+  --color-heat-calor: var(--heat-calor);
+  --color-heat-calor-soft: var(--heat-calor-soft);
+  --color-heat-infierno: var(--heat-infierno);
+  --color-heat-infierno-soft: var(--heat-infierno-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% -10%, oklch(0.972 0.004 160 / 0.86), transparent 32rem),
+    var(--background);
+  color: var(--foreground);
+  font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+::selection {
+  background: oklch(0.72 0.165 72 / 0.35);
+}
+
+@keyframes heat-shimmer {
+  0% {
+    transform: translate3d(-6%, 0, 0) skewX(-8deg);
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.34;
+  }
+  100% {
+    transform: translate3d(6%, 0, 0) skewX(-8deg);
+    opacity: 0.18;
+  }
+}
+
+.heat-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, oklch(0.59 0.21 32 / 0.18), transparent);
+  mix-blend-mode: multiply;
+  animation: heat-shimmer 2.8s var(--ease-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}
