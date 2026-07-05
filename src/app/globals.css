@@ -2,12 +2,17 @@
 
 :root {
   color-scheme: light;
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0.012 92);
   --foreground: oklch(0.19 0.018 160);
-  --surface: oklch(0.972 0.004 160);
-  --surface-raised: oklch(0.992 0.001 160);
+  --surface: oklch(0.957 0.011 96);
+  --surface-raised: oklch(0.997 0.006 96);
   --muted: oklch(0.45 0.014 160);
-  --border: oklch(0.885 0.006 160);
+  --border: oklch(0.86 0.014 96);
+  --page-glow: oklch(0.89 0.055 78 / 0.64);
+  --nav-surface: oklch(1 0.003 96 / 0.94);
+  --action-report-border: oklch(0.59 0.21 32 / 0.62);
+  --action-report-glow: oklch(0.82 0.17 74 / 0.95);
+  --action-report-sheen: oklch(1 0 0 / 0.28);
   --primary: oklch(0.52 0.125 160);
   --primary-contrast: oklch(0.99 0 0);
   --metro-red: oklch(0.56 0.21 28);
@@ -28,16 +33,24 @@
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-popover: 0 6px 14px oklch(0.19 0.018 160 / 0.12);
+  --z-sticky: 30;
+  --z-popover: 50;
 }
 
 .dark {
   color-scheme: dark;
-  --background: oklch(0.105 0 0);
-  --foreground: oklch(0.955 0 0);
-  --surface: oklch(0.17 0 0);
-  --surface-raised: oklch(0.22 0 0);
-  --muted: oklch(0.7 0 0);
-  --border: oklch(0.315 0 0);
+  --background: oklch(0.145 0.036 252);
+  --foreground: oklch(0.935 0.014 245);
+  --surface: oklch(0.205 0.034 250);
+  --surface-raised: oklch(0.255 0.037 248);
+  --muted: oklch(0.73 0.028 245);
+  --border: oklch(0.36 0.04 248);
+  --page-glow: oklch(0.34 0.075 245 / 0.5);
+  --nav-surface: oklch(0.19 0.04 250 / 0.9);
+  --action-report-border: oklch(0.65 0.2 35 / 0.7);
+  --action-report-glow: oklch(0.78 0.16 74 / 0.9);
+  --action-report-sheen: oklch(1 0 0 / 0.22);
 }
 
 @theme inline {
@@ -79,11 +92,58 @@ body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 50% -10%, oklch(0.972 0.004 160 / 0.86), transparent 32rem),
+    radial-gradient(circle at 50% -10%, var(--page-glow), transparent 32rem),
     var(--background);
   color: var(--foreground);
   font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
+}
+
+.home-report-action {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--action-report-border);
+  background:
+    radial-gradient(circle at 16% 0%, var(--action-report-glow), transparent 17rem),
+    linear-gradient(135deg, var(--heat-calor), var(--heat-infierno));
+  color: var(--primary-contrast);
+}
+
+.home-report-action::after {
+  content: "";
+  position: absolute;
+  inset: -40% auto -40% 12%;
+  width: 38%;
+  transform: skewX(-16deg);
+  background: linear-gradient(90deg, transparent, var(--action-report-sheen), transparent);
+  opacity: 0;
+  transition: transform var(--duration-base) var(--ease-out), opacity var(--duration-base) var(--ease-out);
+}
+
+.home-report-action:hover::after,
+.home-report-action:focus-visible::after {
+  transform: translateX(185%) skewX(-16deg);
+  opacity: 1;
+}
+
+.home-explore-action {
+  border-color: color-mix(in oklch, var(--border), var(--metro-blue) 28%);
+  background:
+    linear-gradient(135deg, color-mix(in oklch, var(--surface-raised), var(--metro-blue) 8%), var(--surface-raised));
+}
+
+.home-action-icon {
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.home-report-action:hover .home-action-icon,
+.home-report-action:focus-visible .home-action-icon {
+  transform: translate(2px, -2px) rotate(-8deg);
+}
+
+.home-explore-action:hover .home-action-icon,
+.home-explore-action:focus-visible .home-action-icon {
+  transform: translateY(-2px);
 }
 
 button,

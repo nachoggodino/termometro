@@ -9,6 +9,7 @@ export const messages = {
     report: "Report",
     explore: "Explore",
     methodology: "Methodology",
+    methodologyShort: "Method",
     language: "Language",
     theme: "Theme",
     light: "Light",

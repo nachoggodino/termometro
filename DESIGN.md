@@ -2,18 +2,18 @@
 name: "Termometro de Madrid"
 description: "A mobile-first civic heat-reporting PWA for Metro de Madrid AC conditions."
 colors:
-  bg: "oklch(1.000 0.000 0)"
-  bg-dark: "oklch(0.105 0.000 0)"
-  surface: "oklch(0.972 0.004 160)"
-  surface-dark: "oklch(0.170 0.000 0)"
-  surface-raised: "oklch(0.992 0.001 160)"
-  surface-raised-dark: "oklch(0.220 0.000 0)"
+  bg: "oklch(0.985 0.012 92)"
+  bg-dark: "oklch(0.145 0.036 252)"
+  surface: "oklch(0.957 0.011 96)"
+  surface-dark: "oklch(0.205 0.034 250)"
+  surface-raised: "oklch(0.997 0.006 96)"
+  surface-raised-dark: "oklch(0.255 0.037 248)"
   ink: "oklch(0.190 0.018 160)"
   ink-dark: "oklch(0.955 0.000 0)"
   muted: "oklch(0.450 0.014 160)"
-  muted-dark: "oklch(0.700 0.000 0)"
-  border: "oklch(0.885 0.006 160)"
-  border-dark: "oklch(0.315 0.000 0)"
+  muted-dark: "oklch(0.730 0.028 245)"
+  border: "oklch(0.860 0.014 96)"
+  border-dark: "oklch(0.360 0.040 248)"
   primary: "oklch(0.520 0.125 160)"
   primary-contrast: "oklch(0.990 0.000 0)"
   metro-red: "oklch(0.560 0.210 28)"
@@ -139,7 +139,7 @@ The system rejects official Metro de Madrid mimicry, generic complaint-counter d
 
 ## 2. Colors
 
-The palette is pure-white civic utility with a quiet green primary, Metro red/blue references for the independent mark, and a three-state heat scale for data.
+The palette is creamy civic utility with a quiet green primary, Metro red/blue references for the independent mark, a blue-black dark theme, and a three-state heat scale for data.
 
 ### Primary
 
@@ -155,13 +155,13 @@ The palette is pure-white civic utility with a quiet green primary, Metro red/bl
 
 ### Neutral
 
-- **Pure White** (`oklch(1.000 0.000 0)`): Default light background. No cream, sand, beige, or hidden warm tint.
-- **Cool Panel** (`oklch(0.972 0.004 160)`): App shell panels, dashboard bands, table headers, and quiet section backgrounds.
-- **Raised Surface** (`oklch(0.992 0.001 160)`): Cards, share modules, form groups, and popovers.
+- **Civic Cream** (`oklch(0.985 0.012 92)`): Default light background. Keep it close to neutral and let heat remain data/action color, not wallpaper.
+- **Quiet Panel** (`oklch(0.957 0.011 96)`): App shell panels, dashboard bands, table headers, and quiet section backgrounds.
+- **Raised Surface** (`oklch(0.997 0.006 96)`): Cards, share modules, form groups, and popovers.
 - **Ink Green-Black** (`oklch(0.190 0.018 160)`): Primary text on light surfaces.
 - **Muted Green-Gray** (`oklch(0.450 0.014 160)`): Secondary text that must remain readable; never use pale placeholder gray.
-- **Border Mist** (`oklch(0.885 0.006 160)`): Dividers, input borders, chip outlines, and chart grid lines.
-- **Near Black** (`oklch(0.105 0.000 0)`): Dark theme background, with neutral dark panels and no blue/purple tint.
+- **Border Mist** (`oklch(0.860 0.014 96)`): Dividers, input borders, chip outlines, and chart grid lines.
+- **Tech Blue Black** (`oklch(0.145 0.036 252)`): Dark theme background, with blue-black panels and no white radial wash.
 
 ### Named Rules
 
@@ -169,7 +169,7 @@ The palette is pure-white civic utility with a quiet green primary, Metro red/bl
 
 **The Selected Fill Rule.** Unselected line chips stay neutral with a colored dot or short mark. Selected line chips may use the line color as a fill with contrast-correct white or black text plus a check icon or outline.
 
-**The No Warm Wallpaper Rule.** Heat belongs in data and selected states, not in the global page background.
+**The No Heat Wallpaper Rule.** Heat belongs in data, selected states, and primary report action motion, not in the global page background.
 
 **Metro Line Color Working Set.** Use a token map for L1-L12, based on official-ish line identity colors and verified before launch against the current Metro map/source. Suggested implementation tokens: L1 light blue, L2 red, L3 yellow, L4 brown, L5 green, L6 gray, L7 orange, L8 pink, L9 purple, L10 dark blue, L11 teal green, L12 olive. Each line token must define `fill`, `textOnFill`, and `ring`.
 
@@ -279,7 +279,7 @@ Use a flat red tilted lozenge/diamond behind a blue vertical thermometer. The ma
 
 ### Do:
 
-- **Do** use a mostly light interface with dark mode support from v1.
+- **Do** use a mostly light creamy interface with dark mode support from v1.
 - **Do** use 8px cards, 8px controls, and 12px only for larger app panels or share cards.
 - **Do** keep the dashboard vertical on mobile; no chart carousel for v1.
 - **Do** make every major dashboard module screenshot-friendly with title, range, legend, data, takeaway, and attribution.
