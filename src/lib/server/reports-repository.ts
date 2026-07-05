@@ -1,12 +1,29 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { buildDashboardData } from "@/lib/domain/dashboard";
 import { getRangeStart, type TimeRange } from "@/lib/domain/ranges";
-import { isDuplicateCandidate, type Report, type ReportInput } from "@/lib/domain/reports";
+import {
+  DUPLICATE_WINDOW_MINUTES,
+  isDuplicateCandidate,
+  RATE_LIMIT_MAX_REPORTS,
+  type Report,
+  type ReportInput,
+} from "@/lib/domain/reports";
+import { ESTIMATED_TOTAL_CARS, isMetroLine, type MetroLine } from "@/lib/domain/lines";
+import {
+  createAbuseKey,
+  createUndoToken,
+  getRateLimitStart,
+  getRequestFingerprint,
+  getUndoExpiresAt,
+  hashUndoToken,
+  verifyUndoToken,
+  type RequestFingerprint,
+} from "./report-security";
 import { seedReports } from "./seed-data";
 
 type CreateResult =
-  | { ok: true; report: Report }
-  | { ok: false; reason: "duplicate" | "invalid" };
+  | { ok: true; report: Report; undoToken: string }
+  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" };
 
 type DashboardOptions = {
   range: TimeRange;
@@ -14,7 +31,13 @@ type DashboardOptions = {
 };
 
 const globalForReports = globalThis as typeof globalThis & {
-  termometroReports?: Report[];
+  termometroReports?: MemoryReport[];
+};
+
+type MemoryReport = Report & {
+  abuseKey?: string | null;
+  undoTokenHash?: string | null;
+  undoExpiresAt?: Date | null;
 };
 
 function getMemoryReports() {
@@ -33,13 +56,17 @@ function shouldRequireSupabase() {
 
 function getSupabase(options: { serviceRole?: boolean } = {}) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (shouldRequireSupabase() && !process.env.TERMOMETRO_ABUSE_SECRET) {
+    throw new Error("TERMOMETRO_ABUSE_SECRET is required in this environment.");
+  }
 
   if (!url || !key) {
     if (shouldRequireSupabase()) {
       const missing = [
         !url ? "NEXT_PUBLIC_SUPABASE_URL" : null,
-        !key ? (options.serviceRole ? "SUPABASE_SERVICE_ROLE_KEY" : "NEXT_PUBLIC_SUPABASE_ANON_KEY") : null,
+        !key ? (options.serviceRole ? "SUPABASE_SERVICE_ROLE_KEY" : "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") : null,
       ].filter(Boolean);
       throw new Error(`Supabase is required in this environment. Missing: ${missing.join(", ")}`);
     }
@@ -88,6 +115,19 @@ export async function getReportsForDashboard(options: DashboardOptions) {
   const { data, error } = await query;
   if (error) throw error;
 
+  const { data: fleetData, error: fleetError } = await supabase
+    .from("line_fleet_estimates")
+    .select("line,estimated_total_cars");
+
+  if (fleetError) throw fleetError;
+
+  const fleetEstimates = { ...ESTIMATED_TOTAL_CARS };
+  for (const row of fleetData ?? []) {
+    if (isMetroLine(row.line)) {
+      fleetEstimates[row.line] = row.estimated_total_cars;
+    }
+  }
+
   return buildDashboardData(
     (data ?? []).map((row) => ({
       id: row.id,
@@ -97,31 +137,61 @@ export async function getReportsForDashboard(options: DashboardOptions) {
       createdAt: new Date(row.created_at),
       hiddenAt: row.hidden_at ? new Date(row.hidden_at) : null,
     })),
+    undefined,
+    fleetEstimates as Record<MetroLine, number>,
   );
 }
 
-export async function createReport(input: ReportInput): Promise<CreateResult> {
-  const now = new Date();
+export async function createReportForRequest(
+  input: ReportInput,
+  fingerprint: RequestFingerprint | Request | null,
+  now = new Date(),
+): Promise<CreateResult> {
+  const requestFingerprint = fingerprint instanceof Request ? getRequestFingerprint(fingerprint) : fingerprint;
+  const abuseKey = requestFingerprint ? createAbuseKey(requestFingerprint) : null;
+  const undoToken = createUndoToken();
+  const undoTokenHash = hashUndoToken(undoToken);
+  const undoExpiresAt = getUndoExpiresAt(now);
   const supabase = getSupabase({ serviceRole: true });
 
   if (!supabase) {
     const memoryReports = getMemoryReports();
+    if (abuseKey) {
+      const rateLimitStart = getRateLimitStart(now);
+      const recentReports = memoryReports.filter((report) => report.abuseKey === abuseKey && report.createdAt >= rateLimitStart);
+      if (recentReports.length >= RATE_LIMIT_MAX_REPORTS) return { ok: false, reason: "rate_limited" };
+    }
+
     const recentDuplicate = memoryReports.find((report) => isDuplicateCandidate(input, report, now));
     if (recentDuplicate) return { ok: false, reason: "duplicate" };
 
-    const report: Report = {
+    const report: MemoryReport = {
       id: crypto.randomUUID(),
       line: input.line,
       car: input.car ?? null,
       state: input.state,
       createdAt: now,
       hiddenAt: null,
+      abuseKey,
+      undoTokenHash,
+      undoExpiresAt,
     };
     memoryReports.unshift(report);
-    return { ok: true, report };
+    return { ok: true, report, undoToken };
   }
 
-  const duplicateWindowStart = new Date(now.getTime() - 12 * 60_000).toISOString();
+  if (abuseKey) {
+    const { count, error: rateLimitError } = await supabase
+      .from("reports")
+      .select("id", { count: "exact", head: true })
+      .eq("abuse_key", abuseKey)
+      .gte("created_at", getRateLimitStart(now).toISOString());
+
+    if (rateLimitError) throw rateLimitError;
+    if ((count ?? 0) >= RATE_LIMIT_MAX_REPORTS) return { ok: false, reason: "rate_limited" };
+  }
+
+  const duplicateWindowStart = new Date(now.getTime() - DUPLICATE_WINDOW_MINUTES * 60_000).toISOString();
   let duplicateQuery = supabase
     .from("reports")
     .select("id")
@@ -143,7 +213,9 @@ export async function createReport(input: ReportInput): Promise<CreateResult> {
       line: input.line,
       car: input.car,
       state: input.state,
-      abuse_key: null,
+      abuse_key: abuseKey,
+      undo_token_hash: undoTokenHash,
+      undo_expires_at: undoExpiresAt.toISOString(),
     })
     .select("id,line,car,state,created_at,hidden_at")
     .single();
@@ -152,6 +224,7 @@ export async function createReport(input: ReportInput): Promise<CreateResult> {
 
   return {
     ok: true,
+    undoToken,
     report: {
       id: data.id,
       line: data.line,
@@ -163,16 +236,38 @@ export async function createReport(input: ReportInput): Promise<CreateResult> {
   };
 }
 
-export async function undoReport(id: string) {
+export async function undoReport(id: string, undoToken: string, now = new Date()) {
   const supabase = getSupabase({ serviceRole: true });
   if (!supabase) {
     const reports = getMemoryReports();
     const index = reports.findIndex((report) => report.id === id);
-    if (index >= 0) reports.splice(index, 1);
-    return;
+    const report = reports[index];
+    if (!report || report.hiddenAt) return false;
+    if (!report.undoExpiresAt || report.undoExpiresAt < now) return false;
+    if (!verifyUndoToken(undoToken, report.undoTokenHash)) return false;
+    reports.splice(index, 1);
+    return true;
   }
 
-  await supabase.from("reports").update({ hidden_at: new Date().toISOString(), hidden_reason: "user_undo" }).eq("id", id);
+  const { data, error } = await supabase
+    .from("reports")
+    .select("undo_token_hash,undo_expires_at,hidden_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || data.hidden_at) return false;
+  if (!data.undo_expires_at || new Date(data.undo_expires_at) < now) return false;
+  if (!verifyUndoToken(undoToken, data.undo_token_hash)) return false;
+
+  const { error: updateError } = await supabase
+    .from("reports")
+    .update({ hidden_at: now.toISOString(), hidden_reason: "user_undo" })
+    .eq("id", id)
+    .is("hidden_at", null);
+
+  if (updateError) throw updateError;
+  return true;
 }
 
 export async function getCarSuggestions(line: string) {

@@ -2,17 +2,19 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/shell/theme-provider";
 import { Toaster } from "sonner";
+import { THEME_COLORS } from "@/lib/design/tokens";
+import { defaultAppCopy } from "@/lib/i18n/app-copy";
 
 export const metadata: Metadata = {
-  title: "Termómetro de Madrid",
-  description: "Reportes ciudadanos sobre el aire acondicionado del Metro de Madrid.",
+  title: defaultAppCopy.title,
+  description: defaultAppCopy.description,
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#111111" },
+    { media: "(prefers-color-scheme: light)", color: THEME_COLORS.lightBackground },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLORS.darkBackground },
   ],
 };
 

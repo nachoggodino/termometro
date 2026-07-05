@@ -3,10 +3,12 @@ create type public.heat_state as enum ('fresco', 'calor', 'infierno');
 create table public.reports (
   id uuid primary key default gen_random_uuid(),
   line text not null check (line in ('L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11','L12')),
-  car text,
+  car text check (car is null or car ~ '^[A-Z][0-9]{4,5}$'),
   state public.heat_state not null,
   created_at timestamptz not null default now(),
   abuse_key text,
+  undo_token_hash text,
+  undo_expires_at timestamptz,
   review_status text not null default 'accepted',
   hidden_at timestamptz,
   hidden_reason text
@@ -19,7 +21,7 @@ create index reports_abuse_idx on public.reports (abuse_key, created_at desc) wh
 
 create table public.cars (
   id uuid primary key default gen_random_uuid(),
-  code text not null,
+  code text not null check (code ~ '^[A-Z][0-9]{4,5}$'),
   line text not null check (line in ('L1','L2','L3','L4','L5','L6','L7','L8','L9','L10','L11','L12')),
   active boolean not null default true,
   verified boolean not null default false,
@@ -38,6 +40,17 @@ create table public.line_fleet_estimates (
 alter table public.reports enable row level security;
 alter table public.cars enable row level security;
 alter table public.line_fleet_estimates enable row level security;
+
+revoke all on public.reports from anon, authenticated;
+revoke all on public.cars from anon, authenticated;
+revoke all on public.line_fleet_estimates from anon, authenticated;
+
+grant select (id, line, car, state, created_at, hidden_at) on public.reports to anon, authenticated;
+grant select (id, code, line, active, verified, source, created_at) on public.cars to anon, authenticated;
+grant select on public.line_fleet_estimates to anon, authenticated;
+grant all on public.reports to service_role;
+grant all on public.cars to service_role;
+grant all on public.line_fleet_estimates to service_role;
 
 create policy "Public reports are readable"
 on public.reports for select

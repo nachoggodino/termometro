@@ -2,7 +2,7 @@ import { Slot } from "@radix-ui/react-slot";
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "heat";
+type ButtonVariant = "primary" | "secondary" | "ghost";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   asChild?: boolean;
@@ -13,7 +13,6 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-contrast hover:brightness-95",
   secondary: "border border-border bg-surface-raised text-foreground hover:bg-surface",
   ghost: "bg-transparent text-foreground hover:bg-surface",
-  heat: "bg-heat-calor text-foreground hover:brightness-98",
 };
 
 export function Button({ asChild, className, variant = "primary", ...props }: ButtonProps) {

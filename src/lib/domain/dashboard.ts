@@ -2,6 +2,13 @@ import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Co
 import { ESTIMATED_TOTAL_CARS, METRO_LINES, type MetroLine } from "./lines";
 import type { Report } from "./reports";
 
+export const DASHBOARD_LIMITS = {
+  topLineCount: 6,
+  summaryLineCount: 3,
+  recentReportCount: 12,
+  worstCarCount: 8,
+} as const;
+
 export type LineSummary = {
   line: MetroLine;
   score: number;
@@ -37,7 +44,11 @@ export type DashboardData = {
   hottestLine: LineSummary | null;
 };
 
-export function buildDashboardData(reports: Report[], now = new Date()): DashboardData {
+export function buildDashboardData(
+  reports: Report[],
+  now = new Date(),
+  estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
+): DashboardData {
   const visibleReports = reports.filter((report) => !report.hiddenAt);
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
@@ -56,7 +67,7 @@ export function buildDashboardData(reports: Report[], now = new Date()): Dashboa
       disagreement: Math.round((1 - getAgreement(lineReports)) * 100),
       latestReportAt,
       carsReported: reportedCars.size,
-      estimatedCars: ESTIMATED_TOTAL_CARS[line],
+      estimatedCars: estimatedCarsByLine[line],
     };
   }).sort((a, b) => b.score - a.score || b.reports - a.reports);
 
@@ -79,7 +90,7 @@ export function buildDashboardData(reports: Report[], now = new Date()): Dashboa
       };
     })
     .sort((a, b) => b.score - a.score || b.reports - a.reports)
-    .slice(0, 8);
+    .slice(0, DASHBOARD_LIMITS.worstCarCount);
 
   const trend = buildTrend(visibleReports, now);
   const twoHoursAgo = new Date(now.getTime() - 2 * 3_600_000);

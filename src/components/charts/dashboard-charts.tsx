@@ -14,8 +14,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DashboardData } from "@/lib/domain/dashboard";
+import { DASHBOARD_LIMITS, type DashboardData } from "@/lib/domain/dashboard";
+import { CHART_TOKENS } from "@/lib/design/tokens";
 import { LINE_COLORS } from "@/lib/domain/lines";
+import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { ChartCard } from "./chart-card";
 
@@ -24,8 +26,6 @@ const heatColors = {
   calor: "var(--heat-calor)",
   infierno: "var(--heat-infierno)",
 };
-
-const animationDuration = 220;
 
 export function DashboardCharts({
   data,
@@ -36,7 +36,7 @@ export function DashboardCharts({
   dictionary: Dictionary;
   rangeLabel: string;
 }) {
-  const topLines = data.lineSummaries.slice(0, 6);
+  const topLines = data.lineSummaries.slice(0, DASHBOARD_LIMITS.topLineCount);
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,14 +48,14 @@ export function DashboardCharts({
         takeaway={dictionary.explore.chartTakeaways.ranking}
         title={dictionary.explore.modules.ranking}
       >
-        <div className="h-64">
+        <div className={CHART_TOKENS.rankingHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={topLines} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
+            <BarChart data={topLines} layout="vertical" margin={CHART_TOKENS.rankingMargin}>
               <CartesianGrid horizontal={false} stroke="var(--border)" />
-              <XAxis dataKey="score" domain={[0, 100]} hide type="number" />
-              <YAxis axisLine={false} dataKey="line" tickLine={false} type="category" width={36} />
+              <XAxis dataKey="score" domain={CHART_TOKENS.heatScoreDomain} hide type="number" />
+              <YAxis axisLine={false} dataKey="line" tickLine={false} type="category" width={CHART_TOKENS.yAxisLineWidth} />
               <Tooltip cursor={{ fill: "var(--surface)" }} />
-              <Bar animationDuration={animationDuration} dataKey="score" radius={[0, 6, 6, 0]}>
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" radius={CHART_TOKENS.barRadius}>
                 {topLines.map((item) => (
                   <Cell fill={heatColors[item.tone]} key={item.line} />
                 ))}
@@ -73,14 +73,14 @@ export function DashboardCharts({
         takeaway={dictionary.explore.chartTakeaways.trend}
         title={dictionary.explore.modules.trend}
       >
-        <div className="h-56">
+        <div className={CHART_TOKENS.moduleHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <LineChart data={data.trend} margin={{ left: -24, right: 8, top: 8, bottom: 0 }}>
+            <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="label" tickLine={false} />
-              <YAxis axisLine={false} domain={[0, 100]} tickLine={false} />
+              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
               <Tooltip />
-              <Line animationDuration={animationDuration} dataKey="score" dot={{ r: 3 }} stroke="var(--heat-infierno)" strokeWidth={2} type="monotone" />
+              <Line animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" dot={{ r: 3 }} stroke="var(--heat-infierno)" strokeWidth={2} type="monotone" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -93,14 +93,14 @@ export function DashboardCharts({
         takeaway={dictionary.explore.chartTakeaways.volume}
         title={dictionary.explore.modules.volume}
       >
-        <div className="h-56">
+        <div className={CHART_TOKENS.moduleHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <AreaChart data={topLines} margin={{ left: -24, right: 8, top: 8, bottom: 0 }}>
+            <AreaChart data={topLines} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} tickLine={false} />
               <Tooltip />
-              <Area animationDuration={animationDuration} dataKey="reports" fill="var(--heat-calor-soft)" stroke="var(--heat-calor)" type="monotone" />
+              <Area animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" fill="var(--heat-calor-soft)" stroke="var(--heat-calor)" type="monotone" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -127,7 +127,7 @@ export function DashboardCharts({
                   >
                     {car.line}
                   </span>
-                  <span className="font-mono text-sm font-semibold">{car.car}</span>
+                  <span className="font-mono text-sm font-semibold">{formatCarCode(car.car)}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted">
                   {car.reports} · {dictionary.common.confidence} {dictionary.common[car.confidence]}

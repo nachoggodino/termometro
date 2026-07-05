@@ -45,8 +45,8 @@ export const messages = {
     line: "Line",
     heatState: "AC state",
     car: "Car",
-    carPlaceholder: "E.g. M-1234 or R-1234",
-    carInvalid: "Use a format like M-1234 or R-1234, or leave the field empty.",
+    carPlaceholder: "E.g. M1234 or R12345",
+    carInvalid: "Use one letter and 4 or 5 numbers, for example M1234, or leave this empty.",
     carHelp: "It is usually shown inside or outside the car. If you cannot find it, leave this empty.",
     submit: {
       fresco: "Report fresh air",
@@ -55,6 +55,7 @@ export const messages = {
     },
     success: "Report received. Here is how the line looks now.",
     duplicate: "We already counted this report a moment ago.",
+    rateLimited: "Too many reports in a row. Wait a few minutes before sending another.",
     undo: "Undo",
     dismiss: "Dismiss",
     abuseReminder: "Use Termómetro wisely: report only what you are experiencing now.",

@@ -4,6 +4,7 @@ import { Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
+import { defaultAppCopy } from "@/lib/i18n/app-copy";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 export function ChartCard({
@@ -62,7 +63,9 @@ export function ChartCard({
       {children}
       {takeaway ? <p className="mt-4 text-sm font-semibold leading-5">{takeaway}</p> : null}
       {caveat ? <p className="mt-1 text-xs leading-5 text-muted">{caveat}</p> : null}
-      <p className="mt-4 text-[0.72rem] font-semibold text-muted">Termómetro de Madrid · {dictionary.common.disclaimer}</p>
+      <p className="mt-4 text-[0.72rem] font-semibold text-muted">
+        {defaultAppCopy.title} · {dictionary.common.disclaimer}
+      </p>
     </section>
   );
 }

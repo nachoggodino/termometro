@@ -3,12 +3,14 @@ import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
 import { isMetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
+import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -45,7 +47,7 @@ export default async function ExplorePage({
         </section>
 
         <section className="grid gap-3 pb-4 sm:grid-cols-3">
-          {data.lineSummaries.slice(0, 3).map((summary) => (
+          {data.lineSummaries.slice(0, DASHBOARD_LIMITS.summaryLineCount).map((summary) => (
             <div className="rounded-md border border-border bg-surface-raised p-4" key={summary.line}>
               <div className="flex items-center justify-between">
                 <span
@@ -96,7 +98,7 @@ export default async function ExplorePage({
                 {dictionary.explore.moduleRange}: {rangeLabel}
               </p>
               <div className="mt-4 flex flex-col gap-3">
-                {data.lineSummaries.slice(0, 6).map((summary) => {
+                {data.lineSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
                   const coverage = Math.round((summary.carsReported / summary.estimatedCars) * 100);
                   return (
                     <div key={summary.line}>
@@ -118,7 +120,7 @@ export default async function ExplorePage({
             <section className="rounded-md border border-border bg-surface-raised p-4">
               <h2 className="text-base font-semibold">{dictionary.explore.modules.recent}</h2>
               <div className="mt-4 flex flex-col divide-y divide-border">
-                {data.recentReports.slice(0, 12).map((report) => (
+                {data.recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount).map((report) => (
                   <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-3" key={report.id}>
                     <span
                       className="rounded-sm px-1.5 py-1 text-xs font-bold"
@@ -130,7 +132,7 @@ export default async function ExplorePage({
                       {report.line}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-sm font-semibold">{report.car ?? dictionary.explore.noCar}</p>
+                      <p className="truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
                       <p className="text-xs text-muted">{dictionary.states[report.state].label}</p>
                     </div>
                     <time className="font-mono text-xs text-muted">{formatTime(report.createdAt, lang)}</time>

@@ -45,8 +45,8 @@ export const messages = {
     line: "Línea",
     heatState: "Estado del aire",
     car: "Coche",
-    carPlaceholder: "Ej. M-1234 o R-1234",
-    carInvalid: "Usa un formato tipo M-1234 o R-1234, o deja el campo vacío.",
+    carPlaceholder: "Ej. M1234 o R12345",
+    carInvalid: "Usa una letra y 4 o 5 números, por ejemplo M1234, o deja el campo vacío.",
     carHelp: "Suele aparecer dentro o fuera del coche. Si no lo encuentras, déjalo vacío.",
     submit: {
       fresco: "Reportar fresquito",
@@ -55,6 +55,7 @@ export const messages = {
     },
     success: "Reporte recibido. Así está la línea ahora.",
     duplicate: "Ya hemos contado este reporte hace un momento.",
+    rateLimited: "Demasiados reportes seguidos. Espera unos minutos antes de enviar otro.",
     undo: "Deshacer",
     dismiss: "Cerrar",
     abuseReminder: "Usa Termómetro con cabeza: reporta solo lo que estés viviendo ahora.",

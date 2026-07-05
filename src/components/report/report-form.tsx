@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
-import { normalizeCarCode } from "@/lib/domain/reports";
+import { formatCarCode, normalizeCarCode } from "@/lib/domain/reports";
 import type { HeatState } from "@/lib/domain/heat";
 import type { MetroLine } from "@/lib/domain/lines";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -14,8 +14,8 @@ import { HeatSelector } from "./heat-selector";
 import { LinePicker } from "./line-picker";
 
 type ApiResponse =
-  | { ok: true; report: { id: string } }
-  | { ok: false; reason: "duplicate" | "invalid" };
+  | { ok: true; report: { id: string }; undoToken: string }
+  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" };
 
 export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
   const router = useRouter();
@@ -36,6 +36,11 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   const normalizedCar = useMemo(() => normalizeCarCode(car), [car]);
 
   function submitReport() {
+    if (car && !normalizedCar) {
+      toast(dictionary.reportForm.carInvalid);
+      return;
+    }
+
     startTransition(async () => {
       const response = await fetch("/api/reports", {
         method: "POST",
@@ -45,7 +50,13 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       const payload = (await response.json()) as ApiResponse;
 
       if (!payload.ok) {
-        toast(payload.reason === "duplicate" ? dictionary.reportForm.duplicate : dictionary.reportForm.subtitle);
+        const message =
+          payload.reason === "duplicate"
+            ? dictionary.reportForm.duplicate
+            : payload.reason === "rate_limited"
+              ? dictionary.reportForm.rateLimited
+              : dictionary.reportForm.subtitle;
+        toast(message);
         return;
       }
 
@@ -53,7 +64,11 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         action: {
           label: dictionary.reportForm.undo,
           onClick: () => {
-            fetch(`/api/reports/${payload.report.id}`, { method: "DELETE" }).catch(() => undefined);
+            fetch(`/api/reports/${payload.report.id}`, {
+              method: "DELETE",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ undoToken: payload.undoToken }),
+            }).catch(() => undefined);
           },
         },
         duration: 12_000,
@@ -82,7 +97,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         />
         <datalist id="car-suggestions">
           {suggestions.map((suggestion) => (
-            <option key={suggestion} value={suggestion} />
+            <option key={suggestion} value={formatCarCode(suggestion)} />
           ))}
         </datalist>
         {car && !normalizedCar ? <span className="text-sm text-danger">{dictionary.reportForm.carInvalid}</span> : null}
@@ -93,7 +108,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       <Button
         className="relative min-h-12 overflow-hidden"
         data-testid="submit-report"
-        disabled={pending}
+        disabled={pending || Boolean(car && !normalizedCar)}
         onClick={submitReport}
         style={{
           background:

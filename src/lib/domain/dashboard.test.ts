@@ -16,13 +16,13 @@ function report(partial: Partial<Report> & Pick<Report, "id" | "line" | "state">
 describe("dashboard data", () => {
   it("ranks hot lines and keeps recent reports", () => {
     const data = buildDashboardData([
-      report({ id: "1", line: "L1", state: "infierno", car: "M-1001" }),
-      report({ id: "2", line: "L1", state: "calor", car: "M-1001" }),
+      report({ id: "1", line: "L1", state: "infierno", car: "M1001" }),
+      report({ id: "2", line: "L1", state: "calor", car: "M1001" }),
       report({ id: "3", line: "L2", state: "fresco" }),
     ], now);
 
     expect(data.lineSummaries[0].line).toBe("L1");
-    expect(data.worstCars[0].car).toBe("M-1001");
+    expect(data.worstCars[0].car).toBe("M1001");
     expect(data.recentReports).toHaveLength(3);
   });
 

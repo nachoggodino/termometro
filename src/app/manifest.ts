@@ -1,14 +1,16 @@
 import type { MetadataRoute } from "next";
+import { THEME_COLORS } from "@/lib/design/tokens";
+import { defaultAppCopy } from "@/lib/i18n/app-copy";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Termómetro de Madrid",
-    short_name: "Termómetro",
-    description: "Reportes ciudadanos sobre el aire acondicionado del Metro de Madrid.",
+    name: defaultAppCopy.title,
+    short_name: defaultAppCopy.shortName,
+    description: defaultAppCopy.description,
     start_url: "/es",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#ffffff",
+    background_color: THEME_COLORS.lightBackground,
+    theme_color: THEME_COLORS.lightBackground,
     icons: [
       {
         src: "/icon.svg",

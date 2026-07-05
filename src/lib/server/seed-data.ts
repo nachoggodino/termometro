@@ -4,9 +4,9 @@ import type { Report } from "@/lib/domain/reports";
 
 const now = new Date();
 
-const hotCars = ["M-1001", "M-1004", "R-2401", "M-1732", "R-4110"];
-const l5Cars = ["M-5002", "R-5300", "M-5120", "R-5444"];
-const normalCars = ["M-2201", "R-3304", "M-6012", "M-8066", "R-9010", "M-1204"];
+const hotCars = ["M1001", "M1004", "R2401", "M1732", "R4110"];
+const l5Cars = ["M5002", "R5300", "M5120", "R5444"];
+const normalCars = ["M2201", "R3304", "M6012", "M8066", "R9010", "M1204"];
 
 function hoursAgo(hours: number) {
   return new Date(now.getTime() - hours * 3_600_000);
@@ -39,7 +39,7 @@ export const seedReports: Report[] = [
       index % 3 === 0 ? null : normalCars[index % normalCars.length],
     ),
   ),
-  makeReport(300, "L1", "fresco", 3.2, "M-1001"),
+  makeReport(300, "L1", "fresco", 3.2, "M1001"),
   makeReport(301, "L5", "fresco", 4.4, null),
-  makeReport(302, "L7", "calor", 1.6, "M-7310"),
+  makeReport(302, "L7", "calor", 1.6, "M7310"),
 ];

@@ -10,8 +10,9 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
 2. Import the repository in Vercel.
 3. Set these Vercel environment variables for Preview and Production:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
+   - `TERMOMETRO_ABUSE_SECRET`
 4. Apply `supabase/migrations/0001_initial.sql` to the Supabase project.
 5. Seed non-production data with `supabase/seed.sql` if the preview project should have dashboard data immediately.
 6. Deploy a Preview build from a non-production branch.
@@ -21,12 +22,10 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
    - `npm test`
    - `npm run test:ui`
 
-Vercel sets `VERCEL=1`, so the app will fail loudly if Supabase env vars are missing instead of falling back to local seed data.
+Vercel sets `VERCEL=1`, so the app will fail loudly if Supabase env vars or `TERMOMETRO_ABUSE_SECRET` are missing instead of falling back to local seed data.
 
 ## Current Gaps Before Public Production
 
-- Abuse keys/rate limiting are not implemented yet. The schema has `abuse_key`, but submissions currently store `null`.
-- Undo is ID-based and server-side, but there is no strict undo time window enforced in the repository.
 - Supabase migrations exist, but they still need to be applied and verified against the real project.
 - CI is not configured yet. Vercel can build from Git, but test/typecheck gates are still manual.
 - Playwright coverage exists for core flows, but screenshots/accessibility checks should be reviewed before public launch.
