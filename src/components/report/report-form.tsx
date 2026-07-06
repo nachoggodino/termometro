@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { TriangleAlert } from "lucide-react";
 import { useEffect, useMemo, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -78,7 +79,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         },
         duration: 12_000,
       });
-      startTransition(() => router.push(`/${locale}/explorar?linea=${line}&reported=1`));
+      startTransition(() => router.push(`/${locale}/explorar?reported=1`));
     } catch {
       toast(dictionary.reportForm.subtitle);
       setSubmitting(false);
@@ -111,7 +112,10 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         {car && !normalizedCar ? <span className="text-sm text-danger">{dictionary.reportForm.carInvalid}</span> : null}
       </label>
 
-      <p className="rounded-md border border-border bg-surface p-3 text-sm text-muted">{dictionary.reportForm.abuseReminder}</p>
+      <p className="flex items-start gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[0.6875rem] leading-4 text-muted/85">
+        <TriangleAlert aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-muted/85" />
+        <span>{dictionary.reportForm.abuseReminder}</span>
+      </p>
 
       <Button
         className="home-report-action report-submit-action relative min-h-12 overflow-hidden"

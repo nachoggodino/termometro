@@ -28,6 +28,7 @@ type CreateResult =
 type DashboardOptions = {
   range: TimeRange;
   line?: string | null;
+  lines?: MetroLine[] | null;
 };
 
 const globalForReports = globalThis as typeof globalThis & {
@@ -92,11 +93,12 @@ function getSupabase(options: { serviceRole?: boolean } = {}) {
 
 export async function getReportsForDashboard(options: DashboardOptions) {
   const start = getRangeStart(options.range);
+  const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
   const supabase = getSupabase();
 
   if (!supabase) {
     const reports = getMemoryReports().filter((report) => {
-      return report.createdAt >= start && (!options.line || report.line === options.line);
+      return report.createdAt >= start && (!selectedLines || selectedLines.includes(report.line));
     });
     return buildDashboardData(reports);
   }
@@ -108,8 +110,8 @@ export async function getReportsForDashboard(options: DashboardOptions) {
     .is("hidden_at", null)
     .order("created_at", { ascending: false });
 
-  if (options.line) {
-    query = query.eq("line", options.line);
+  if (selectedLines) {
+    query = query.in("line", selectedLines);
   }
 
   const [reportsResult, fleetResult] = await Promise.all([

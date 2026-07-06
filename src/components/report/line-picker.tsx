@@ -14,7 +14,7 @@ export function LinePicker({
 }) {
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="text-sm font-semibold">{label}</legend>
+      <legend className="mb-2 text-sm font-semibold">{label}</legend>
       <div className="grid grid-cols-4 gap-px overflow-hidden rounded-md border border-border bg-border">
         {METRO_LINES.map((line) => {
           const selected = line === value;

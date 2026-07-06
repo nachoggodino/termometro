@@ -29,6 +29,9 @@ export const messages = {
     share: "Share",
     shareCard: "Share module",
     shareCopied: "Summary copied",
+    shareImageCopied: "Image copied",
+    shareImageDownloaded: "Image downloaded",
+    shareImageUnavailable: "Could not generate image",
     optional: "optional",
     selected: "selected",
     current: "current",
@@ -95,6 +98,8 @@ export const messages = {
       range: "Date",
       apply: "Apply filters",
       applying: "Applying",
+      clear: "Clear filters",
+      lineCount: "{count} lines",
     },
     modules: {
       ranking: "Worst lines",

@@ -29,6 +29,7 @@
   --heat-infierno: oklch(0.59 0.21 32);
   --heat-infierno-soft: oklch(0.955 0.04 32);
   --heat-soft-foreground: oklch(0.19 0.018 160);
+  --heat-helper-foreground: color-mix(in oklch, var(--heat-soft-foreground), var(--muted) 38%);
   --success: oklch(0.555 0.13 150);
   --warning: oklch(0.71 0.16 76);
   --danger: oklch(0.565 0.21 30);
@@ -65,6 +66,7 @@
   --report-particle: oklch(0.98 0.04 92);
   --report-active-blur: oklch(0.78 0.16 74 / 0.42);
   --heat-soft-foreground: oklch(0.145 0.036 252);
+  --heat-helper-foreground: color-mix(in oklch, var(--heat-soft-foreground), var(--muted) 18%);
 }
 
 @theme inline {
@@ -201,6 +203,11 @@ body {
   animation: selection-panel-enter var(--duration-base) var(--ease-out);
 }
 
+.filter-popover {
+  transform-origin: var(--radix-popover-content-transform-origin);
+  animation: filter-popover-enter var(--duration-base) var(--ease-out);
+}
+
 .home-report-action:hover .home-action-icon,
 .home-report-action:focus-visible .home-action-icon {
   transform: translate(2px, -2px) rotate(-8deg);
@@ -279,6 +286,17 @@ button:disabled {
   100% {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes filter-popover-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

@@ -7,7 +7,7 @@ import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
-import { isMetroLine } from "@/lib/domain/lines";
+import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
 import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
@@ -24,15 +24,15 @@ export default async function ExplorePage({
   const search = await searchParams;
   const dictionary = await getDictionary(lang);
   const selectedRange = isTimeRange(search.rango) ? search.rango : "today";
-  const selectedLine = isMetroLine(search.linea) ? search.linea : null;
-  const data = await getDashboardDataForPage({ range: selectedRange, line: selectedLine });
+  const selectedLines = parseSelectedLines(search.linea);
+  const data = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
   const rangeLabel = dictionary.explore.ranges[selectedRange];
-  const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLine ? summary.line === selectedLine : summary.reports > 0));
+  const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
 
   return (
     <main className="min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 pb-10">
-        <FilterBar dictionary={dictionary} locale={lang} selectedLine={selectedLine} selectedRange={selectedRange} />
+        <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
         <section className="py-6">
           <h1 className="text-2xl font-[650] tracking-[-0.015em]">{dictionary.explore.title}</h1>
@@ -40,7 +40,7 @@ export default async function ExplorePage({
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedLine={selectedLine} />
+          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedLines={selectedLines} />
           <aside className="flex flex-col gap-4">
             <section className="rounded-md border border-border bg-surface-raised p-4">
               <div className="flex items-center gap-2">
@@ -136,6 +136,17 @@ export default async function ExplorePage({
       </div>
     </main>
   );
+}
+
+function parseSelectedLines(value: string | undefined) {
+  if (!value) return [];
+  const lines: MetroLine[] = [];
+  for (const item of value.split(",")) {
+    if (isMetroLine(item) && !lines.includes(item)) {
+      lines.push(item);
+    }
+  }
+  return lines;
 }
 
 function formatTime(date: Date, locale: string) {

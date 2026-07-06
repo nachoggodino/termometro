@@ -22,7 +22,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await page.getByPlaceholder("Ej. M1234 o R12345").fill(`m${carNumber}`);
   await page.getByTestId("submit-report").click();
 
-  await expect(page).toHaveURL(/\/es\/explorar\?linea=L1&reported=1/);
+  await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
   await expect(page.getByText("Líneas en peor estado")).toBeVisible();
   await expect(page.getByText("Peores coches")).toBeVisible();
 });
@@ -39,10 +39,11 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.goto("/es/explorar");
 
   await page.getByRole("button", { name: "Filtros" }).click();
-  await page.getByRole("button", { name: "L5" }).click();
+  await page.getByRole("button", { name: "L5", exact: true }).click();
+  await page.getByRole("button", { name: "L1", exact: true }).click();
   await page.getByRole("button", { name: "7 días" }).click();
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
-  await expect(page).toHaveURL(/linea=L5/);
+  await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
   await expect(page).toHaveURL(/rango=sevenDays/);
 
   await page.getByRole("button", { name: "Menú" }).click();

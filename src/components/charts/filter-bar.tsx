@@ -14,43 +14,52 @@ import { Button } from "@/components/ui/button";
 export function FilterBar({
   dictionary,
   locale,
-  selectedLine,
+  selectedLines,
   selectedRange,
 }: {
   dictionary: Dictionary;
   locale: Locale;
-  selectedLine: string | null;
+  selectedLines: MetroLine[];
   selectedRange: TimeRange;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
-  const [draftLine, setDraftLine] = useState<string | null>(selectedLine);
+  const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
 
-  function href(line: string | null, range = selectedRange) {
+  function href(lines: MetroLine[], range = selectedRange) {
     const params = new URLSearchParams();
-    if (line) params.set("linea", line);
+    if (lines.length > 0) params.set("linea", lines.join(","));
     if (range !== "today") params.set("rango", range);
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
 
   function applyFilters() {
     startTransition(() => {
-      router.push(href(draftLine, draftRange));
+      router.push(href(draftLines, draftRange));
       setOpen(false);
     });
   }
 
+  function clearFilters() {
+    setDraftLines([]);
+    setDraftRange("today");
+  }
+
+  function toggleLine(line: MetroLine) {
+    setDraftLines((current) => (current.includes(line) ? current.filter((item) => item !== line) : [...current, line]));
+  }
+
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
-      setDraftLine(selectedLine);
+      setDraftLines(selectedLines);
       setDraftRange(selectedRange);
     }
     setOpen(nextOpen);
   }
 
-  const selectedLineLabel = selectedLine ?? dictionary.explore.allLines;
+  const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
@@ -73,7 +82,7 @@ export function FilterBar({
         <Popover.Portal>
           <Popover.Content
             align="end"
-            className="z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
+            className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
             sideOffset={8}
           >
             <div className="flex items-center justify-between gap-3">
@@ -88,12 +97,12 @@ export function FilterBar({
 
             <div className="mt-4">
               <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
-              <button className={allLinesClass(!draftLine)} onClick={() => setDraftLine(null)} type="button">
+              <button className={allLinesClass(draftLines.length === 0)} onClick={() => setDraftLines([])} type="button">
                 {dictionary.explore.allLines}
               </button>
               <div className="mt-2 grid grid-cols-6 gap-2">
                 {METRO_LINES.map((line) => (
-                  <LineSwatch active={draftLine === line} label={line} line={line} onClick={() => setDraftLine(line)} key={line} />
+                  <LineSwatch active={draftLines.includes(line)} label={line} line={line} onClick={() => toggleLine(line)} key={line} />
                 ))}
               </div>
             </div>
@@ -115,9 +124,14 @@ export function FilterBar({
               </div>
             </div>
 
-            <Button className="mt-5 w-full" disabled={isPending} onClick={applyFilters} type="button">
-              {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
-            </Button>
+            <div className="mt-5 grid grid-cols-[auto_1fr] gap-2">
+              <Button disabled={isPending} onClick={clearFilters} type="button" variant="secondary">
+                {dictionary.explore.filters.clear}
+              </Button>
+              <Button disabled={isPending} onClick={applyFilters} type="button">
+                {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
+              </Button>
+            </div>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
@@ -142,12 +156,12 @@ function LineSwatch({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "flex h-10 items-center justify-center rounded-md border text-xs font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        active ? "border-foreground ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-surface-raised" : "border-border hover:border-foreground",
+        "selection-flow flex h-10 items-center justify-center gap-1 rounded-md border px-1 text-xs font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        active ? "border-transparent" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
       style={
-        lineColor
+        active && lineColor
           ? {
               background: lineColor.fill,
               color: lineColor.textOnFill,
@@ -156,6 +170,13 @@ function LineSwatch({
       }
       type="button"
     >
+      {lineColor ? (
+        <span
+          aria-hidden="true"
+          className={cn("rounded-full transition duration-200 ease-out", active ? "size-2 bg-white" : "size-1.5")}
+          style={!active ? { background: lineColor.fill } : undefined}
+        />
+      ) : null}
       {line ?? label}
     </button>
   );
@@ -164,7 +185,7 @@ function LineSwatch({
 function allLinesClass(selected: boolean) {
   return cn(
     "flex min-h-10 w-full items-center justify-center rounded-md border px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-    selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface text-muted hover:text-foreground",
+    selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
   );
 }
 
@@ -173,4 +194,10 @@ function rangeClass(selected: boolean) {
     "rounded-md border px-3 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
     selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:text-foreground",
   );
+}
+
+function getSelectedLineLabel(selectedLines: MetroLine[], dictionary: Dictionary) {
+  if (selectedLines.length === 0) return dictionary.explore.allLines;
+  if (selectedLines.length <= 3) return selectedLines.join(", ");
+  return dictionary.explore.filters.lineCount.replace("{count}", String(selectedLines.length));
 }

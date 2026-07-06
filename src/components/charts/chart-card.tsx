@@ -1,6 +1,7 @@
 "use client";
 
 import { Share2 } from "lucide-react";
+import { useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
@@ -18,7 +19,7 @@ export function ChartCard({
   shareText,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   help?: string;
   dictionary: Dictionary;
   rangeLabel?: string;
@@ -26,24 +27,41 @@ export function ChartCard({
   caveat?: string;
   shareText?: string;
 }) {
+  const cardRef = useRef<HTMLElement>(null);
+
   async function shareModule() {
     const text = shareText ?? [title, rangeLabel, takeaway, caveat, dictionary.common.disclaimer].filter(Boolean).join("\n");
     try {
-      if (navigator.share) {
-        await navigator.share({ title, text });
+      const blob = await renderElementAsPng(cardRef.current);
+      if (!blob) throw new Error("Image export failed");
+      const file = new File([blob], `${slugify(title)}.png`, { type: "image/png" });
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title, text, files: [file] });
         return;
       }
-      await navigator.clipboard.writeText(text);
-      toast.success(dictionary.common.shareCopied);
+
+      if (window.ClipboardItem && navigator.clipboard?.write) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        toast.success(dictionary.common.shareImageCopied);
+        return;
+      }
+
+      downloadBlob(blob, file.name);
+      toast.success(dictionary.common.shareImageDownloaded);
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
-      await navigator.clipboard.writeText(text);
-      toast.success(dictionary.common.shareCopied);
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success(dictionary.common.shareCopied);
+      } catch {
+        toast.error(dictionary.common.shareImageUnavailable);
+      }
     }
   }
 
   return (
-    <section className="rounded-md border border-border bg-surface-raised p-4">
+    <section className="rounded-md border border-border bg-surface-raised p-4" ref={cardRef}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -56,7 +74,14 @@ export function ChartCard({
             </p>
           ) : null}
         </div>
-        <Button aria-label={`${dictionary.common.shareCard}: ${title}`} className="size-9 min-h-0 px-0 py-0" onClick={shareModule} type="button" variant="secondary">
+        <Button
+          aria-label={`${dictionary.common.shareCard}: ${title}`}
+          className="size-9 min-h-0 px-0 py-0"
+          data-share-exclude="true"
+          onClick={shareModule}
+          type="button"
+          variant="secondary"
+        >
           <Share2 aria-hidden="true" />
         </Button>
       </div>
@@ -68,4 +93,70 @@ export function ChartCard({
       </p>
     </section>
   );
+}
+
+async function renderElementAsPng(element: HTMLElement | null) {
+  if (!element) return null;
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll("[data-share-exclude]").forEach((node) => node.remove());
+  inlineComputedStyles(element, clone);
+
+  const rect = element.getBoundingClientRect();
+  const width = Math.ceil(rect.width);
+  const height = Math.ceil(rect.height);
+  const serialized = new XMLSerializer().serializeToString(clone);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">${serialized}</div>
+      </foreignObject>
+    </svg>
+  `;
+  const image = new Image();
+  image.decoding = "async";
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  await image.decode();
+
+  const canvas = document.createElement("canvas");
+  const scale = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = width * scale;
+  canvas.height = height * scale;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.scale(scale, scale);
+  context.fillStyle = getComputedStyle(element).backgroundColor;
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
+function inlineComputedStyles(source: Element, target: Element) {
+  const computed = getComputedStyle(source);
+  const targetElement = target as HTMLElement | SVGElement;
+  targetElement.setAttribute("style", Array.from(computed).map((property) => `${property}:${computed.getPropertyValue(property)}`).join(";"));
+
+  const sourceChildren = Array.from(source.children);
+  const targetChildren = Array.from(target.children);
+  for (let index = 0; index < sourceChildren.length; index += 1) {
+    if (targetChildren[index]) inlineComputedStyles(sourceChildren[index], targetChildren[index]);
+  }
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }

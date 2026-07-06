@@ -67,7 +67,7 @@ export function AppHeader({
               onClick={() => setIsOpen(false)}
             >
               <AppLogo />
-              <span className="min-w-0 truncate text-sm font-semibold leading-5 sm:text-base">{dictionary.common.appName}</span>
+              <span className="min-w-0 truncate text-base font-semibold leading-5 sm:text-lg">{dictionary.common.appName}</span>
             </Link>
             <button
               aria-controls="app-navigation-drawer"

@@ -29,15 +29,15 @@ export function DashboardCharts({
   data,
   dictionary,
   rangeLabel,
-  selectedLine,
+  selectedLines,
 }: {
   data: DashboardData;
   dictionary: Dictionary;
   rangeLabel: string;
-  selectedLine: MetroLine | null;
+  selectedLines: MetroLine[];
 }) {
   const chartLines = data.lineSummaries
-    .filter((summary) => (selectedLine ? summary.line === selectedLine : summary.reports > 0))
+    .filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0))
     .slice(0, DASHBOARD_LIMITS.topLineCount);
 
   return (
