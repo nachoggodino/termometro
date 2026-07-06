@@ -35,7 +35,7 @@ export const messages = {
   },
   home: {
     mission: "Un termómetro ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",
-    reportsInWindow: "reportes último día",
+    reportsInWindow: "reportes en el último día",
     hottestLine: "vuelve a encender el termómetro",
     noReports: "Sin reportes recientes",
     noReportsCopy: "Si el vagón parece sauna, puedes ser la primera persona en avisar",
@@ -86,6 +86,15 @@ export const messages = {
       sevenDays: "7 días",
       month: "1 mes",
       summer: "Este verano",
+    },
+    filters: {
+      active: "Filtro activo",
+      button: "Filtros",
+      title: "Filtrar exploración",
+      line: "Línea",
+      range: "Fecha",
+      apply: "Aplicar filtros",
+      applying: "Aplicando",
     },
     modules: {
       ranking: "Líneas en peor estado",

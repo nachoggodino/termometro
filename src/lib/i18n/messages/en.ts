@@ -35,7 +35,7 @@ export const messages = {
   },
   home: {
     mission: "A citizen thermometer for making overheated Metro cars visible during Madrid summer",
-    reportsInWindow: "reports last day",
+    reportsInWindow: "reports in the last day",
     hottestLine: "is heating the thermometer again",
     noReports: "No recent reports",
     noReportsCopy: "If the car feels like a sauna, you can be the first to report it",
@@ -86,6 +86,15 @@ export const messages = {
       sevenDays: "7 days",
       month: "1 month",
       summer: "This summer",
+    },
+    filters: {
+      active: "Active filter",
+      button: "Filters",
+      title: "Filter explore",
+      line: "Line",
+      range: "Date",
+      apply: "Apply filters",
+      applying: "Applying",
     },
     modules: {
       ranking: "Worst lines",

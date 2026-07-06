@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/shell/app-header";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { notFound } from "next/navigation";
@@ -17,7 +16,6 @@ export default async function MethodologyPage({ params }: { params: Promise<{ la
 
   return (
     <main className="min-h-dvh">
-      <AppHeader dictionary={dictionary} locale={lang} pathname="/metodologia" />
       <article className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="text-3xl font-[680] tracking-[-0.025em]">{dictionary.methodology.title}</h1>
         <p className="mt-3 text-muted">{dictionary.methodology.intro}</p>

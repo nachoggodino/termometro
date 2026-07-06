@@ -1,9 +1,7 @@
-import { AppHeader } from "@/components/shell/app-header";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
 import { HeatStateBadge } from "@/components/report/heat-state-badge";
 import { InfoTooltip } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -13,7 +11,6 @@ import { isMetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
 import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 
 export default async function ExplorePage({
   params,
@@ -30,65 +27,20 @@ export default async function ExplorePage({
   const selectedLine = isMetroLine(search.linea) ? search.linea : null;
   const data = await getDashboardDataForPage({ range: selectedRange, line: selectedLine });
   const rangeLabel = dictionary.explore.ranges[selectedRange];
+  const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLine ? summary.line === selectedLine : summary.reports > 0));
 
   return (
     <main className="min-h-dvh">
-      <AppHeader dictionary={dictionary} locale={lang} pathname="/explorar" />
       <div className="mx-auto max-w-5xl px-4 pb-10">
         <FilterBar dictionary={dictionary} locale={lang} selectedLine={selectedLine} selectedRange={selectedRange} />
 
         <section className="py-6">
           <h1 className="text-2xl font-[650] tracking-[-0.015em]">{dictionary.explore.title}</h1>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <p className="max-w-2xl text-sm leading-5 text-muted">{dictionary.explore.subtitle}</p>
-            <Button asChild className="w-fit px-3 py-2 text-sm" variant="secondary">
-              <Link href={`/${lang}/metodologia`}>{dictionary.explore.methodologyLink}</Link>
-            </Button>
-          </div>
-        </section>
-
-        <section className="grid gap-3 pb-4 sm:grid-cols-3">
-          {data.lineSummaries.slice(0, DASHBOARD_LIMITS.summaryLineCount).map((summary) => (
-            <div className="rounded-md border border-border bg-surface-raised p-4" key={summary.line}>
-              <div className="flex items-center justify-between">
-                <span
-                  className="rounded-sm px-2 py-1 text-sm font-bold"
-                  style={{
-                    background: LINE_COLORS[summary.line].fill,
-                    color: LINE_COLORS[summary.line].textOnFill,
-                  }}
-                >
-                  {summary.line}
-                </span>
-                <span className="font-mono text-2xl font-semibold">{summary.score}</span>
-              </div>
-              <p className="mt-3 flex items-center gap-2 text-sm text-muted">
-                {dictionary.common.confidence} {dictionary.common[summary.confidence]}
-                <InfoTooltip label={dictionary.common.confidence}>{dictionary.explore.confidenceHelp}</InfoTooltip>
-              </p>
-              <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                <div>
-                  <dt className="text-muted">{dictionary.common.reports}</dt>
-                  <dd className="font-mono font-semibold">{summary.reports}</dd>
-                </div>
-                <div>
-                  <dt className="flex items-center gap-1 text-muted">
-                    {dictionary.common.disagreement}
-                    <InfoTooltip label={dictionary.common.disagreement}>{dictionary.explore.disagreementHelp}</InfoTooltip>
-                  </dt>
-                  <dd className="font-mono font-semibold">{summary.disagreement}%</dd>
-                </div>
-                <div>
-                  <dt className="text-muted">{dictionary.explore.latestReport}</dt>
-                  <dd className="font-mono font-semibold">{formatRelativeReport(summary.latestReportAt, lang, dictionary)}</dd>
-                </div>
-              </dl>
-            </div>
-          ))}
+          <p className="mt-2 max-w-2xl text-sm leading-5 text-muted">{dictionary.explore.subtitle}</p>
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} />
+          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedLine={selectedLine} />
           <aside className="flex flex-col gap-4">
             <section className="rounded-md border border-border bg-surface-raised p-4">
               <div className="flex items-center gap-2">
@@ -99,7 +51,7 @@ export default async function ExplorePage({
                 {dictionary.explore.moduleRange}: {rangeLabel}
               </p>
               <div className="mt-4 flex flex-col gap-3">
-                {data.lineSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
+                {visibleSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
                   const coverage = Math.round((summary.carsReported / summary.estimatedCars) * 100);
                   return (
                     <div key={summary.line}>
@@ -141,6 +93,46 @@ export default async function ExplorePage({
             </section>
           </aside>
         </div>
+
+        <section className="grid gap-3 pt-4 sm:grid-cols-3">
+          {visibleSummaries.slice(0, DASHBOARD_LIMITS.summaryLineCount).map((summary) => (
+            <div className="rounded-md border border-border bg-surface-raised p-4" key={summary.line}>
+              <div className="flex items-center justify-between">
+                <span
+                  className="rounded-sm px-2 py-1 text-sm font-bold"
+                  style={{
+                    background: LINE_COLORS[summary.line].fill,
+                    color: LINE_COLORS[summary.line].textOnFill,
+                  }}
+                >
+                  {summary.line}
+                </span>
+                <span className="font-mono text-2xl font-semibold">{summary.score}</span>
+              </div>
+              <p className="mt-3 flex items-center gap-2 text-sm text-muted">
+                {dictionary.common.confidence} {dictionary.common[summary.confidence]}
+                <InfoTooltip label={dictionary.common.confidence}>{dictionary.explore.confidenceHelp}</InfoTooltip>
+              </p>
+              <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <dt className="text-muted">{dictionary.common.reports}</dt>
+                  <dd className="font-mono font-semibold">{summary.reports}</dd>
+                </div>
+                <div>
+                  <dt className="flex items-center gap-1 text-muted">
+                    {dictionary.common.disagreement}
+                    <InfoTooltip label={dictionary.common.disagreement}>{dictionary.explore.disagreementHelp}</InfoTooltip>
+                  </dt>
+                  <dd className="font-mono font-semibold">{summary.disagreement}%</dd>
+                </div>
+                <div>
+                  <dt className="text-muted">{dictionary.explore.latestReport}</dt>
+                  <dd className="font-mono font-semibold">{formatRelativeReport(summary.latestReportAt, lang, dictionary)}</dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </section>
       </div>
     </main>
   );

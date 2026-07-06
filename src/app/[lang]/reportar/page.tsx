@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/shell/app-header";
 import { ReportForm } from "@/components/report/report-form";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
@@ -11,7 +10,6 @@ export default async function ReportPage({ params }: { params: Promise<{ lang: s
 
   return (
     <main className="min-h-dvh">
-      <AppHeader dictionary={dictionary} locale={lang} pathname="/reportar" />
       <section className="mx-auto max-w-xl px-4 py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-[650] tracking-[-0.015em]">{dictionary.reportForm.title}</h1>

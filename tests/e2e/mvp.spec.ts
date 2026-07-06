@@ -38,12 +38,15 @@ test("report flow blocks invalid car codes", async ({ page }) => {
 test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.goto("/es/explorar");
 
-  await page.getByRole("link", { name: "L5" }).click();
+  await page.getByRole("button", { name: "Filtros" }).click();
+  await page.getByRole("button", { name: "L5" }).click();
+  await page.getByRole("button", { name: "7 días" }).click();
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page).toHaveURL(/linea=L5/);
-  await page.getByRole("link", { name: "7 días" }).click();
   await expect(page).toHaveURL(/rango=sevenDays/);
 
   await page.getByRole("button", { name: "Menú" }).click();
-  await page.getByRole("button", { name: "Oscuro" }).click();
+  await expect(page.getByTestId("theme-toggle")).toBeVisible();
+  await page.getByTestId("theme-toggle").getByRole("button", { name: "Oscuro" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
