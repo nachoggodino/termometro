@@ -100,7 +100,7 @@ export async function getReportsForDashboard(options: DashboardOptions) {
     const reports = getMemoryReports().filter((report) => {
       return report.createdAt >= start && (!selectedLines || selectedLines.includes(report.line));
     });
-    return buildDashboardData(reports);
+    return buildDashboardData(reports, undefined, ESTIMATED_TOTAL_CARS, options.range);
   }
 
   let query = supabase
@@ -143,6 +143,7 @@ export async function getReportsForDashboard(options: DashboardOptions) {
     })),
     undefined,
     fleetEstimates as Record<MetroLine, number>,
+    options.range,
   );
 }
 

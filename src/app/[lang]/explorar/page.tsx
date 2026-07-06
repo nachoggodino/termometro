@@ -11,6 +11,7 @@ import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
 import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
+import { BarChart3 } from "lucide-react";
 
 export default async function ExplorePage({
   params,
@@ -30,17 +31,19 @@ export default async function ExplorePage({
   const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
 
   return (
-    <main className="min-h-dvh">
+    <main className="min-h-dvh bg-background">
       <div className="mx-auto max-w-5xl px-4 pb-10">
         <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
         <section className="py-6">
-          <h1 className="text-2xl font-[650] tracking-[-0.015em]">{dictionary.explore.title}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-5 text-muted">{dictionary.explore.subtitle}</p>
+          <div className="flex items-center justify-center gap-2">
+            <BarChart3 aria-hidden="true" className="size-6 text-muted" />
+            <h1 className="text-center text-2xl font-[650] tracking-[-0.015em]">{dictionary.explore.title}</h1>
+          </div>
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedLines={selectedLines} />
+          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedRange={selectedRange} selectedLines={selectedLines} />
           <aside className="flex flex-col gap-4">
             <section className="rounded-md border border-border bg-surface-raised p-4">
               <div className="flex items-center gap-2">

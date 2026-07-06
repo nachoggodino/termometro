@@ -35,6 +35,7 @@ export const messages = {
     optional: "opcional",
     selected: "seleccionado",
     current: "actual",
+    attribution: "Datos de ciudadanos en Termómetro de Madrid",
   },
   home: {
     mission: "Un termómetro ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",
@@ -105,6 +106,8 @@ export const messages = {
       ranking: "Líneas en peor estado",
       trend: "Evolución del calor",
       volume: "Reportes por línea",
+      lineCars: "Coches por línea",
+      lineEvolution: "Evolución de cada línea",
       worstCars: "Peores coches",
       fleet: "Cobertura de flota",
       recent: "Últimos reportes",
@@ -124,6 +127,8 @@ export const messages = {
       ranking: "L1 y L5 concentran las peores señales del rango seleccionado",
       trend: "El pico reciente necesita leerse junto al volumen de reportes",
       volume: "Más reportes no significan más calor: indican dónde hay más señal ciudadana",
+      lineCars: "Muestra cuántos coches distintos aparecen en los reportes del rango",
+      lineEvolution: "Las líneas con más reportes muestran cuándo se concentra la señal",
       worstCars: "Coches con pocos reportes siguen siendo señales, no veredictos",
     },
     caveats: {

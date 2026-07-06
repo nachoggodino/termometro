@@ -1,6 +1,7 @@
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { notFound } from "next/navigation";
+import { CircleHelp } from "lucide-react";
 
 export default async function MethodologyPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -15,10 +16,12 @@ export default async function MethodologyPage({ params }: { params: Promise<{ la
   ] as const;
 
   return (
-    <main className="min-h-dvh">
+    <main className="min-h-dvh bg-background">
       <article className="mx-auto max-w-2xl px-4 py-8">
-        <h1 className="text-3xl font-[680] tracking-[-0.025em]">{dictionary.methodology.title}</h1>
-        <p className="mt-3 text-muted">{dictionary.methodology.intro}</p>
+        <div className="flex items-center justify-center gap-2">
+          <CircleHelp aria-hidden="true" className="size-6 text-muted" />
+          <h1 className="text-center text-2xl font-[650] tracking-[-0.015em]">{dictionary.methodology.title}</h1>
+        </div>
         <div className="mt-8 flex flex-col gap-4">
           {sections.map(([title, body]) => (
             <section className="rounded-md border border-border bg-surface-raised p-4" key={title}>

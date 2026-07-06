@@ -15,6 +15,7 @@ import {
 import { DASHBOARD_LIMITS, type DashboardData } from "@/lib/domain/dashboard";
 import { CHART_TOKENS } from "@/lib/design/tokens";
 import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
+import type { TimeRange } from "@/lib/domain/ranges";
 import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { ChartCard } from "./chart-card";
@@ -29,21 +30,59 @@ export function DashboardCharts({
   data,
   dictionary,
   rangeLabel,
+  selectedRange,
   selectedLines,
 }: {
   data: DashboardData;
   dictionary: Dictionary;
   rangeLabel: string;
+  selectedRange: TimeRange;
   selectedLines: MetroLine[];
 }) {
-  const chartLines = data.lineSummaries
-    .filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0))
-    .slice(0, DASHBOARD_LIMITS.topLineCount);
+  const visibleLines = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
+  const limitWhenUnfiltered = (items: typeof visibleLines) => (selectedLines.length > 0 ? items : items.slice(0, DASHBOARD_LIMITS.topLineCount));
+  const rankingLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.score - a.score || b.reports - a.reports));
+  const reportVolumeLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.reports - a.reports || b.score - a.score));
+  const carLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.carsReported - a.carsReported || b.score - a.score));
+  const lineEvolutionLines = visibleLines
+    .filter((summary) => summary.reports > 0)
+    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
+    .slice(0, 4)
+    .map((summary) => summary.line);
+  const xAxisInterval = selectedRange === "today" ? 2 : selectedRange === "sevenDays" ? 0 : "preserveStartEnd";
 
   return (
     <div className="flex flex-col gap-4">
       <ChartCard
-        caveat={dictionary.explore.caveats.confidence}
+        dictionary={dictionary}
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.lineEvolution}
+        title={dictionary.explore.modules.lineEvolution}
+      >
+        <div className={CHART_TOKENS.moduleHeightClass}>
+          <ResponsiveContainer height="100%" width="100%">
+            <LineChart data={data.lineEvolution} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
+              <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+              <Tooltip />
+              {lineEvolutionLines.map((line) => (
+                <Line
+                  animationDuration={CHART_TOKENS.animationDurationMs}
+                  dataKey={line}
+                  dot={false}
+                  key={line}
+                  stroke={LINE_COLORS[line].fill}
+                  strokeWidth={2}
+                  type="monotone"
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartCard>
+
+      <ChartCard
         dictionary={dictionary}
         help={dictionary.explore.scoreHelp}
         rangeLabel={rangeLabel}
@@ -54,7 +93,7 @@ export function DashboardCharts({
           <ResponsiveContainer height="100%" width="100%">
             <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
-              <XAxis axisLine={false} dataKey="label" tickLine={false} />
+              <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
               <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
               <Tooltip />
               <Line animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" dot={{ r: 3 }} stroke="var(--heat-infierno)" strokeWidth={2} type="monotone" />
@@ -64,7 +103,6 @@ export function DashboardCharts({
       </ChartCard>
 
       <ChartCard
-        caveat={dictionary.explore.caveats.confidence}
         dictionary={dictionary}
         help={dictionary.explore.scoreHelp}
         rangeLabel={rangeLabel}
@@ -73,13 +111,13 @@ export function DashboardCharts({
       >
         <div className={CHART_TOKENS.moduleHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={chartLines} margin={CHART_TOKENS.compactMargin}>
+            <BarChart data={reportVolumeLines} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
               <Tooltip cursor={{ fill: "var(--surface)" }} />
               <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" radius={[6, 6, 0, 0]}>
-                {chartLines.map((item) => (
+                {reportVolumeLines.map((item) => (
                   <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
                 ))}
               </Bar>
@@ -89,7 +127,29 @@ export function DashboardCharts({
       </ChartCard>
 
       <ChartCard
-        caveat={dictionary.explore.caveats.confidence}
+        dictionary={dictionary}
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.lineCars}
+        title={dictionary.explore.modules.lineCars}
+      >
+        <div className={CHART_TOKENS.moduleHeightClass}>
+          <ResponsiveContainer height="100%" width="100%">
+            <BarChart data={carLines} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="line" tickLine={false} />
+              <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+              <Tooltip cursor={{ fill: "var(--surface)" }} />
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="carsReported" radius={[6, 6, 0, 0]}>
+                {carLines.map((item) => (
+                  <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartCard>
+
+      <ChartCard
         dictionary={dictionary}
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.worstCars}
@@ -99,7 +159,6 @@ export function DashboardCharts({
       </ChartCard>
 
       <ChartCard
-        caveat={dictionary.explore.caveats.confidence}
         dictionary={dictionary}
         help={dictionary.explore.scoreHelp}
         rangeLabel={rangeLabel}
@@ -108,13 +167,13 @@ export function DashboardCharts({
       >
         <div className={CHART_TOKENS.rankingHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={chartLines} layout="vertical" margin={CHART_TOKENS.rankingMargin}>
+            <BarChart data={rankingLines} layout="vertical" margin={CHART_TOKENS.rankingMargin}>
               <CartesianGrid horizontal={false} stroke="var(--border)" />
               <XAxis dataKey="score" domain={CHART_TOKENS.heatScoreDomain} hide type="number" />
               <YAxis axisLine={false} dataKey="line" tickLine={false} type="category" width={CHART_TOKENS.yAxisLineWidth} />
               <Tooltip cursor={{ fill: "var(--surface)" }} />
               <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" radius={CHART_TOKENS.barRadius}>
-                {chartLines.map((item) => (
+                {rankingLines.map((item) => (
                   <Cell fill={heatColors[item.tone]} key={item.line} />
                 ))}
               </Bar>

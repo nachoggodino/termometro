@@ -35,6 +35,7 @@ export const messages = {
     optional: "optional",
     selected: "selected",
     current: "current",
+    attribution: "Citizen data in Termómetro de Madrid",
   },
   home: {
     mission: "A citizen thermometer for making overheated Metro cars visible during Madrid summer",
@@ -105,6 +106,8 @@ export const messages = {
       ranking: "Worst lines",
       trend: "Heat trend",
       volume: "Reports by line",
+      lineCars: "Cars by line",
+      lineEvolution: "Each line evolution",
       worstCars: "Worst cars",
       fleet: "Fleet coverage",
       recent: "Recent reports",
@@ -124,6 +127,8 @@ export const messages = {
       ranking: "L1 and L5 carry the worst signals in the selected range",
       trend: "The recent spike needs to be read next to report volume",
       volume: "More reports do not mean more heat: they show where citizen signal is stronger",
+      lineCars: "Shows how many distinct cars appear in reports for this range",
+      lineEvolution: "The lines with the most reports show when the signal concentrates",
       worstCars: "Cars with few reports remain signals, not verdicts",
     },
     caveats: {

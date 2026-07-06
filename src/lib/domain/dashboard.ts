@@ -1,5 +1,6 @@
 import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Confidence, type HeatState } from "./heat";
 import { ESTIMATED_TOTAL_CARS, METRO_LINES, type MetroLine } from "./lines";
+import { getRangeStart, type TimeRange } from "./ranges";
 import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
@@ -35,10 +36,15 @@ export type TrendPoint = {
   reports: number;
 };
 
+export type LineEvolutionPoint = {
+  label: string;
+} & Partial<Record<MetroLine, number>>;
+
 export type DashboardData = {
   lineSummaries: LineSummary[];
   worstCars: CarSummary[];
   trend: TrendPoint[];
+  lineEvolution: LineEvolutionPoint[];
   recentReports: Report[];
   reportsLastDay: number;
   hottestLine: LineSummary | null;
@@ -48,6 +54,7 @@ export function buildDashboardData(
   reports: Report[],
   now = new Date(),
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
+  range: TimeRange = "sevenDays",
 ): DashboardData {
   const visibleReports = reports.filter((report) => !report.hiddenAt);
   const lineSummaries = METRO_LINES.map((line) => {
@@ -92,7 +99,8 @@ export function buildDashboardData(
     .sort((a, b) => b.score - a.score || b.reports - a.reports)
     .slice(0, DASHBOARD_LIMITS.worstCarCount);
 
-  const trend = buildTrend(visibleReports, now);
+  const trend = buildTrend(visibleReports, now, range);
+  const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
   const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
 
@@ -100,28 +108,73 @@ export function buildDashboardData(
     lineSummaries,
     worstCars,
     trend,
+    lineEvolution,
     recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 18),
     reportsLastDay,
     hottestLine: lineSummaries.find((summary) => summary.reports > 0) ?? null,
   };
 }
 
-function buildTrend(reports: Report[], now: Date): TrendPoint[] {
-  return Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(now);
-    day.setDate(day.getDate() - (6 - index));
-    const label = day.toLocaleDateString("es-ES", { weekday: "short" });
-    const dayReports = reports.filter((report) => {
-      return (
-        report.createdAt.getFullYear() === day.getFullYear() &&
-        report.createdAt.getMonth() === day.getMonth() &&
-        report.createdAt.getDate() === day.getDate()
-      );
-    });
+function buildTrend(reports: Report[], now: Date, range: TimeRange): TrendPoint[] {
+  return buildBuckets(now, range).map((bucket) => {
+    const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
     return {
-      label,
-      score: getWeightedHeatScore(dayReports, now),
-      reports: dayReports.length,
+      label: bucket.label,
+      score: getWeightedHeatScore(bucketReports, now),
+      reports: bucketReports.length,
     };
   });
+}
+
+function buildLineEvolution(
+  reports: Report[],
+  now: Date,
+  range: TimeRange,
+  lineSummaries: LineSummary[],
+): LineEvolutionPoint[] {
+  const lines = lineSummaries
+    .filter((summary) => summary.reports > 0)
+    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
+    .slice(0, 4)
+    .map((summary) => summary.line);
+
+  return buildBuckets(now, range).map((bucket) => {
+    const point: LineEvolutionPoint = { label: bucket.label };
+    for (const line of lines) {
+      point[line] = reports.filter((report) => report.line === line && report.createdAt >= bucket.start && report.createdAt < bucket.end).length;
+    }
+    return point;
+  });
+}
+
+function buildBuckets(now: Date, range: TimeRange) {
+  if (range === "today") {
+    const start = getRangeStart("today", now);
+    return Array.from({ length: 24 }, (_, hour) => {
+      const bucketStart = new Date(start);
+      bucketStart.setHours(hour, 0, 0, 0);
+      const bucketEnd = new Date(bucketStart);
+      bucketEnd.setHours(hour + 1, 0, 0, 0);
+      return {
+        start: bucketStart,
+        end: bucketEnd,
+        label: bucketStart.toLocaleTimeString("es-ES", { hour: "2-digit" }),
+      };
+    });
+  }
+
+  const start = getRangeStart(range, now);
+  const buckets = [];
+  for (const day = new Date(start); day <= now; day.setDate(day.getDate() + 1)) {
+    const bucketStart = new Date(day);
+    bucketStart.setHours(0, 0, 0, 0);
+    const bucketEnd = new Date(bucketStart);
+    bucketEnd.setDate(bucketEnd.getDate() + 1);
+    buckets.push({
+      start: bucketStart,
+      end: bucketEnd,
+      label: bucketStart.toLocaleDateString("es-ES", range === "sevenDays" ? { weekday: "short" } : { day: "2-digit", month: "short" }),
+    });
+  }
+  return buckets;
 }
