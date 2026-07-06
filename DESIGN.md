@@ -24,6 +24,7 @@ colors:
   heat-calor-soft: "oklch(0.965 0.040 72)"
   heat-infierno: "oklch(0.590 0.210 32)"
   heat-infierno-soft: "oklch(0.955 0.040 32)"
+  heat-soft-foreground: "oklch(0.190 0.018 160)"
   success: "oklch(0.555 0.130 150)"
   warning: "oklch(0.710 0.160 76)"
   danger: "oklch(0.565 0.210 30)"
@@ -152,6 +153,7 @@ The palette is creamy civic utility with a quiet green primary, Metro red/blue r
 - **Fresco Blue** (`oklch(0.680 0.145 235)`): Comfortable AC state. Use for selected `Fresco`, chart segments, and subtle cool summaries. The soft fill is `oklch(0.955 0.030 235)`.
 - **Calor Amber** (`oklch(0.720 0.165 72)`): Default report state and uncomfortable condition. Use for selected `Calor`, warnings, chart segments, and default heat summaries. The soft fill is `oklch(0.965 0.040 72)`.
 - **Infierno Red** (`oklch(0.590 0.210 32)`): Intolerable/broken AC state. Use for selected `Infierno`, critical chart segments, and heat shimmer accents after selection. The soft fill is `oklch(0.955 0.040 32)`.
+- **Heat Soft Foreground** (`oklch(0.190 0.018 160)` light, dark theme equivalent of the page background): Text and icons on selected soft heat fills, so dark mode never places pale text on pale heat backgrounds.
 
 ### Neutral
 

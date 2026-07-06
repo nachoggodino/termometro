@@ -11,9 +11,8 @@ export default async function ReportPage({ params }: { params: Promise<{ lang: s
   return (
     <main className="min-h-dvh">
       <section className="mx-auto max-w-xl px-4 py-6">
-        <div className="mb-6">
+        <div className="mb-4">
           <h1 className="text-2xl font-[650] tracking-[-0.015em]">{dictionary.reportForm.title}</h1>
-          <p className="mt-2 text-sm leading-5 text-muted">{dictionary.reportForm.subtitle}</p>
         </div>
         <div className="rounded-lg border border-border bg-surface-raised p-4">
           <ReportForm dictionary={dictionary} locale={lang} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
@@ -24,6 +24,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   const [car, setCar] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetch(`/api/cars?line=${line}`)
@@ -34,14 +35,17 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
 
   const submitLabel = dictionary.reportForm.submit[state];
   const normalizedCar = useMemo(() => normalizeCarCode(car), [car]);
+  const busy = submitting || pending;
 
-  function submitReport() {
+  async function submitReport() {
     if (car && !normalizedCar) {
       toast(dictionary.reportForm.carInvalid);
       return;
     }
 
-    startTransition(async () => {
+    setSubmitting(true);
+
+    try {
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -57,6 +61,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
               ? dictionary.reportForm.rateLimited
               : dictionary.reportForm.subtitle;
         toast(message);
+        setSubmitting(false);
         return;
       }
 
@@ -73,8 +78,11 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         },
         duration: 12_000,
       });
-      router.push(`/${locale}/explorar?linea=${line}&reported=1`);
-    });
+      startTransition(() => router.push(`/${locale}/explorar?linea=${line}&reported=1`));
+    } catch {
+      toast(dictionary.reportForm.subtitle);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -106,23 +114,27 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       <p className="rounded-md border border-border bg-surface p-3 text-sm text-muted">{dictionary.reportForm.abuseReminder}</p>
 
       <Button
-        className="relative min-h-12 overflow-hidden"
+        className="home-report-action report-submit-action relative min-h-12 overflow-hidden"
         data-testid="submit-report"
-        disabled={pending || Boolean(car && !normalizedCar)}
+        disabled={busy || Boolean(car && !normalizedCar)}
         onClick={submitReport}
-        style={{
-          background:
-            state === "fresco"
-              ? "var(--heat-fresco)"
-              : state === "infierno"
-                ? "var(--heat-infierno)"
-                : "var(--heat-calor)",
-          color: state === "calor" ? "var(--foreground)" : "white",
-        }}
+        style={submitStyle(state)}
         type="button"
       >
-        {pending ? dictionary.common.report : submitLabel}
+        {busy ? <span aria-hidden="true" className="report-button-spinner" /> : null}
+        <span>{submitLabel}</span>
       </Button>
     </div>
   );
+}
+
+function submitStyle(state: HeatState): CSSProperties {
+  const heatColor = state === "fresco" ? "var(--heat-fresco)" : state === "infierno" ? "var(--heat-infierno)" : "var(--heat-calor)";
+  return {
+    "--report-button": heatColor,
+    "--action-report-border": `color-mix(in oklch, ${heatColor}, var(--border) 24%)`,
+    "--report-particle": state === "fresco" ? "oklch(0.96 0.045 235)" : state === "infierno" ? "oklch(0.98 0.05 42)" : "oklch(0.99 0.055 92)",
+    "--report-active-blur": `color-mix(in oklch, ${heatColor}, transparent 52%)`,
+    color: state === "calor" ? "var(--foreground)" : "white",
+  } as CSSProperties;
 }

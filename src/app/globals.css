@@ -28,6 +28,7 @@
   --heat-calor-soft: oklch(0.965 0.04 72);
   --heat-infierno: oklch(0.59 0.21 32);
   --heat-infierno-soft: oklch(0.955 0.04 32);
+  --heat-soft-foreground: oklch(0.19 0.018 160);
   --success: oklch(0.555 0.13 150);
   --warning: oklch(0.71 0.16 76);
   --danger: oklch(0.565 0.21 30);
@@ -63,6 +64,7 @@
   --report-button: oklch(0.68 0.16 72);
   --report-particle: oklch(0.98 0.04 92);
   --report-active-blur: oklch(0.78 0.16 74 / 0.42);
+  --heat-soft-foreground: oklch(0.145 0.036 252);
 }
 
 @theme inline {
@@ -149,6 +151,28 @@ body {
   opacity: 1;
 }
 
+.report-submit-action {
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out),
+    filter var(--duration-base) var(--ease-out);
+}
+
+.report-submit-action:disabled::before,
+.report-submit-action:disabled::after {
+  opacity: 0.45;
+}
+
+.report-button-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: report-button-spin 800ms linear infinite;
+}
+
 .home-explore-action {
   border-color: color-mix(in oklch, var(--border), var(--metro-blue) 48%);
   background:
@@ -163,6 +187,18 @@ body {
 
 .home-action-icon {
   transition: transform var(--duration-base) var(--ease-out);
+}
+
+.selection-flow {
+  transform: translateY(0) scale(1);
+}
+
+.selection-flow[aria-pressed="true"] {
+  animation: selection-settle var(--duration-base) var(--ease-out);
+}
+
+.selection-panel-flow {
+  animation: selection-panel-enter var(--duration-base) var(--ease-out);
 }
 
 .home-report-action:hover .home-action-icon,
@@ -217,6 +253,32 @@ button:disabled {
 @keyframes report-border-orbit {
   to {
     --report-border-angle: 360deg;
+  }
+}
+
+@keyframes report-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes selection-settle {
+  0% {
+    transform: translateY(1px) scale(0.98);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes selection-panel-enter {
+  0% {
+    opacity: 0.74;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
