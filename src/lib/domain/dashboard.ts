@@ -40,7 +40,7 @@ export type DashboardData = {
   worstCars: CarSummary[];
   trend: TrendPoint[];
   recentReports: Report[];
-  reportsLastTwoHours: number;
+  reportsLastDay: number;
   hottestLine: LineSummary | null;
 };
 
@@ -93,15 +93,15 @@ export function buildDashboardData(
     .slice(0, DASHBOARD_LIMITS.worstCarCount);
 
   const trend = buildTrend(visibleReports, now);
-  const twoHoursAgo = new Date(now.getTime() - 2 * 3_600_000);
-  const reportsLastTwoHours = visibleReports.filter((report) => report.createdAt >= twoHoursAgo).length;
+  const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
+  const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
 
   return {
     lineSummaries,
     worstCars,
     trend,
     recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 18),
-    reportsLastTwoHours,
+    reportsLastDay,
     hottestLine: lineSummaries.find((summary) => summary.reports > 0) ?? null,
   };
 }

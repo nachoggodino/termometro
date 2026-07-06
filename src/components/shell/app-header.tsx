@@ -1,86 +1,138 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowLeft, BarChart3, CircleHelp, Home, Send } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { BarChart3, CircleHelp, Home, Send } from "lucide-react";
 import { AppLogo } from "@/components/ui/app-logo";
-import { Button } from "@/components/ui/button";
-import { LanguageSwitcher } from "./language-switcher";
-import { ThemeToggle } from "./theme-toggle";
+import { LanguageRadioGroup } from "./language-switcher";
+import { ThemeSegmentedSwitch } from "./theme-toggle";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
+import { cn } from "@/lib/utils";
 
 export function AppHeader({
   dictionary,
   locale,
   pathname,
-  title,
-  backHref,
 }: {
   dictionary: Dictionary;
   locale: Locale;
   pathname: string;
-  title?: string;
-  backHref?: string;
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [panelHeight, setPanelHeight] = useState<number | null>(null);
+  const drawerBodyRef = useRef<HTMLDivElement>(null);
+  const topRowRef = useRef<HTMLDivElement>(null);
   const navItems = [
+    { href: `/${locale}`, label: dictionary.common.home, icon: Home, path: "" },
     { href: `/${locale}/reportar`, label: dictionary.common.report, icon: Send, path: "/reportar" },
     { href: `/${locale}/explorar`, label: dictionary.common.explore, icon: BarChart3, path: "/explorar" },
     {
       href: `/${locale}/metodologia`,
       label: dictionary.common.methodology,
-      shortLabel: dictionary.common.methodologyShort,
       icon: CircleHelp,
       path: "/metodologia",
     },
   ];
 
+  useLayoutEffect(() => {
+    const topHeight = topRowRef.current?.offsetHeight ?? 64;
+    const drawerHeight = drawerBodyRef.current?.scrollHeight ?? 0;
+    setPanelHeight(isOpen ? topHeight + drawerHeight + 12 : topHeight);
+  }, [isOpen, locale, pathname]);
+
   return (
-    <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-[var(--nav-surface)] backdrop-blur supports-[backdrop-filter]:bg-[var(--nav-surface)]">
-      <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-3">
-        <div className="flex items-center gap-3">
-          {backHref ? (
-            <Button asChild className="size-10 min-h-0 px-0 py-0" variant="secondary">
-              <Link aria-label={dictionary.common.home} href={backHref}>
-                <ArrowLeft aria-hidden="true" />
-              </Link>
-            </Button>
-          ) : (
-            <Link className="flex items-center gap-2 font-semibold" href={`/${locale}`}>
+    <header className="sticky top-0 z-[var(--z-modal)] px-4 pt-4">
+      <div
+        className={cn(
+          "fixed inset-0 transition duration-[var(--duration-drawer)] ease-out",
+          isOpen ? "pointer-events-auto bg-background/70 opacity-100 backdrop-blur-sm" : "pointer-events-none bg-transparent opacity-0 backdrop-blur-0",
+        )}
+        aria-hidden={!isOpen}
+        onClick={() => setIsOpen(false)}
+      >
+        <span className="sr-only">{dictionary.common.closeMenu}</span>
+      </div>
+
+      <div
+        className="relative mx-auto max-h-[calc(100dvh-2rem)] max-w-5xl overflow-hidden rounded-lg border border-border bg-[var(--drawer-surface)] shadow-[var(--shadow-popover)] backdrop-blur-2xl transition-[height,background-color] duration-[var(--duration-drawer)] ease-out supports-[backdrop-filter]:bg-[var(--drawer-surface)]"
+        style={panelHeight === null ? undefined : { height: `${panelHeight}px` }}
+      >
+        <div className="px-3 py-2" ref={topRowRef}>
+          <div className="flex items-center gap-3">
+            <Link
+              aria-label={dictionary.common.home}
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              href={`/${locale}`}
+              onClick={() => setIsOpen(false)}
+            >
               <AppLogo />
-              <span className="hidden sm:inline">{dictionary.common.shortName}</span>
+              <span className="min-w-0 truncate text-sm font-semibold leading-5 sm:text-base">{dictionary.common.appName}</span>
             </Link>
-          )}
-          <div className="min-w-0 flex-1">
-            {title ? <p className={backHref ? "hidden truncate text-sm font-semibold sm:block" : "truncate text-sm font-semibold"}>{title}</p> : null}
+            <button
+              aria-controls="app-navigation-drawer"
+              aria-expanded={isOpen}
+              aria-label={isOpen ? dictionary.common.closeMenu : dictionary.common.menu}
+              className="group relative flex size-10 shrink-0 items-center justify-center rounded-md text-foreground transition duration-[var(--duration-drawer)] ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => setIsOpen((current) => !current)}
+              type="button"
+            >
+              <span className="sr-only">{isOpen ? dictionary.common.closeMenu : dictionary.common.menu}</span>
+              <span
+                className={cn(
+                  "absolute h-0.5 w-5 rounded-full bg-current transition duration-[var(--duration-drawer)] ease-out",
+                  isOpen ? "translate-y-0 rotate-45" : "-translate-y-1.5 rotate-0",
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute h-0.5 w-5 rounded-full bg-current transition duration-[var(--duration-drawer)] ease-out",
+                  isOpen ? "scale-x-0 opacity-0" : "scale-x-100 opacity-100 delay-75",
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute h-0.5 w-5 rounded-full bg-current transition duration-[var(--duration-drawer)] ease-out",
+                  isOpen ? "translate-y-0 -rotate-45" : "translate-y-1.5 rotate-0",
+                )}
+              />
+            </button>
           </div>
-          <Button asChild className="size-10 min-h-0 px-0 py-0" variant="secondary">
-            <Link aria-label={dictionary.common.home} href={`/${locale}`}>
-              <Home aria-hidden="true" />
-            </Link>
-          </Button>
-          <LanguageSwitcher label={dictionary.common.language} locale={locale} pathname={pathname} />
-          <ThemeToggle darkLabel={dictionary.common.dark} label={dictionary.common.theme} lightLabel={dictionary.common.light} />
         </div>
-        <nav className="flex items-center gap-1 overflow-x-auto rounded-md border border-border bg-surface-raised p-1" aria-label={dictionary.common.shortName}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const current = pathname === item.path;
-            return (
-              <Link
-                aria-current={current ? "page" : undefined}
-                className={
-                  current
-                    ? "flex min-h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm bg-foreground px-2 py-2 text-xs font-semibold text-background sm:gap-2 sm:px-3 sm:text-sm"
-                    : "flex min-h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-2 text-xs font-semibold text-muted transition duration-200 ease-out hover:bg-surface hover:text-foreground sm:gap-2 sm:px-3 sm:text-sm"
-                }
-                href={item.href}
-                key={item.path}
-              >
-                <Icon aria-hidden="true" className="size-4" />
-                <span className="sm:hidden">{item.shortLabel ?? item.label}</span>
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div
+          className="max-h-[calc(100dvh-6.5rem)] overflow-y-auto px-3 pb-4"
+          id="app-navigation-drawer"
+          inert={!isOpen}
+          ref={drawerBodyRef}
+        >
+          <nav className="mt-8 flex flex-col gap-1 px-1" aria-label={dictionary.common.appName}>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const current = pathname === item.path;
+              return (
+                <Link
+                  aria-current={current ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-11 items-center gap-3 rounded-md px-2.5 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    current ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:bg-surface hover:text-foreground",
+                  )}
+                  href={item.href}
+                  key={item.path}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Icon aria-hidden="true" className="size-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="mx-1 mt-8 border-t border-border pt-5">
+            <LanguageRadioGroup label={dictionary.common.language} locale={locale} pathname={pathname} />
+            <div className="mt-5">
+              <ThemeSegmentedSwitch darkLabel={dictionary.common.dark} label={dictionary.common.theme} lightLabel={dictionary.common.light} />
+            </div>
+          </div>
+        </div>
       </div>
     </header>
   );

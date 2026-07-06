@@ -10,9 +10,14 @@
   --border: oklch(0.86 0.014 96);
   --page-glow: oklch(0.89 0.055 78 / 0.64);
   --nav-surface: oklch(1 0.003 96 / 0.94);
+  --drawer-surface: oklch(0.997 0.006 96 / 0.96);
   --action-report-border: oklch(0.59 0.21 32 / 0.62);
-  --action-report-glow: oklch(0.82 0.17 74 / 0.95);
   --action-report-sheen: oklch(1 0 0 / 0.28);
+  --accent: oklch(0.72 0.165 72);
+  --accent-contrast: oklch(0.19 0.018 160);
+  --report-button: oklch(0.72 0.165 72);
+  --report-particle: oklch(0.99 0.055 92);
+  --report-active-blur: oklch(0.78 0.16 74 / 0.48);
   --primary: oklch(0.52 0.125 160);
   --primary-contrast: oklch(0.99 0 0);
   --metro-red: oklch(0.56 0.21 28);
@@ -32,10 +37,12 @@
   --radius-lg: 12px;
   --duration-fast: 150ms;
   --duration-base: 200ms;
+  --duration-drawer: 500ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --shadow-popover: 0 6px 14px oklch(0.19 0.018 160 / 0.12);
   --z-sticky: 30;
   --z-popover: 50;
+  --z-modal: 60;
 }
 
 .dark {
@@ -48,9 +55,14 @@
   --border: oklch(0.36 0.04 248);
   --page-glow: oklch(0.34 0.075 245 / 0.5);
   --nav-surface: oklch(0.19 0.04 250 / 0.9);
+  --drawer-surface: oklch(0.16 0.036 252 / 0.94);
   --action-report-border: oklch(0.65 0.2 35 / 0.7);
-  --action-report-glow: oklch(0.78 0.16 74 / 0.9);
   --action-report-sheen: oklch(1 0 0 / 0.22);
+  --accent: oklch(0.74 0.15 76);
+  --accent-contrast: oklch(0.145 0.036 252);
+  --report-button: oklch(0.68 0.16 72);
+  --report-particle: oklch(0.98 0.04 92);
+  --report-active-blur: oklch(0.78 0.16 74 / 0.42);
 }
 
 @theme inline {
@@ -103,33 +115,50 @@ body {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--action-report-border);
-  background:
-    radial-gradient(circle at 16% 0%, var(--action-report-glow), transparent 17rem),
-    linear-gradient(135deg, var(--heat-calor), var(--heat-infierno));
-  color: var(--primary-contrast);
+  background: var(--report-button);
+  color: var(--accent-contrast);
+}
+
+.home-report-action::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from var(--report-border-angle), transparent 0 72%, var(--report-particle) 78%, var(--heat-infierno) 84%, transparent 92%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: report-border-orbit 2.8s linear infinite;
 }
 
 .home-report-action::after {
   content: "";
   position: absolute;
-  inset: -40% auto -40% 12%;
-  width: 38%;
-  transform: skewX(-16deg);
-  background: linear-gradient(90deg, transparent, var(--action-report-sheen), transparent);
+  inset: -35%;
+  background:
+    radial-gradient(circle at 30% 20%, var(--report-active-blur), transparent 28%),
+    linear-gradient(90deg, transparent, var(--action-report-sheen), transparent);
+  filter: blur(14px);
   opacity: 0;
-  transition: transform var(--duration-base) var(--ease-out), opacity var(--duration-base) var(--ease-out);
+  transform: translateX(-10%) skewX(-10deg);
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
 }
 
-.home-report-action:hover::after,
-.home-report-action:focus-visible::after {
-  transform: translateX(185%) skewX(-16deg);
+.home-report-action:active::after {
+  transform: translateX(10%) skewX(-10deg);
   opacity: 1;
 }
 
 .home-explore-action {
-  border-color: color-mix(in oklch, var(--border), var(--metro-blue) 28%);
+  border-color: color-mix(in oklch, var(--border), var(--metro-blue) 48%);
   background:
-    linear-gradient(135deg, color-mix(in oklch, var(--surface-raised), var(--metro-blue) 8%), var(--surface-raised));
+    linear-gradient(135deg, color-mix(in oklch, var(--surface-raised), var(--metro-blue) 14%), var(--surface-raised));
+}
+
+.home-report-action > *,
+.home-explore-action > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home-action-icon {
@@ -176,6 +205,18 @@ button:disabled {
   100% {
     transform: translate3d(6%, 0, 0) skewX(-8deg);
     opacity: 0.18;
+  }
+}
+
+@property --report-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes report-border-orbit {
+  to {
+    --report-border-angle: 360deg;
   }
 }
 

@@ -2,23 +2,41 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle({ label, lightLabel, darkLabel }: { label: string; lightLabel: string; darkLabel: string }) {
+export function ThemeSegmentedSwitch({ label, lightLabel, darkLabel }: { label: string; lightLabel: string; darkLabel: string }) {
   const { resolvedTheme, setTheme } = useTheme();
-  const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
-  const nextThemeLabel = nextTheme === "dark" ? darkLabel : lightLabel;
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <Button
-      aria-label={`${label}: ${nextThemeLabel}`}
-      className="size-10 min-h-0 px-0 py-0"
-      data-testid="theme-toggle"
-      onClick={() => setTheme(nextTheme)}
-      type="button"
-      variant="secondary"
-    >
-      {resolvedTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-    </Button>
+    <div>
+      <p className="text-xs font-semibold text-muted">{label}</p>
+      <div className="mt-2 grid grid-cols-2 rounded-md border border-border bg-surface p-1" data-testid="theme-toggle">
+        <button
+          aria-pressed={!isDark}
+          className={cn(
+            "flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            !isDark ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:text-foreground",
+          )}
+          onClick={() => setTheme("light")}
+          type="button"
+        >
+          <Sun aria-hidden="true" className="size-4" />
+          {lightLabel}
+        </button>
+        <button
+          aria-pressed={isDark}
+          className={cn(
+            "flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            isDark ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:text-foreground",
+          )}
+          onClick={() => setTheme("dark")}
+          type="button"
+        >
+          <Moon aria-hidden="true" className="size-4" />
+          {darkLabel}
+        </button>
+      </div>
+    </div>
   );
 }

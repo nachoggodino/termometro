@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/shell/app-header";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
+import { HeatStateBadge } from "@/components/report/heat-state-badge";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
@@ -32,7 +33,7 @@ export default async function ExplorePage({
 
   return (
     <main className="min-h-dvh">
-      <AppHeader dictionary={dictionary} locale={lang} pathname="/explorar" title={dictionary.explore.title} />
+      <AppHeader dictionary={dictionary} locale={lang} pathname="/explorar" />
       <div className="mx-auto max-w-5xl px-4 pb-10">
         <FilterBar dictionary={dictionary} locale={lang} selectedLine={selectedLine} selectedRange={selectedRange} />
 
@@ -121,7 +122,7 @@ export default async function ExplorePage({
               <h2 className="text-base font-semibold">{dictionary.explore.modules.recent}</h2>
               <div className="mt-4 flex flex-col divide-y divide-border">
                 {data.recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount).map((report) => (
-                  <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-3" key={report.id}>
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 py-3" key={report.id}>
                     <span
                       className="rounded-sm px-1.5 py-1 text-xs font-bold"
                       style={{
@@ -131,10 +132,8 @@ export default async function ExplorePage({
                     >
                       {report.line}
                     </span>
-                    <div className="min-w-0">
-                      <p className="truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
-                      <p className="text-xs text-muted">{dictionary.states[report.state].label}</p>
-                    </div>
+                    <p className="min-w-0 truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
+                    <HeatStateBadge dictionary={dictionary} state={report.state} />
                     <time className="font-mono text-xs text-muted">{formatTime(report.createdAt, lang)}</time>
                   </div>
                 ))}

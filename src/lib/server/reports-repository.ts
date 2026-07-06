@@ -112,13 +112,15 @@ export async function getReportsForDashboard(options: DashboardOptions) {
     query = query.eq("line", options.line);
   }
 
-  const { data, error } = await query;
+  const [reportsResult, fleetResult] = await Promise.all([
+    query,
+    supabase.from("line_fleet_estimates").select("line,estimated_total_cars"),
+  ]);
+
+  const { data, error } = reportsResult;
   if (error) throw error;
 
-  const { data: fleetData, error: fleetError } = await supabase
-    .from("line_fleet_estimates")
-    .select("line,estimated_total_cars");
-
+  const { data: fleetData, error: fleetError } = fleetResult;
   if (fleetError) throw fleetError;
 
   const fleetEstimates = { ...ESTIMATED_TOTAL_CARS };

@@ -1,50 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import * as Popover from "@radix-ui/react-popover";
-import { Check, ChevronDown, Languages } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
 import { localeNames, LOCALES } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 
-export function LanguageSwitcher({ label, locale, pathname }: { label: string; locale: Locale; pathname: string }) {
+export function LanguageRadioGroup({ label, locale, pathname }: { label: string; locale: Locale; pathname: string }) {
   return (
-    <Popover.Root>
-      <Popover.Trigger
-        aria-label={`${label}: ${localeNames[locale]}`}
-        className="inline-flex h-10 items-center justify-center gap-1 rounded-md border border-border bg-surface-raised px-3 text-sm font-semibold leading-none text-foreground transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-        data-testid="language-menu"
-        type="button"
-      >
-        <Languages aria-hidden="true" className="size-4" />
-        <span>{localeNames[locale]}</span>
-        <ChevronDown aria-hidden="true" className="size-3.5 text-muted" />
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          align="end"
-          className="z-[var(--z-popover)] w-44 rounded-md border border-border bg-surface-raised p-1 text-sm shadow-[var(--shadow-popover)]"
-          sideOffset={8}
-        >
-          <p className="px-2 py-1.5 text-xs font-semibold text-muted">{label}</p>
-          {LOCALES.map((candidate) => (
-            <Popover.Close asChild key={candidate}>
-              <Link
-                aria-current={candidate === locale ? "true" : undefined}
+    <div>
+      <p className="text-xs font-semibold text-muted">{label}</p>
+      <div className="mt-2 grid grid-cols-2 gap-2" role="radiogroup" aria-label={label}>
+        {LOCALES.map((candidate) => {
+          const selected = candidate === locale;
+          return (
+            <Link
+              aria-checked={selected}
+              className={cn(
+                "flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
+              )}
+              data-testid={`lang-${candidate}`}
+              href={`/${candidate}${pathname}`}
+              key={candidate}
+              role="radio"
+            >
+              <span
+                aria-hidden="true"
                 className={cn(
-                  "flex items-center justify-between rounded-sm px-2 py-2 font-semibold transition",
-                  candidate === locale ? "bg-foreground text-background" : "text-muted hover:bg-surface hover:text-foreground",
+                  "flex size-4 items-center justify-center rounded-full border transition duration-200 ease-out",
+                  selected ? "border-[var(--accent-contrast)]" : "border-border",
                 )}
-                data-testid={`lang-${candidate}`}
-                href={`/${candidate}${pathname}`}
               >
-                {localeNames[candidate]}
-                {candidate === locale ? <Check aria-hidden="true" className="size-4" /> : null}
-              </Link>
-            </Popover.Close>
-          ))}
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
+                <span className={cn("size-1.5 rounded-full transition duration-200 ease-out", selected ? "bg-[var(--accent-contrast)]" : "bg-transparent")} />
+              </span>
+              {localeNames[candidate]}
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }

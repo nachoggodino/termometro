@@ -4,7 +4,7 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
   const project = testInfo.project.name;
 
   await page.goto("/es");
-  await expect(page.getByRole("heading", { name: "Termómetro de Madrid" })).toBeVisible();
+  await expect(page.getByText("Termómetro de Madrid").first()).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termometro-${project}-home.png` });
 
   await page.goto("/es/reportar");

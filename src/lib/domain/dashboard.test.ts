@@ -26,14 +26,14 @@ describe("dashboard data", () => {
     expect(data.recentReports).toHaveLength(3);
   });
 
-  it("excludes hidden reports and counts last two hours", () => {
+  it("excludes hidden reports and counts the last day", () => {
     const data = buildDashboardData([
       report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-07-05T11:30:00Z") }),
       report({ id: "2", line: "L1", state: "infierno", hiddenAt: now }),
-      report({ id: "3", line: "L5", state: "calor", createdAt: new Date("2026-07-04T11:30:00Z") }),
+      report({ id: "3", line: "L5", state: "calor", createdAt: new Date("2026-07-04T12:30:00Z") }),
     ], now);
 
-    expect(data.reportsLastTwoHours).toBe(1);
+    expect(data.reportsLastDay).toBe(2);
     expect(data.lineSummaries.find((summary) => summary.line === "L1")?.reports).toBe(1);
   });
 });

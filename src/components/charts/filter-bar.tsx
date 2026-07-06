@@ -49,6 +49,6 @@ export function FilterBar({
 function chipClass(selected: boolean) {
   return cn(
     "shrink-0 rounded-md border px-3 py-2 text-sm font-semibold transition",
-    selected ? "border-foreground bg-foreground text-background" : "border-border bg-surface-raised text-muted hover:text-foreground",
+    selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:text-foreground",
   );
 }
