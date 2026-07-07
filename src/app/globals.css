@@ -222,7 +222,15 @@ body {
 
 .filter-popover {
   transform-origin: var(--radix-popover-content-transform-origin);
+}
+
+.filter-popover[data-state="open"] {
   animation: filter-popover-enter var(--duration-base) var(--ease-out);
+}
+
+.filter-popover[data-state="closed"] {
+  pointer-events: none;
+  animation: filter-popover-exit var(--duration-base) var(--ease-out) forwards;
 }
 
 .home-report-action:hover .home-action-icon,
@@ -314,6 +322,22 @@ button:disabled {
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes filter-popover-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    visibility: visible;
+  }
+  99% {
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+    visibility: hidden;
   }
 }
 

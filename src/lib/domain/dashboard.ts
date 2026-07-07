@@ -130,7 +130,7 @@ function buildTrend(
     };
     for (const line of METRO_LINES) {
       const lineReports = bucketReports.filter((report) => report.line === line);
-      point[line] = getFleetAffectedScore(lineReports, estimatedCarsByLine[line]);
+      point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], now);
     }
     return point;
   });
@@ -165,6 +165,23 @@ export function getFleetAffectedScore(
 
   const reportedHotCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
   return Math.round(Math.min(100, (reportedHotCars.size / estimatedCars) * 100));
+}
+
+export function getHeatEvolutionScore(
+  reports: Array<{ state: HeatState; car: string | null; createdAt: Date }>,
+  estimatedCars = 1,
+  now = new Date(),
+) {
+  if (estimatedCars <= 0 || reports.length === 0) return 0;
+
+  const thermometerIndicator = getWeightedHeatScore(reports, now) / 100;
+  const affectedCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
+  const fleetPercentage = affectedCars.size / estimatedCars;
+  return roundToTwo(thermometerIndicator * reports.length * fleetPercentage);
+}
+
+function roundToTwo(value: number) {
+  return Math.round(value * 100) / 100;
 }
 
 function buildBuckets(now: Date, range: TimeRange) {

@@ -1,8 +1,8 @@
 export default function ExploreLoading() {
   return (
-    <main>
+    <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
       <div className="mx-auto max-w-5xl px-4 pb-5">
-        <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-background/96 px-4 py-3 backdrop-blur">
+        <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-[var(--nav-surface)] px-4 py-3 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
             <div>
               <div className="h-3 w-24 animate-pulse rounded-sm bg-surface" />

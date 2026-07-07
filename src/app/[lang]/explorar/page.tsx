@@ -37,7 +37,7 @@ export default async function ExplorePage({
   const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
 
   return (
-    <main>
+    <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
       <div className="mx-auto max-w-5xl px-4 pb-5">
         <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
@@ -51,7 +51,7 @@ export default async function ExplorePage({
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
           <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedRange={selectedRange} selectedLines={selectedLines} />
           <aside className="flex flex-col gap-4">
-            <section className="rounded-md border border-border bg-surface-raised p-4">
+            <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id="fleet">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold">{dictionary.explore.modules.fleet}</h2>
                 <InfoTooltip label={dictionary.explore.modules.fleet}>{dictionary.explore.caveats.fleet}</InfoTooltip>
@@ -79,7 +79,7 @@ export default async function ExplorePage({
               </div>
             </section>
 
-            <section className="rounded-md border border-border bg-surface-raised p-4">
+            <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id="recent-reports">
               <h2 className="text-base font-semibold">{dictionary.explore.modules.recent}</h2>
               <div className="mt-4 flex flex-col divide-y divide-border">
                 {data.recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount).map((report) => (

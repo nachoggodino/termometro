@@ -1,7 +1,7 @@
 "use client";
 
 import * as Popover from "@radix-ui/react-popover";
-import { SlidersHorizontal, X } from "lucide-react";
+import { ListTree, SlidersHorizontal, X } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
@@ -25,6 +25,9 @@ export function FilterBar({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [navigationOpen, setNavigationOpen] = useState(false);
+  const [hasOpenedFilters, setHasOpenedFilters] = useState(false);
+  const [hasOpenedNavigation, setHasOpenedNavigation] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
 
@@ -53,17 +56,23 @@ export function FilterBar({
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
+      setHasOpenedFilters(true);
       setDraftLines(selectedLines);
       setDraftRange(selectedRange);
     }
     setOpen(nextOpen);
   }
 
+  function handleNavigationOpenChange(nextOpen: boolean) {
+    if (nextOpen) setHasOpenedNavigation(true);
+    setNavigationOpen(nextOpen);
+  }
+
   const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
-    <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-background/96 px-4 py-3 backdrop-blur">
+    <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-[var(--nav-surface)] px-4 py-3 backdrop-blur">
       <Popover.Root open={open} onOpenChange={handleOpenChange}>
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -72,18 +81,66 @@ export function FilterBar({
               {selectedLineLabel} · {activeRangeLabel}
             </p>
           </div>
-          <Popover.Trigger asChild>
-            <Button className="min-h-10 shrink-0 px-3 py-2" type="button" variant="secondary">
-              <SlidersHorizontal aria-hidden="true" className="size-4" />
-              {dictionary.explore.filters.button}
-            </Button>
-          </Popover.Trigger>
+          <div className="flex shrink-0 items-center gap-2">
+            <Popover.Root open={navigationOpen} onOpenChange={handleNavigationOpenChange}>
+              <Popover.Trigger asChild>
+                <Button
+                  aria-label={dictionary.explore.navigation.button}
+                  className="min-h-10 px-3 py-2"
+                  type="button"
+                  variant="secondary"
+                >
+                  <ListTree aria-hidden="true" className="size-4" />
+                  <span className="hidden sm:inline">{dictionary.explore.navigation.button}</span>
+                </Button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  align="end"
+                  aria-hidden={!navigationOpen}
+                  className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
+                  sideOffset={8}
+                  {...(hasOpenedNavigation ? { forceMount: true } : {})}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-base font-semibold">{dictionary.explore.navigation.title}</h2>
+                    <Popover.Close
+                      aria-label={dictionary.common.closeMenu}
+                      className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      <X aria-hidden="true" className="size-4" />
+                    </Popover.Close>
+                  </div>
+                  <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
+                    {EXPLORE_SECTIONS.map((section) => (
+                      <Popover.Close asChild key={section.id}>
+                        <a
+                          className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                          href={`#${section.id}`}
+                        >
+                          {dictionary.explore.modules[section.module]}
+                        </a>
+                      </Popover.Close>
+                    ))}
+                  </nav>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+            <Popover.Trigger asChild>
+              <Button className="min-h-10 px-3 py-2" type="button" variant="secondary">
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+                {dictionary.explore.filters.button}
+              </Button>
+            </Popover.Trigger>
+          </div>
         </div>
         <Popover.Portal>
           <Popover.Content
             align="end"
+            aria-hidden={!open}
             className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
             sideOffset={8}
+            {...(hasOpenedFilters ? { forceMount: true } : {})}
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold">{dictionary.explore.filters.title}</h2>
@@ -138,6 +195,16 @@ export function FilterBar({
     </div>
   );
 }
+
+const EXPLORE_SECTIONS = [
+  { id: "line-evolution", module: "lineEvolution" },
+  { id: "report-volume", module: "volume" },
+  { id: "line-cars", module: "lineCars" },
+  { id: "worst-cars", module: "worstCars" },
+  { id: "heat-trend", module: "trend" },
+  { id: "fleet", module: "fleet" },
+  { id: "recent-reports", module: "recent" },
+] as const;
 
 function LineSwatch({
   active,

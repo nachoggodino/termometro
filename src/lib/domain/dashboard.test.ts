@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDashboardData, getFleetAffectedScore } from "./dashboard";
+import { buildDashboardData, getHeatEvolutionScore } from "./dashboard";
 import type { Report } from "./reports";
 
 const now = new Date("2026-07-05T12:00:00Z");
@@ -62,26 +62,26 @@ describe("dashboard data", () => {
     expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
   });
 
-  it("scores heat evolution by affected fleet coverage only", () => {
-    const noAffectedFleetScore = getFleetAffectedScore([
+  it("scores heat evolution from indicator, report count, and affected fleet percentage", () => {
+    const noAffectedFleetScore = getHeatEvolutionScore([
       report({ id: "1", line: "L1", state: "fresco", car: "M1001" }),
-    ], 10);
-    const singleCarScore = getFleetAffectedScore([
+    ], 10, now);
+    const singleCarScore = getHeatEvolutionScore([
       report({ id: "1", line: "L1", state: "calor", car: "M1001" }),
-    ], 10);
-    const widerFleetSignalScore = getFleetAffectedScore([
+    ], 10, now);
+    const widerFleetSignalScore = getHeatEvolutionScore([
       report({ id: "1", line: "L1", state: "calor", car: "M1001" }),
       report({ id: "2", line: "L1", state: "calor", car: "M1002" }),
       report({ id: "3", line: "L1", state: "calor", car: "M1003" }),
-    ], 10);
-    const fullFleetScore = getFleetAffectedScore(Array.from({ length: 10 }, (_, index) =>
+    ], 10, now);
+    const fullFleetScore = getHeatEvolutionScore(Array.from({ length: 10 }, (_, index) =>
       report({ id: String(index), line: "L1", state: "infierno", car: `M10${String(index).padStart(2, "0")}` }),
-    ), 10);
+    ), 10, now);
 
     expect(noAffectedFleetScore).toBe(0);
-    expect(singleCarScore).toBe(10);
-    expect(widerFleetSignalScore).toBe(30);
-    expect(fullFleetScore).toBe(100);
+    expect(singleCarScore).toBe(0.06);
+    expect(widerFleetSignalScore).toBe(0.54);
+    expect(fullFleetScore).toBe(10);
   });
 
   it("excludes reports after the summer window", () => {

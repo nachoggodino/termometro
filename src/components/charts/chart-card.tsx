@@ -16,6 +16,7 @@ export function ChartCard({
   takeaway,
   caveat,
   shareText,
+  id,
 }: {
   title: string;
   children: ReactNode;
@@ -25,6 +26,7 @@ export function ChartCard({
   takeaway?: string;
   caveat?: string;
   shareText?: string;
+  id?: string;
 }) {
   const cardRef = useRef<HTMLElement>(null);
 
@@ -60,7 +62,7 @@ export function ChartCard({
   }
 
   return (
-    <section className="rounded-md border border-border bg-surface-raised p-4" ref={cardRef}>
+    <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id={id} ref={cardRef}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

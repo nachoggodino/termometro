@@ -50,6 +50,7 @@ export function DashboardCharts({
     <div className="flex flex-col gap-4">
       <ChartCard
         dictionary={dictionary}
+        id="line-evolution"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.lineEvolution}
         title={dictionary.explore.modules.lineEvolution}
@@ -80,6 +81,7 @@ export function DashboardCharts({
 
       <ChartCard
         dictionary={dictionary}
+        id="report-volume"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.volume}
         title={dictionary.explore.modules.volume}
@@ -103,6 +105,7 @@ export function DashboardCharts({
 
       <ChartCard
         dictionary={dictionary}
+        id="line-cars"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.lineCars}
         title={dictionary.explore.modules.lineCars}
@@ -126,6 +129,7 @@ export function DashboardCharts({
 
       <ChartCard
         dictionary={dictionary}
+        id="worst-cars"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.worstCars}
         title={dictionary.explore.modules.worstCars}
@@ -136,6 +140,7 @@ export function DashboardCharts({
       <ChartCard
         dictionary={dictionary}
         help={dictionary.explore.fleetAdjustedScoreHelp}
+        id="heat-trend"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.trend}
         title={dictionary.explore.modules.trend}
@@ -145,7 +150,7 @@ export function DashboardCharts({
             <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
-              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
+              <YAxis axisLine={false} tickLine={false} />
               <Tooltip content={<LocalizedTooltip footer={dictionary.explore.fleetAdjustedScoreHelp} labelName={dictionary.explore.fleetAdjustedScoreLabel} />} />
               {heatTrendLines.map((line) => (
                 <Line

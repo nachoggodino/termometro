@@ -100,6 +100,10 @@ export const messages = {
       clear: "Limpiar filtros",
       lineCount: "{count} líneas",
     },
+    navigation: {
+      button: "Gráficas",
+      title: "Ir a módulo",
+    },
     modules: {
       trend: "Evolución del calor",
       volume: "Reportes por línea",
@@ -112,7 +116,7 @@ export const messages = {
     score: "Indicador Termómetro",
     scoreHelp: "Promedio ponderado: Fresco 0, Calor 60, Infierno 100",
     fleetAdjustedScoreHelp:
-      "Fórmula: min(100, coches distintos reportados en Calor/Infierno ÷ flota estimada de la línea × 100). Marca 100 solo si toda la flota estimada aparece afectada en ese periodo.",
+      "Fórmula: indicador Termómetro del periodo × reportes del periodo × porcentaje de flota afectada del periodo. Indicador y porcentaje se usan de 0 a 1.",
     confidenceHelp: "Calculada por cantidad de reportes recientes y nivel de acuerdo entre ellos",
     disagreementHelp: "Porcentaje de reportes recientes que no coinciden con el estado dominante",
     latestReport: "Último reporte",
@@ -124,7 +128,7 @@ export const messages = {
     noCar: "Sin coche",
     moduleRange: "Rango",
     chartTakeaways: {
-      trend: "La línea sube solo cuando más coches distintos aparecen afectados dentro de su flota estimada",
+      trend: "La línea sube cuando coinciden más calor, más reportes y más flota afectada en el periodo",
       volume: "Más reportes no significan más calor: indican dónde hay más señal ciudadana",
       lineCars: "Muestra cuántos coches distintos aparecen en los reportes del rango",
       lineEvolution: "Las líneas con más reportes muestran cuándo se concentra la señal",

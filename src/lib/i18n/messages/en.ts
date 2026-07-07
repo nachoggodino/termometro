@@ -100,6 +100,10 @@ export const messages = {
       clear: "Clear filters",
       lineCount: "{count} lines",
     },
+    navigation: {
+      button: "Charts",
+      title: "Go to module",
+    },
     modules: {
       trend: "Heat trend",
       volume: "Reports by line",
@@ -112,7 +116,7 @@ export const messages = {
     score: "Termómetro Indicator",
     scoreHelp: "Weighted average: Fresh 0, Hot 60, Hell 100",
     fleetAdjustedScoreHelp:
-      "Formula: min(100, distinct cars reported as Hot/Hell ÷ estimated cars on the line × 100). It reaches 100 only if the whole estimated fleet appears affected in that period.",
+      "Formula: Termómetro indicator for the period × reports in the period × affected fleet percentage for the period. Indicator and percentage use 0 to 1 scale.",
     confidenceHelp: "Calculated from recent report volume and agreement",
     disagreementHelp: "Share of recent reports that do not match the dominant state",
     latestReport: "Latest report",
@@ -124,7 +128,7 @@ export const messages = {
     noCar: "No car",
     moduleRange: "Range",
     chartTakeaways: {
-      trend: "The line rises only when more distinct cars appear affected within its estimated fleet",
+      trend: "The line rises when heat, report volume, and affected fleet coverage coincide in the period",
       volume: "More reports do not mean more heat: they show where citizen signal is stronger",
       lineCars: "Shows how many distinct cars appear in reports for this range",
       lineEvolution: "The lines with the most reports show when the signal concentrates",
