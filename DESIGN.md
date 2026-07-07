@@ -1,5 +1,5 @@
 ---
-name: "Termometro de Madrid"
+name: "Termo de Madrid"
 description: "A mobile-first civic heat-reporting PWA for Metro de Madrid AC conditions."
 colors:
   bg: "oklch(0.985 0.012 92)"
@@ -106,7 +106,7 @@ components:
     padding: "12px"
 ---
 
-# Design System: Termometro de Madrid
+# Design System: Termo de Madrid
 
 <!-- SEED -->
 
@@ -114,7 +114,7 @@ components:
 
 **Creative North Star: "Flighty Status, Raycast Action"**
 
-Termometro de Madrid should feel like a sharp public evidence tool built for a hot train platform: fast to read, easy to share, and calm enough to trust while still carrying a dry satirical edge. The product should combine Flighty-like mobile status intelligence with Raycast-like action clarity: a confident current-state surface first, then two obvious actions.
+Termo de Madrid should feel like a sharp public evidence tool built for a hot train platform: fast to read, easy to share, and calm enough to trust while still carrying a dry satirical edge. The product should combine Flighty-like mobile status intelligence with Raycast-like action clarity: a confident current-state surface first, then two obvious actions.
 
 The default interface is light because people will use and screenshot it on phones in stations, trains, and outdoor transitions. Dark mode is supported from v1, but it should be a true theme switch, not the main visual identity. Heat is expressed through state, charts, and micro-motion, not through a permanently hot background.
 
@@ -132,9 +132,9 @@ The system rejects official Metro de Madrid mimicry, generic complaint-counter d
 
 - **Observable Plot** (`https://observablehq.com/plot/`): Primary chart inspiration. Adopt the grammar mindset: compose bars, lines, dots, scales, small multiples, and transforms deliberately. Even though v1 uses Recharts, chart components should be designed as reusable visual grammar, not one-off pictures.
 - **Linear** (`https://linear.app/`): Adopt the precision: dense but calm layouts, compact labels, clear hierarchy, subtle separators, and highly consistent component vocabulary. Avoid copying its dark SaaS mood or product-management structure.
-- **Raycast** (`https://www.raycast.com/`): Core action reference. Adopt centered action clarity and command-palette discipline: one obvious next action, compact rows, fast feedback, and utility controls that do not compete with the primary task. Avoid making Termometro feel like a desktop launcher.
+- **Raycast** (`https://www.raycast.com/`): Core action reference. Adopt centered action clarity and command-palette discipline: one obvious next action, compact rows, fast feedback, and utility controls that do not compete with the primary task. Avoid making Termo feel like a desktop launcher.
 - **Flighty** (`https://www.flighty.com/`): Core mobile-status reference. Adopt one strong current-state panel, crisp travel/status details, restrained delight, and share/export affordances that feel native. Avoid heavy 3D or map hero treatments for v1.
-- **Citymapper** (`https://citymapper.com/`): Adopt small transport-specific humor and useful weirdness: tiny route/status jokes, obvious mode chips, and local transit personality. Avoid the busy map/search surface; Termometro is not a route planner.
+- **Citymapper** (`https://citymapper.com/`): Adopt small transport-specific humor and useful weirdness: tiny route/status jokes, obvious mode chips, and local transit personality. Avoid the busy map/search surface; Termo is not a route planner.
 - **Datawrapper** (`https://www.datawrapper.de/`): Adopt chart discipline: mobile exports, non-overlapping labels, accessible colors, brand consistency, and responsive preview thinking. Every dashboard module should be checked as a shareable mobile artifact.
 - **FixMyStreet** (`https://www.fixmystreet.com/`): Functional reference only, not a visual reference. Keep the civic directness and recent-activity proof, but do not inherit its visual style or location-heavy flow.
 
@@ -238,7 +238,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 - **Shadow Strategy:** Flat at rest. Use border or tonal contrast. Floating overlays may use Popover Shadow.
 - **Border:** 1px solid Border Mist. No colored side stripes thicker than 1px.
 - **Internal Padding:** 16px on mobile modules, 20-24px for desktop panels and share-card exports.
-- **Share Modules:** Every exportable dashboard module needs title, active range, visible legend, chart/table body, key takeaway, and Termometro attribution inside the module bounds.
+- **Share Modules:** Every exportable dashboard module needs title, active range, visible legend, chart/table body, key takeaway, and Termo attribution inside the module bounds.
 
 ### Inputs / Fields
 
@@ -262,7 +262,7 @@ Three equal-size options: Fresco, Calor, Infierno. Calor is selected by default,
 
 ### Dashboard Modules
 
-Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termómetro`, confidence, fleet estimates, and summer range definitions.
+Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termo`, confidence, fleet estimates, and summer range definitions.
 
 Required module styles:
 

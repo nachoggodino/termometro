@@ -1,4 +1,4 @@
-# Termómetro de Madrid
+# Termo de Madrid
 
 Mobile-first civic PWA for reporting and exploring Metro de Madrid AC conditions.
 
@@ -11,7 +11,7 @@ npm run dev
 
 Open `http://localhost:3000/es`.
 
-Local development can run without Supabase. In that mode the app uses in-memory seed data from `src/lib/server/seed-data.ts`. Vercel Preview/Production requires Supabase environment variables and `TERMOMETRO_ABUSE_SECRET`.
+Local development can run without Supabase. In that mode the app uses in-memory seed data from `src/lib/server/seed-data.ts`. Vercel Preview/Production requires Supabase environment variables and `TERMO_ABUSE_SECRET`.
 
 ## Environment
 
@@ -21,10 +21,10 @@ Copy `.env.example` to `.env.local` when wiring Supabase:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-TERMOMETRO_ABUSE_SECRET=
+TERMO_ABUSE_SECRET=
 ```
 
-Use a long random value for `TERMOMETRO_ABUSE_SECRET`; it salts private abuse keys and undo token hashes.
+Use a long random value for `TERMO_ABUSE_SECRET`; it salts private abuse keys and undo token hashes.
 
 ## Supabase
 

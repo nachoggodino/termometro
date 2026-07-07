@@ -44,7 +44,7 @@ type DashboardOptions = {
 };
 
 const globalForReports = globalThis as typeof globalThis & {
-  termometroReports?: MemoryReport[];
+  termoReports?: MemoryReport[];
 };
 
 type MemoryReport = Report & {
@@ -54,25 +54,25 @@ type MemoryReport = Report & {
 };
 
 function getMemoryReports() {
-  if (!globalForReports.termometroReports) {
-    globalForReports.termometroReports = seedReports.map((report) => ({ ...report }));
+  if (!globalForReports.termoReports) {
+    globalForReports.termoReports = seedReports.map((report) => ({ ...report }));
   }
-  return globalForReports.termometroReports;
+  return globalForReports.termoReports;
 }
 
 let supabaseClient: SupabaseClient | null = null;
 let supabaseServiceClient: SupabaseClient | null = null;
 
 function shouldRequireSupabase() {
-  return process.env.VERCEL === "1" || process.env.TERMOMETRO_REQUIRE_SUPABASE === "1";
+  return process.env.VERCEL === "1" || process.env.TERMO_REQUIRE_SUPABASE === "1";
 }
 
 function getSupabase(options: { serviceRole?: boolean } = {}) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (shouldRequireSupabase() && !process.env.TERMOMETRO_ABUSE_SECRET) {
-    throw new Error("TERMOMETRO_ABUSE_SECRET is required in this environment.");
+  if (shouldRequireSupabase() && !process.env.TERMO_ABUSE_SECRET) {
+    throw new Error("TERMO_ABUSE_SECRET is required in this environment.");
   }
 
   if (!url || !key) {

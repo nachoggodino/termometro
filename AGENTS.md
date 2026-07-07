@@ -1,6 +1,6 @@
 # Agent Instructions
 
-This repository is for **Termometro de Madrid**, a mobile-first civic PWA for reporting and exploring Metro de Madrid AC conditions.
+This repository is for **Termo de Madrid**, a mobile-first civic PWA for reporting and exploring Metro de Madrid AC conditions.
 
 Before making product, UI, data, or architecture changes, read:
 

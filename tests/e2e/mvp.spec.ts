@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("home exposes the two primary actions and switches language", async ({ page }) => {
   await page.goto("/es");
 
-  await expect(page.getByText("Termómetro de Madrid").first()).toBeVisible();
+  await expect(page.getByText("Termo de Madrid").first()).toBeVisible();
   await expect(page.getByTestId("home-report")).toBeVisible();
   await expect(page.getByTestId("home-explore")).toBeVisible();
 

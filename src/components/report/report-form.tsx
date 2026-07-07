@@ -14,9 +14,11 @@ import type { Locale } from "@/lib/i18n/config";
 import { HeatSelector } from "./heat-selector";
 import { LinePicker } from "./line-picker";
 
+type ApiErrorReason = "duplicate" | "invalid" | "rate_limited" | "server_error";
+
 type ApiResponse =
   | { ok: true; report: { id: string }; undoToken: string }
-  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" };
+  | { ok: false; reason: ApiErrorReason };
 
 export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
   const router = useRouter();
@@ -57,18 +59,12 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ line, state, car }),
+        body: JSON.stringify({ line, state, car: normalizedCar }),
       });
       const payload = (await response.json()) as ApiResponse;
 
       if (!payload.ok) {
-        const message =
-          payload.reason === "duplicate"
-            ? dictionary.reportForm.duplicate
-            : payload.reason === "rate_limited"
-              ? dictionary.reportForm.rateLimited
-              : dictionary.reportForm.subtitle;
-        toast(message);
+        toast(getSubmissionErrorMessage(payload.reason, dictionary));
         setSubmitting(false);
         return;
       }
@@ -88,7 +84,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       });
       startTransition(() => router.push(`/${locale}/explorar?reported=1`));
     } catch {
-      toast(dictionary.reportForm.subtitle);
+      toast(dictionary.reportForm.submitFailed);
       setSubmitting(false);
     }
   }
@@ -137,6 +133,13 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       </Button>
     </div>
   );
+}
+
+function getSubmissionErrorMessage(reason: ApiErrorReason, dictionary: Dictionary) {
+  if (reason === "duplicate") return dictionary.reportForm.duplicate;
+  if (reason === "rate_limited") return dictionary.reportForm.rateLimited;
+  if (reason === "invalid") return dictionary.reportForm.invalid;
+  return dictionary.reportForm.submitFailed;
 }
 
 function submitStyle(state: HeatState): CSSProperties {

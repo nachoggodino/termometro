@@ -13,10 +13,10 @@ export const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_MINUTES * 60_000;
 export const UNDO_WINDOW_MS = UNDO_WINDOW_SECONDS * 1_000;
 
 function getAbuseSecret() {
-  const secret = process.env.TERMOMETRO_ABUSE_SECRET;
+  const secret = process.env.TERMO_ABUSE_SECRET;
   if (secret) return secret;
-  if (process.env.VERCEL === "1" || process.env.TERMOMETRO_REQUIRE_SUPABASE === "1") {
-    throw new Error("TERMOMETRO_ABUSE_SECRET is required in this environment.");
+  if (process.env.VERCEL === "1" || process.env.TERMO_REQUIRE_SUPABASE === "1") {
+    throw new Error("TERMO_ABUSE_SECRET is required in this environment.");
   }
   return "development-only-abuse-secret";
 }

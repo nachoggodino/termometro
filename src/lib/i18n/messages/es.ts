@@ -1,11 +1,11 @@
 export const messages = {
   meta: {
-    title: "Termómetro de Madrid",
+    title: "Termo de Madrid",
     description: "Reportes ciudadanos sobre el aire acondicionado del Metro de Madrid",
   },
   common: {
-    appName: "Termómetro de Madrid",
-    shortName: "Termómetro",
+    appName: "Termo de Madrid",
+    shortName: "Termo",
     report: "Reportar",
     explore: "Explorar",
     methodology: "Metodología",
@@ -30,7 +30,7 @@ export const messages = {
     shareImageDownloaded: "Imagen descargada",
     shareImageUnavailable: "No se pudo generar la imagen",
     optional: "opcional",
-    attribution: "Datos de ciudadanos en Termómetro de Madrid",
+    attribution: "Datos de ciudadanos en Termo de Madrid",
     creatorCredit: {
       prefix: "created by",
       name: "nachoggodino",
@@ -38,7 +38,7 @@ export const messages = {
     },
   },
   home: {
-    mission: "Un termómetro ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",
+    mission: "Un termo ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",
     reportsInWindow: "reportes en el último día",
     noReports: "Sin reportes recientes",
     noReportsCopy: "Si el vagón parece sauna, puedes ser la primera persona en avisar",
@@ -62,8 +62,10 @@ export const messages = {
     success: "Reporte recibido. Así está la línea ahora",
     duplicate: "Ya hemos contado este reporte hace un momento",
     rateLimited: "Demasiados reportes seguidos. Espera unos minutos antes de enviar otro",
+    invalid: "Revisa el reporte e inténtalo de nuevo",
+    submitFailed: "No se pudo enviar el reporte. Inténtalo otra vez",
     undo: "Deshacer",
-    abuseReminder: "Usa Termómetro con cabeza: reporta solo lo que estés viviendo ahora",
+    abuseReminder: "Usa Termo con cabeza: reporta solo lo que estés viviendo ahora",
   },
   states: {
     fresco: {
@@ -113,10 +115,10 @@ export const messages = {
       fleet: "Porcentaje de flota sin AC",
       recent: "Últimos reportes",
     },
-    score: "Indicador Termómetro",
+    score: "Indicador Termo",
     scoreHelp: "Promedio ponderado: Fresco 0, Calor 60, Infierno 100",
     fleetAdjustedScoreHelp:
-      "Fórmula: indicador Termómetro del periodo × reportes del periodo × porcentaje de flota afectada del periodo. Indicador y porcentaje se usan de 0 a 1.",
+      "Fórmula: indicador Termo del periodo × reportes del periodo × porcentaje de flota afectada del periodo. Indicador y porcentaje se usan de 0 a 1.",
     confidenceHelp: "Calculada por cantidad de reportes recientes y nivel de acuerdo entre ellos",
     disagreementHelp: "Porcentaje de reportes recientes que no coinciden con el estado dominante",
     latestReport: "Último reporte",
@@ -141,8 +143,8 @@ export const messages = {
   },
   methodology: {
     title: "Metodología",
-    intro: "Termómetro convierte reportes ciudadanos en señales públicas, no en verdades absolutas",
-    scoreTitle: "Indicador Termómetro",
+    intro: "Termo convierte reportes ciudadanos en señales públicas, no en verdades absolutas",
+    scoreTitle: "Indicador Termo",
     scoreBody: "Fresco vale 0, Calor vale 60 e Infierno vale 100. Los reportes recientes pesan más en vistas de hoy",
     confidenceTitle: "Confianza",
     confidenceBody: "La confianza sube con más reportes recientes y más acuerdo entre ellos. El desacuerdo se muestra, no se oculta",

@@ -28,7 +28,7 @@ describe("report security helpers", () => {
   });
 
   it("extracts a request fingerprint from forwarding headers", () => {
-    const request = new Request("https://termometro.test/api/reports", {
+    const request = new Request("https://termo.test/api/reports", {
       headers: {
         "x-forwarded-for": "198.51.100.4, 10.0.0.1",
         "user-agent": "playwright",

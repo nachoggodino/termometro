@@ -1,11 +1,11 @@
 export const messages = {
   meta: {
-    title: "Termómetro de Madrid",
+    title: "Termo de Madrid",
     description: "Citizen reports about air conditioning in Metro de Madrid",
   },
   common: {
-    appName: "Termómetro de Madrid",
-    shortName: "Termómetro",
+    appName: "Termo de Madrid",
+    shortName: "Termo",
     report: "Report",
     explore: "Explore",
     methodology: "Methodology",
@@ -30,7 +30,7 @@ export const messages = {
     shareImageDownloaded: "Image downloaded",
     shareImageUnavailable: "Could not generate image",
     optional: "optional",
-    attribution: "Citizen data in Termómetro de Madrid",
+    attribution: "Citizen data in Termo de Madrid",
     creatorCredit: {
       prefix: "created by",
       name: "nachoggodino",
@@ -62,8 +62,10 @@ export const messages = {
     success: "Report received. Here is how the line looks now",
     duplicate: "We already counted this report a moment ago",
     rateLimited: "Too many reports in a row. Wait a few minutes before sending another",
+    invalid: "Review the report and try again",
+    submitFailed: "Could not send the report. Try again",
     undo: "Undo",
-    abuseReminder: "Use Termómetro wisely: report only what you are experiencing now",
+    abuseReminder: "Use Termo wisely: report only what you are experiencing now",
   },
   states: {
     fresco: {
@@ -113,10 +115,10 @@ export const messages = {
       fleet: "Share of fleet without AC",
       recent: "Recent reports",
     },
-    score: "Termómetro Indicator",
+    score: "Termo Indicator",
     scoreHelp: "Weighted average: Fresh 0, Hot 60, Hell 100",
     fleetAdjustedScoreHelp:
-      "Formula: Termómetro indicator for the period × reports in the period × affected fleet percentage for the period. Indicator and percentage use 0 to 1 scale.",
+      "Formula: Termo indicator for the period × reports in the period × affected fleet percentage for the period. Indicator and percentage use 0 to 1 scale.",
     confidenceHelp: "Calculated from recent report volume and agreement",
     disagreementHelp: "Share of recent reports that do not match the dominant state",
     latestReport: "Latest report",
@@ -141,8 +143,8 @@ export const messages = {
   },
   methodology: {
     title: "Methodology",
-    intro: "Termómetro turns citizen reports into public signals, not absolute truths",
-    scoreTitle: "Termómetro Indicator",
+    intro: "Termo turns citizen reports into public signals, not absolute truths",
+    scoreTitle: "Termo Indicator",
     scoreBody: "Fresh is 0, Hot is 60, and Hell is 100. Recent reports weigh more in today views",
     confidenceTitle: "Confidence",
     confidenceBody: "Confidence rises with more recent reports and stronger agreement. Disagreement is shown, not hidden",

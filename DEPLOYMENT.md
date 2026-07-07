@@ -1,6 +1,6 @@
 # Deployment Readiness
 
-Termometro de Madrid is intended to deploy on Vercel with Supabase Postgres.
+Termo de Madrid is intended to deploy on Vercel with Supabase Postgres.
 
 ## Fake Production On Vercel
 
@@ -12,7 +12,7 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `TERMOMETRO_ABUSE_SECRET`
+   - `TERMO_ABUSE_SECRET`
 4. Apply all files in `supabase/migrations/` to the Supabase project in filename order.
 5. Seed non-production data with `supabase/seed.sql` if the preview project should have dashboard data immediately.
 6. Deploy a Preview build from a non-production branch.
@@ -22,7 +22,7 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
    - `npm test`
    - `npm run test:ui`
 
-Vercel sets `VERCEL=1`, so the app will fail loudly if Supabase env vars or `TERMOMETRO_ABUSE_SECRET` are missing instead of falling back to local seed data.
+Vercel sets `VERCEL=1`, so the app will fail loudly if Supabase env vars or `TERMO_ABUSE_SECRET` are missing instead of falling back to local seed data.
 
 ## Current Gaps Before Public Production
 

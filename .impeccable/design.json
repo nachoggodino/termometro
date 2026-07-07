@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-07-05T00:00:00.000Z",
-  "title": "Design System: Termometro de Madrid",
+  "title": "Design System: Termo de Madrid",
   "extensions": {
     "northStar": "The Civic Thermometer",
     "register": "product",
@@ -92,7 +92,7 @@
           "legend",
           "data body",
           "key takeaway",
-          "Termometro attribution for shareable modules"
+          "Termo attribution for shareable modules"
         ]
       }
     },

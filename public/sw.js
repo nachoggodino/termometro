@@ -1,5 +1,5 @@
-const SHELL_CACHE = "termometro-shell-v1";
-const DASHBOARD_CACHE = "termometro-dashboard-v1";
+const SHELL_CACHE = "termo-shell-v1";
+const DASHBOARD_CACHE = "termo-dashboard-v1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(["/es", "/en"])));

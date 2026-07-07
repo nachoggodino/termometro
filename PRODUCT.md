@@ -6,13 +6,13 @@ product
 
 ## Users
 
-Termometro de Madrid is for Metro de Madrid riders, primarily on mobile phones, who want to report and understand overheated train cars caused by weak or broken air conditioning. Users are often in transit, uncomfortable, and short on patience, so reporting must be fast, anonymous, and low-friction.
+Termo de Madrid is for Metro de Madrid riders, primarily on mobile phones, who want to report and understand overheated train cars caused by weak or broken air conditioning. Users are often in transit, uncomfortable, and short on patience, so reporting must be fast, anonymous, and low-friction.
 
 Secondary users include journalists, transit advocates, public officials, and people sharing evidence on social media. For them, the dashboard should make the scale and concentration of the problem legible without hiding severe lines behind network-wide averages.
 
 ## Product Purpose
 
-Termometro de Madrid is a citizen-run, multilingual PWA that collects crowdsourced AC condition reports for Metro de Madrid lines and cars. It exists to make heat problems visible, shareable, and harder to ignore.
+Termo de Madrid is a citizen-run, multilingual PWA that collects crowdsourced AC condition reports for Metro de Madrid lines and cars. It exists to make heat problems visible, shareable, and harder to ignore.
 
 The product has two primary actions:
 
@@ -37,9 +37,9 @@ The product can use dry humor and heat metaphors, especially in state descriptio
 
 Public-facing name:
 
-- Spanish UI: Termometro de Madrid, displayed as Termómetro de Madrid.
-- Short name: Termómetro.
-- Technical names, slugs, package names, and code identifiers should use ASCII: termometro.
+- Spanish UI: Termo de Madrid, displayed as Termo de Madrid.
+- Short name: Termo.
+- Technical names, slugs, package names, and code identifiers should use ASCII: termo.
 
 ## Anti-references
 
