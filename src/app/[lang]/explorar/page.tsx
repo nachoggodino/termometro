@@ -37,8 +37,8 @@ export default async function ExplorePage({
   const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
 
   return (
-    <main className="min-h-dvh bg-background">
-      <div className="mx-auto max-w-5xl px-4 pb-10">
+    <main>
+      <div className="mx-auto max-w-5xl px-4 pb-5">
         <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
         <section className="py-6">

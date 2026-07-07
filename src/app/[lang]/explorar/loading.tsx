@@ -1,7 +1,7 @@
 export default function ExploreLoading() {
   return (
-    <main className="min-h-dvh">
-      <div className="mx-auto max-w-5xl px-4 pb-10">
+    <main>
+      <div className="mx-auto max-w-5xl px-4 pb-5">
         <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-background/96 px-4 py-3 backdrop-blur">
           <div className="flex items-center justify-between gap-3">
             <div>

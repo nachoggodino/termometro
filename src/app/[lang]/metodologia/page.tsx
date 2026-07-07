@@ -16,8 +16,8 @@ export default async function MethodologyPage({ params }: { params: Promise<{ la
   ] as const;
 
   return (
-    <main className="min-h-dvh bg-background">
-      <article className="mx-auto max-w-2xl px-4 py-8">
+    <main>
+      <article className="mx-auto max-w-2xl px-4 pb-5 pt-8">
         <div className="flex items-center justify-center gap-2">
           <CircleHelp aria-hidden="true" className="size-6 text-muted" />
           <h1 className="text-center text-2xl font-[650] tracking-[-0.015em]">{dictionary.methodology.title}</h1>

@@ -10,8 +10,8 @@ export default async function ReportPage({ params }: { params: Promise<{ lang: s
   const dictionary = await getDictionary(lang);
 
   return (
-    <main className="min-h-dvh bg-background">
-      <section className="mx-auto max-w-xl px-4 py-6">
+    <main>
+      <section className="mx-auto max-w-xl px-4 pb-5 pt-6">
         <div className="mb-4 flex items-center justify-center gap-2">
           <Send aria-hidden="true" className="size-6 text-muted" />
           <h1 className="text-center text-2xl font-[650] tracking-[-0.015em]">{dictionary.reportForm.title}</h1>
