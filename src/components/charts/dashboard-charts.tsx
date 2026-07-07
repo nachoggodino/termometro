@@ -20,12 +20,6 @@ import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { ChartCard } from "./chart-card";
 
-const heatColors = {
-  fresco: "var(--heat-fresco)",
-  calor: "var(--heat-calor)",
-  infierno: "var(--heat-infierno)",
-};
-
 export function DashboardCharts({
   data,
   dictionary,
@@ -41,7 +35,6 @@ export function DashboardCharts({
 }) {
   const visibleLines = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
   const limitWhenUnfiltered = (items: typeof visibleLines) => (selectedLines.length > 0 ? items : items.slice(0, DASHBOARD_LIMITS.topLineCount));
-  const rankingLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.score - a.score || b.reports - a.reports));
   const reportVolumeLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.reports - a.reports || b.score - a.score));
   const carLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.carsReported - a.carsReported || b.score - a.score));
   const lineEvolutionLines = visibleLines
@@ -84,27 +77,6 @@ export function DashboardCharts({
 
       <ChartCard
         dictionary={dictionary}
-        help={dictionary.explore.scoreHelp}
-        rangeLabel={rangeLabel}
-        takeaway={dictionary.explore.chartTakeaways.trend}
-        title={dictionary.explore.modules.trend}
-      >
-        <div className={CHART_TOKENS.moduleHeightClass}>
-          <ResponsiveContainer height="100%" width="100%">
-            <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
-              <CartesianGrid stroke="var(--border)" vertical={false} />
-              <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
-              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
-              <Tooltip />
-              <Line animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" dot={{ r: 3 }} stroke="var(--heat-infierno)" strokeWidth={2} type="monotone" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </ChartCard>
-
-      <ChartCard
-        dictionary={dictionary}
-        help={dictionary.explore.scoreHelp}
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.volume}
         title={dictionary.explore.modules.volume}
@@ -162,22 +134,18 @@ export function DashboardCharts({
         dictionary={dictionary}
         help={dictionary.explore.scoreHelp}
         rangeLabel={rangeLabel}
-        takeaway={dictionary.explore.chartTakeaways.ranking}
-        title={dictionary.explore.modules.ranking}
+        takeaway={dictionary.explore.chartTakeaways.trend}
+        title={dictionary.explore.modules.trend}
       >
-        <div className={CHART_TOKENS.rankingHeightClass}>
+        <div className={CHART_TOKENS.moduleHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={rankingLines} layout="vertical" margin={CHART_TOKENS.rankingMargin}>
-              <CartesianGrid horizontal={false} stroke="var(--border)" />
-              <XAxis dataKey="score" domain={CHART_TOKENS.heatScoreDomain} hide type="number" />
-              <YAxis axisLine={false} dataKey="line" tickLine={false} type="category" width={CHART_TOKENS.yAxisLineWidth} />
-              <Tooltip cursor={{ fill: "var(--surface)" }} />
-              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" radius={CHART_TOKENS.barRadius}>
-                {rankingLines.map((item) => (
-                  <Cell fill={heatColors[item.tone]} key={item.line} />
-                ))}
-              </Bar>
-            </BarChart>
+            <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
+              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
+              <Tooltip />
+              <Line animationDuration={CHART_TOKENS.animationDurationMs} dataKey="score" dot={{ r: 3 }} stroke="var(--heat-infierno)" strokeWidth={2} type="monotone" />
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </ChartCard>

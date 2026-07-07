@@ -8,7 +8,7 @@ export function CreatorCredit({ dictionary }: { dictionary: Dictionary }) {
   const credit = dictionary.common.creatorCredit;
 
   return (
-    <footer className="px-[var(--space-lg)] pb-[var(--space-xl)] pt-[var(--space-lg)]">
+    <footer className="px-[var(--space-lg)] pb-[var(--space-lg)] pt-[var(--space-sm)]">
       <a
         aria-label={credit.ariaLabel}
         className="mx-auto flex w-fit max-w-full items-center gap-[var(--space-xs)] rounded-md border border-border bg-surface-raised px-[var(--space-sm)] py-[var(--space-xs)] text-sm font-medium leading-tight text-muted no-underline transition duration-[var(--duration-base)] ease-out hover:border-primary hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

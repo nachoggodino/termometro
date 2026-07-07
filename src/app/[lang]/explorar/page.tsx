@@ -23,11 +23,18 @@ export default async function ExplorePage({
   if (!isLocale(lang)) notFound();
   const search = await searchParams;
   const dictionary = await getDictionary(lang);
-  const selectedRange = isTimeRange(search.rango) ? search.rango : "today";
+  const selectedRange = isTimeRange(search.rango) ? search.rango : "sevenDays";
   const selectedLines = parseSelectedLines(search.linea);
   const data = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
   const rangeLabel = dictionary.explore.ranges[selectedRange];
   const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
+  const fleetSummaries = visibleSummaries
+    .map((summary) => ({
+      ...summary,
+      fleetWithoutAcPercentage: Math.round((summary.carsWithoutAcReported / summary.estimatedCars) * 100),
+    }))
+    .toSorted((a, b) => b.fleetWithoutAcPercentage - a.fleetWithoutAcPercentage || b.reports - a.reports);
+  const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
 
   return (
     <main className="min-h-dvh bg-background">
@@ -53,14 +60,14 @@ export default async function ExplorePage({
                 {dictionary.explore.moduleRange}: {rangeLabel}
               </p>
               <div className="mt-4 flex flex-col gap-3">
-                {visibleSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
-                  const coverage = Math.round((summary.carsReported / summary.estimatedCars) * 100);
+                {fleetSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
+                  const coverage = summary.fleetWithoutAcPercentage;
                   return (
                     <div key={summary.line}>
                       <div className="mb-1 flex items-center justify-between text-sm">
                         <span className="font-semibold">{summary.line}</span>
                         <span className="text-muted">
-                          {coverage}% {dictionary.explore.estimatedFleet}
+                          {coverage}% {dictionary.explore.fleetWithoutAc}
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-surface">
@@ -83,8 +90,8 @@ export default async function ExplorePage({
           </aside>
         </div>
 
-        <section className="grid gap-3 pt-4 sm:grid-cols-3">
-          {visibleSummaries.slice(0, DASHBOARD_LIMITS.summaryLineCount).map((summary) => (
+        <section className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+          {reportSummaryCards.map((summary) => (
             <div className="rounded-md border border-border bg-surface-raised p-4" key={summary.line}>
               <div className="flex items-center justify-between">
                 <span
@@ -96,7 +103,7 @@ export default async function ExplorePage({
                 >
                   {summary.line}
                 </span>
-                <span className="font-mono text-2xl font-semibold">{summary.score}</span>
+                <span className="font-mono text-2xl font-semibold">{summary.reports}</span>
               </div>
               <p className="mt-3 flex items-center gap-2 text-sm text-muted">
                 {dictionary.common.confidence} {dictionary.common[summary.confidence]}
@@ -104,8 +111,8 @@ export default async function ExplorePage({
               </p>
               <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
                 <div>
-                  <dt className="text-muted">{dictionary.common.reports}</dt>
-                  <dd className="font-mono font-semibold">{summary.reports}</dd>
+                  <dt className="text-muted">{dictionary.explore.score}</dt>
+                  <dd className="font-mono font-semibold">{summary.score}</dd>
                 </div>
                 <div>
                   <dt className="flex items-center gap-1 text-muted">

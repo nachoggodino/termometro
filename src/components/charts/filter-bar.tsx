@@ -31,7 +31,7 @@ export function FilterBar({
   function href(lines: MetroLine[], range = selectedRange) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
-    if (range !== "today") params.set("rango", range);
+    if (range !== "sevenDays") params.set("rango", range);
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
 
@@ -44,7 +44,7 @@ export function FilterBar({
 
   function clearFilters() {
     setDraftLines([]);
-    setDraftRange("today");
+    setDraftRange("sevenDays");
   }
 
   function toggleLine(line: MetroLine) {

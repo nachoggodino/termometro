@@ -101,13 +101,12 @@ export const messages = {
       lineCount: "{count} líneas",
     },
     modules: {
-      ranking: "Líneas en peor estado",
       trend: "Evolución del calor",
       volume: "Reportes por línea",
       lineCars: "Coches por línea",
       lineEvolution: "Evolución de cada línea",
       worstCars: "Peores coches",
-      fleet: "Cobertura de flota",
+      fleet: "Porcentaje de flota sin AC",
       recent: "Últimos reportes",
     },
     score: "Indicador Termómetro",
@@ -116,11 +115,10 @@ export const messages = {
     disagreementHelp: "Porcentaje de reportes recientes que no coinciden con el estado dominante",
     latestReport: "Último reporte",
     noRecentReport: "Sin reportes en el rango",
-    estimatedFleet: "sobre flota estimada",
+    fleetWithoutAc: "de flota sin AC",
     noCar: "Sin coche",
     moduleRange: "Rango",
     chartTakeaways: {
-      ranking: "L1 y L5 concentran las peores señales del rango seleccionado",
       trend: "El pico reciente necesita leerse junto al volumen de reportes",
       volume: "Más reportes no significan más calor: indican dónde hay más señal ciudadana",
       lineCars: "Muestra cuántos coches distintos aparecen en los reportes del rango",
@@ -129,7 +127,7 @@ export const messages = {
     },
     caveats: {
       confidence: "Confianza, recencia y desacuerdo modulan cada señal",
-      fleet: "Cobertura calculada con flota estimada e inventarios incompletos",
+      fleet: "Porcentaje calculado con coches reportados en Calor o Infierno, flota estimada e inventarios incompletos",
     },
   },
   methodology: {

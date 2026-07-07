@@ -6,7 +6,6 @@ import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
-  summaryLineCount: 3,
   recentReportCount: 12,
   worstCarCount: 8,
 } as const;
@@ -20,6 +19,7 @@ export type LineSummary = {
   disagreement: number;
   latestReportAt: Date | null;
   carsReported: number;
+  carsWithoutAcReported: number;
   estimatedCars: number;
 };
 
@@ -61,6 +61,7 @@ export function buildDashboardData(
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
+    const reportedCarsWithoutAc = new Set(lineReports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
     const score = getWeightedHeatScore(lineReports, now);
     const latestReportAt =
       lineReports.length > 0
@@ -75,6 +76,7 @@ export function buildDashboardData(
       disagreement: Math.round((1 - getAgreement(lineReports)) * 100),
       latestReportAt,
       carsReported: reportedCars.size,
+      carsWithoutAcReported: reportedCarsWithoutAc.size,
       estimatedCars: estimatedCarsByLine[line],
     };
   }).sort((a, b) => b.score - a.score || b.reports - a.reports);

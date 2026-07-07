@@ -101,13 +101,12 @@ export const messages = {
       lineCount: "{count} lines",
     },
     modules: {
-      ranking: "Worst lines",
       trend: "Heat trend",
       volume: "Reports by line",
       lineCars: "Cars by line",
       lineEvolution: "Each line evolution",
       worstCars: "Worst cars",
-      fleet: "Fleet coverage",
+      fleet: "Share of fleet without AC",
       recent: "Recent reports",
     },
     score: "Termómetro Indicator",
@@ -116,11 +115,10 @@ export const messages = {
     disagreementHelp: "Share of recent reports that do not match the dominant state",
     latestReport: "Latest report",
     noRecentReport: "No reports in this range",
-    estimatedFleet: "of estimated fleet",
+    fleetWithoutAc: "of fleet without AC",
     noCar: "No car",
     moduleRange: "Range",
     chartTakeaways: {
-      ranking: "L1 and L5 carry the worst signals in the selected range",
       trend: "The recent spike needs to be read next to report volume",
       volume: "More reports do not mean more heat: they show where citizen signal is stronger",
       lineCars: "Shows how many distinct cars appear in reports for this range",
@@ -129,7 +127,7 @@ export const messages = {
     },
     caveats: {
       confidence: "Confidence, recency, and disagreement qualify each signal",
-      fleet: "Coverage uses estimated fleet counts and incomplete inventories",
+      fleet: "Calculated from cars reported as Hot or Hell, estimated fleet counts, and incomplete inventories",
     },
   },
   methodology: {

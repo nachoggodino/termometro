@@ -30,7 +30,7 @@ export default async function MethodologyPage({ params }: { params: Promise<{ la
             </section>
           ))}
         </div>
-        <p className="mt-8 text-xs text-muted">{dictionary.common.disclaimer}</p>
+        <p className="mt-8 text-center text-xs text-muted">{dictionary.common.disclaimer}</p>
       </article>
     </main>
   );

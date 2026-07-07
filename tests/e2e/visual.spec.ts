@@ -12,6 +12,6 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
   await page.screenshot({ fullPage: true, path: `/tmp/termometro-${project}-reportar.png` });
 
   await page.goto("/es/explorar");
-  await expect(page.getByText("Líneas en peor estado")).toBeVisible();
+  await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termometro-${project}-explorar.png` });
 });

@@ -24,7 +24,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await page.getByTestId("submit-report").click();
 
   await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
-  await expect(page.getByText("Líneas en peor estado")).toBeVisible();
+  await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await expect(page.getByText("Peores coches")).toBeVisible();
 
   const undoResponse = page.waitForResponse((response) => response.url().includes("/api/reports/") && response.request().method() === "DELETE");
@@ -51,7 +51,7 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "7 días" }).click();
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
-  await expect(page).toHaveURL(/rango=sevenDays/);
+  await expect(page).not.toHaveURL(/rango=/);
 
   await page.getByRole("button", { name: "Menú" }).click();
   await expect(page.getByTestId("theme-toggle")).toBeVisible();
