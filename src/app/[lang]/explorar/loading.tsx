@@ -2,13 +2,15 @@ export default function ExploreLoading() {
   return (
     <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
       <div className="mx-auto max-w-5xl px-4 pb-5">
-        <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-[var(--nav-surface)] px-4 py-3 backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="h-3 w-24 animate-pulse rounded-sm bg-surface" />
-              <div className="mt-2 h-4 w-32 animate-pulse rounded-sm bg-surface" />
+        <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-3">
+          <div className="rounded-lg border border-border bg-[var(--drawer-surface)] px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="h-3 w-24 animate-pulse rounded-sm bg-surface" />
+                <div className="mt-2 h-4 w-32 animate-pulse rounded-sm bg-surface" />
+              </div>
+              <div className="h-10 w-24 animate-pulse rounded-md bg-surface" />
             </div>
-            <div className="h-10 w-24 animate-pulse rounded-md bg-surface" />
           </div>
         </div>
         <section className="py-6">

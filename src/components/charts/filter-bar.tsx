@@ -72,66 +72,63 @@ export function FilterBar({
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
-    <div className="sticky top-[80px] z-20 -mx-4 border-b border-border bg-[var(--nav-surface)] px-4 py-3 backdrop-blur">
+    <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-3">
       <Popover.Root open={open} onOpenChange={handleOpenChange}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
-            <p className="truncate text-sm font-semibold">
-              {selectedLineLabel} · {activeRangeLabel}
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Popover.Root open={navigationOpen} onOpenChange={handleNavigationOpenChange}>
+        <div className="rounded-lg border border-border bg-[var(--drawer-surface)] px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
+              <p className="truncate text-sm font-semibold">
+                {selectedLineLabel} · {activeRangeLabel}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Popover.Root open={navigationOpen} onOpenChange={handleNavigationOpenChange}>
+                <Popover.Trigger asChild>
+                  <Button aria-label={dictionary.explore.navigation.button} className="min-h-10 px-3 py-2" type="button" variant="secondary">
+                    <ListTree aria-hidden="true" className="size-4" />
+                    <span className="hidden sm:inline">{dictionary.explore.navigation.button}</span>
+                  </Button>
+                </Popover.Trigger>
+                <Popover.Portal>
+                  <Popover.Content
+                    align="end"
+                    aria-hidden={!navigationOpen}
+                    className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
+                    sideOffset={8}
+                    {...(hasOpenedNavigation ? { forceMount: true } : {})}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <h2 className="text-base font-semibold">{dictionary.explore.navigation.title}</h2>
+                      <Popover.Close
+                        aria-label={dictionary.common.closeMenu}
+                        className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      >
+                        <X aria-hidden="true" className="size-4" />
+                      </Popover.Close>
+                    </div>
+                    <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
+                      {EXPLORE_SECTIONS.map((section) => (
+                        <Popover.Close asChild key={section.id}>
+                          <a
+                            className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                            href={`#${section.id}`}
+                          >
+                            {dictionary.explore.modules[section.module]}
+                          </a>
+                        </Popover.Close>
+                      ))}
+                    </nav>
+                  </Popover.Content>
+                </Popover.Portal>
+              </Popover.Root>
               <Popover.Trigger asChild>
-                <Button
-                  aria-label={dictionary.explore.navigation.button}
-                  className="min-h-10 px-3 py-2"
-                  type="button"
-                  variant="secondary"
-                >
-                  <ListTree aria-hidden="true" className="size-4" />
-                  <span className="hidden sm:inline">{dictionary.explore.navigation.button}</span>
+                <Button className="min-h-10 px-3 py-2" type="button" variant="secondary">
+                  <SlidersHorizontal aria-hidden="true" className="size-4" />
+                  {dictionary.explore.filters.button}
                 </Button>
               </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content
-                  align="end"
-                  aria-hidden={!navigationOpen}
-                  className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
-                  sideOffset={8}
-                  {...(hasOpenedNavigation ? { forceMount: true } : {})}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-base font-semibold">{dictionary.explore.navigation.title}</h2>
-                    <Popover.Close
-                      aria-label={dictionary.common.closeMenu}
-                      className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    >
-                      <X aria-hidden="true" className="size-4" />
-                    </Popover.Close>
-                  </div>
-                  <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
-                    {EXPLORE_SECTIONS.map((section) => (
-                      <Popover.Close asChild key={section.id}>
-                        <a
-                          className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                          href={`#${section.id}`}
-                        >
-                          {dictionary.explore.modules[section.module]}
-                        </a>
-                      </Popover.Close>
-                    ))}
-                  </nav>
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-            <Popover.Trigger asChild>
-              <Button className="min-h-10 px-3 py-2" type="button" variant="secondary">
-                <SlidersHorizontal aria-hidden="true" className="size-4" />
-                {dictionary.explore.filters.button}
-              </Button>
-            </Popover.Trigger>
+            </div>
           </div>
         </div>
         <Popover.Portal>
