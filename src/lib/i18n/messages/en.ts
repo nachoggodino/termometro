@@ -31,6 +31,11 @@ export const messages = {
     shareImageUnavailable: "Could not generate image",
     optional: "optional",
     attribution: "Citizen data in Termómetro de Madrid",
+    creatorCredit: {
+      prefix: "created by",
+      name: "nachoggodino",
+      ariaLabel: "Credits: created by nachoggodino",
+    },
   },
   home: {
     mission: "A citizen thermometer for making overheated Metro cars visible during Madrid summer",

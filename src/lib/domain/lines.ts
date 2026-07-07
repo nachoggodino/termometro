@@ -36,21 +36,6 @@ export const LINE_COLORS: Record<MetroLine, LineColor> = {
   L12: { fill: "oklch(0.58 0.11 120)", textOnFill: "white", ring: "oklch(0.84 0.05 120)" },
 };
 
-export const ESTIMATED_TOTAL_CARS: Record<MetroLine, number> = {
-  L1: 80,
-  L2: 48,
-  L3: 55,
-  L4: 44,
-  L5: 72,
-  L6: 90,
-  L7: 56,
-  L8: 30,
-  L9: 62,
-  L10: 76,
-  L11: 24,
-  L12: 50,
-};
-
 export function isMetroLine(value: unknown): value is MetroLine {
   return typeof value === "string" && METRO_LINES.includes(value as MetroLine);
 }

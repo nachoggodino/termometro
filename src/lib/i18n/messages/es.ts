@@ -31,6 +31,11 @@ export const messages = {
     shareImageUnavailable: "No se pudo generar la imagen",
     optional: "opcional",
     attribution: "Datos de ciudadanos en Termómetro de Madrid",
+    creatorCredit: {
+      prefix: "created by",
+      name: "nachoggodino",
+      ariaLabel: "Credits: created by nachoggodino",
+    },
   },
   home: {
     mission: "Un termómetro ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",

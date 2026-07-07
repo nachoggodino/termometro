@@ -1,5 +1,6 @@
 import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Confidence, type HeatState } from "./heat";
-import { ESTIMATED_TOTAL_CARS, METRO_LINES, type MetroLine } from "./lines";
+import { ESTIMATED_TOTAL_CARS } from "./fleet-estimates";
+import { METRO_LINES, type MetroLine } from "./lines";
 import { getRangeWindow, type TimeRange } from "./ranges";
 import type { Report } from "./reports";
 

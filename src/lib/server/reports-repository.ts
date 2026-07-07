@@ -8,7 +8,8 @@ import {
   type Report,
   type ReportInput,
 } from "@/lib/domain/reports";
-import { ESTIMATED_TOTAL_CARS, isMetroLine, type MetroLine } from "@/lib/domain/lines";
+import { ESTIMATED_TOTAL_CARS } from "@/lib/domain/fleet-estimates";
+import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import {
   createAbuseKey,
   createUndoToken,

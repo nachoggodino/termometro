@@ -89,19 +89,5 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 }
 
 function TrainSilhouette() {
-  return (
-    <svg aria-hidden="true" className="mx-auto mb-1 h-16 w-44 text-muted opacity-35" fill="none" viewBox="0 0 176 64">
-      <path
-        d="M28 46V24c0-7.7 6.3-14 14-14h78c13.8 0 25.7 9.7 28.4 23.2l2.5 12.8H28Z"
-        stroke="currentColor"
-        strokeLinejoin="round"
-        strokeWidth="3"
-      />
-      <path d="M45 21h65c8.3 0 15.8 4.7 19.4 12H45V21Z" stroke="currentColor" strokeLinejoin="round" strokeWidth="3" />
-      <path d="M56 21v12M78 21v12M100 21v12M122 24l-8 9" stroke="currentColor" strokeLinecap="round" strokeWidth="3" />
-      <path d="M31 46h125" stroke="currentColor" strokeLinecap="round" strokeWidth="3" />
-      <circle cx="55" cy="51" r="5" stroke="currentColor" strokeWidth="3" />
-      <circle cx="121" cy="51" r="5" stroke="currentColor" strokeWidth="3" />
-    </svg>
-  );
+  return <span aria-hidden="true" className="home-train-silhouette mx-auto mb-1 h-16 w-48 text-muted opacity-35" />;
 }

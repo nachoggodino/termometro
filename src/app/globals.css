@@ -40,6 +40,12 @@
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-drawer: 500ms;
@@ -184,6 +190,12 @@ body {
   border-color: color-mix(in oklch, var(--border), var(--metro-blue) 48%);
   background:
     linear-gradient(135deg, color-mix(in oklch, var(--surface-raised), var(--metro-blue) 14%), var(--surface-raised));
+}
+
+.home-train-silhouette {
+  display: block;
+  background: currentColor;
+  mask: url("/landing-train.svg") center / contain no-repeat;
 }
 
 .home-report-action > *,
