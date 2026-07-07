@@ -38,25 +38,29 @@ export function DashboardCharts({
   const limitWhenUnfiltered = (items: typeof visibleLines) => (selectedLines.length > 0 ? items : items.slice(0, DASHBOARD_LIMITS.topLineCount));
   const reportVolumeLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.reports - a.reports || b.score - a.score));
   const carLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.carsReported - a.carsReported || b.score - a.score));
-  const lineEvolutionLines = selectedLines.length > 0 ? selectedLines : data.lineSummaries.map((summary) => summary.line);
+  const lineEvolutionLines = visibleLines
+    .filter((summary) => summary.reports > 0)
+    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
+    .slice(0, 4)
+    .map((summary) => summary.line);
+  const heatTrendLines = selectedLines.length > 0 ? selectedLines : data.lineSummaries.map((summary) => summary.line);
   const xAxisInterval = selectedRange === "today" ? 2 : selectedRange === "sevenDays" ? 0 : "preserveStartEnd";
 
   return (
     <div className="flex flex-col gap-4">
       <ChartCard
         dictionary={dictionary}
-        help={dictionary.explore.fleetAdjustedScoreHelp}
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.lineEvolution}
-        title={dictionary.explore.modules.trend}
+        title={dictionary.explore.modules.lineEvolution}
       >
         <div className={CHART_TOKENS.moduleHeightClass}>
           <ResponsiveContainer height="100%" width="100%">
             <LineChart data={data.lineEvolution} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
-              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
-              <Tooltip content={<LocalizedTooltip footer={dictionary.explore.fleetAdjustedScoreHelp} labelName={dictionary.explore.fleetAdjustedScoreLabel} />} />
+              <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} />} />
               {lineEvolutionLines.map((line) => (
                 <Line
                   animationDuration={CHART_TOKENS.animationDurationMs}
@@ -72,7 +76,6 @@ export function DashboardCharts({
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <LineLegend lines={lineEvolutionLines} />
       </ChartCard>
 
       <ChartCard
@@ -130,6 +133,37 @@ export function DashboardCharts({
         <WorstCarsList data={data} dictionary={dictionary} />
       </ChartCard>
 
+      <ChartCard
+        dictionary={dictionary}
+        help={dictionary.explore.fleetAdjustedScoreHelp}
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.trend}
+        title={dictionary.explore.modules.trend}
+      >
+        <div className={CHART_TOKENS.moduleHeightClass}>
+          <ResponsiveContainer height="100%" width="100%">
+            <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
+              <YAxis axisLine={false} domain={CHART_TOKENS.heatScoreDomain} tickLine={false} />
+              <Tooltip content={<LocalizedTooltip footer={dictionary.explore.fleetAdjustedScoreHelp} labelName={dictionary.explore.fleetAdjustedScoreLabel} />} />
+              {heatTrendLines.map((line) => (
+                <Line
+                  animationDuration={CHART_TOKENS.animationDurationMs}
+                  dataKey={line}
+                  dot={false}
+                  key={line}
+                  name={line}
+                  stroke={LINE_COLORS[line].fill}
+                  strokeWidth={2}
+                  type="monotone"
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <LineLegend lines={heatTrendLines} />
+      </ChartCard>
     </div>
   );
 }

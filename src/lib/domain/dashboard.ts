@@ -33,9 +33,8 @@ export type CarSummary = {
 
 export type TrendPoint = {
   label: string;
-  score: number;
   reports: number;
-};
+} & Partial<Record<MetroLine, number>>;
 
 export type LineEvolutionPoint = {
   label: string;
@@ -102,8 +101,8 @@ export function buildDashboardData(
     .sort((a, b) => b.score - a.score || b.reports - a.reports)
     .slice(0, DASHBOARD_LIMITS.worstCarCount);
 
-  const trend = buildTrend(visibleReports, now, range);
-  const lineEvolution = buildLineEvolution(visibleReports, now, range, estimatedCarsByLine);
+  const trend = buildTrend(visibleReports, now, range, estimatedCarsByLine);
+  const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
   const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
 
@@ -117,14 +116,23 @@ export function buildDashboardData(
   };
 }
 
-function buildTrend(reports: Report[], now: Date, range: TimeRange): TrendPoint[] {
+function buildTrend(
+  reports: Report[],
+  now: Date,
+  range: TimeRange,
+  estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
+): TrendPoint[] {
   return buildBuckets(now, range).map((bucket) => {
     const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
-    return {
+    const point: TrendPoint = {
       label: bucket.label,
-      score: getWeightedHeatScore(bucketReports, now),
       reports: bucketReports.length,
     };
+    for (const line of METRO_LINES) {
+      const lineReports = bucketReports.filter((report) => report.line === line);
+      point[line] = getFleetAffectedScore(lineReports, estimatedCarsByLine[line]);
+    }
+    return point;
   });
 }
 
@@ -132,29 +140,31 @@ function buildLineEvolution(
   reports: Report[],
   now: Date,
   range: TimeRange,
-  estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
+  lineSummaries: LineSummary[],
 ): LineEvolutionPoint[] {
+  const lines = lineSummaries
+    .filter((summary) => summary.reports > 0)
+    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
+    .slice(0, 4)
+    .map((summary) => summary.line);
+
   return buildBuckets(now, range).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };
-    for (const line of METRO_LINES) {
-      const bucketReports = reports.filter((report) => report.line === line && report.createdAt >= bucket.start && report.createdAt < bucket.end);
-      point[line] = getFleetAdjustedHeatScore(bucketReports, now, estimatedCarsByLine[line]);
+    for (const line of lines) {
+      point[line] = reports.filter((report) => report.line === line && report.createdAt >= bucket.start && report.createdAt < bucket.end).length;
     }
     return point;
   });
 }
 
-export function getFleetAdjustedHeatScore(
-  reports: Array<{ state: HeatState; createdAt: Date; car: string | null }>,
-  now = new Date(),
+export function getFleetAffectedScore(
+  reports: Array<{ state: HeatState; car: string | null }>,
   estimatedCars = 1,
 ) {
-  const baseScore = getWeightedHeatScore(reports, now);
-  if (baseScore === 0 || estimatedCars <= 0) return baseScore;
+  if (estimatedCars <= 0) return 0;
 
   const reportedHotCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-  const fleetCoverage = reportedHotCars.size / estimatedCars;
-  return Math.round(Math.min(100, baseScore * (1 + fleetCoverage)));
+  return Math.round(Math.min(100, (reportedHotCars.size / estimatedCars) * 100));
 }
 
 function buildBuckets(now: Date, range: TimeRange) {

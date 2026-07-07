@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDashboardData, getFleetAdjustedHeatScore } from "./dashboard";
+import { buildDashboardData, getFleetAffectedScore } from "./dashboard";
 import type { Report } from "./reports";
 
 const now = new Date("2026-07-05T12:00:00Z");
@@ -46,8 +46,7 @@ describe("dashboard data", () => {
     expect(data.trend).toHaveLength(24);
     expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(2);
     expect(data.lineEvolution).toHaveLength(24);
-    expect(Math.max(...data.lineEvolution.map((point) => point.L1 ?? 0))).toBe(100);
-    expect(Math.max(...data.lineEvolution.map((point) => point.L5 ?? 0))).toBe(60);
+    expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0) + (point.L5 ?? 0), 0)).toBe(2);
   });
 
   it("uses daily buckets for wider range charts and tracks the busiest lines", () => {
@@ -59,23 +58,30 @@ describe("dashboard data", () => {
 
     expect(data.trend).toHaveLength(7);
     expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(3);
-    expect(data.lineEvolution.some((point) => (point.L1 ?? 0) > 0)).toBe(true);
-    expect(data.lineEvolution.some((point) => (point.L5 ?? 0) > 0)).toBe(true);
-    expect(data.lineEvolution.every((point) => typeof point.L12 === "number")).toBe(true);
+    expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0), 0)).toBe(2);
+    expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
   });
 
-  it("raises the line evolution score when hot reports cover more of a line fleet", () => {
-    const singleCarScore = getFleetAdjustedHeatScore([
+  it("scores heat evolution by affected fleet coverage only", () => {
+    const noAffectedFleetScore = getFleetAffectedScore([
+      report({ id: "1", line: "L1", state: "fresco", car: "M1001" }),
+    ], 10);
+    const singleCarScore = getFleetAffectedScore([
       report({ id: "1", line: "L1", state: "calor", car: "M1001" }),
-    ], now, 10);
-    const widerFleetSignalScore = getFleetAdjustedHeatScore([
+    ], 10);
+    const widerFleetSignalScore = getFleetAffectedScore([
       report({ id: "1", line: "L1", state: "calor", car: "M1001" }),
       report({ id: "2", line: "L1", state: "calor", car: "M1002" }),
       report({ id: "3", line: "L1", state: "calor", car: "M1003" }),
-    ], now, 10);
+    ], 10);
+    const fullFleetScore = getFleetAffectedScore(Array.from({ length: 10 }, (_, index) =>
+      report({ id: String(index), line: "L1", state: "infierno", car: `M10${String(index).padStart(2, "0")}` }),
+    ), 10);
 
-    expect(singleCarScore).toBe(66);
-    expect(widerFleetSignalScore).toBe(78);
+    expect(noAffectedFleetScore).toBe(0);
+    expect(singleCarScore).toBe(10);
+    expect(widerFleetSignalScore).toBe(30);
+    expect(fullFleetScore).toBe(100);
   });
 
   it("excludes reports after the summer window", () => {

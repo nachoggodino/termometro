@@ -15,9 +15,9 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   const recentReports = dashboard.recentReports.slice(0, 5);
 
   return (
-    <main className="min-h-dvh">
-      <section className="mx-auto flex min-h-[calc(100dvh-80px)] max-w-5xl flex-col px-4 py-7 sm:py-12">
-        <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center gap-5">
+    <main>
+      <section className="mx-auto flex max-w-5xl flex-col px-4 pb-5 pt-7 sm:pt-12">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
           <TrainSilhouette />
           <p className="mx-auto max-w-md text-center text-pretty text-sm leading-5 text-muted sm:text-base sm:leading-6">{dictionary.home.mission}</p>
 
