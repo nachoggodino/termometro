@@ -59,7 +59,7 @@ Avoid:
 ## Design Principles
 
 1. Make the hot lines impossible to average away.
-   The dashboard should lead with rankings, line-by-line comparisons, critical-line callouts, and worst-car evidence instead of a single network average.
+   The dashboard may lead with a current evolution/status module, but it must keep rankings, line-by-line comparisons, critical-line callouts, and worst-car evidence prominent instead of using a single network average.
 
 2. Treat reports as signals, not verdicts.
    Use recency, confidence, disagreement, and sample size to communicate uncertainty honestly.

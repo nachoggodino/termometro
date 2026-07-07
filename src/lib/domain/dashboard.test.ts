@@ -61,4 +61,15 @@ describe("dashboard data", () => {
     expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0), 0)).toBe(2);
     expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
   });
+
+  it("excludes reports after the summer window", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-10-15T12:00:00Z") }),
+      report({ id: "2", line: "L5", state: "infierno", createdAt: new Date("2026-11-01T12:00:00Z") }),
+    ], new Date("2026-11-02T12:00:00Z"), undefined, "summer");
+
+    expect(data.lineSummaries.find((summary) => summary.line === "L1")?.reports).toBe(1);
+    expect(data.lineSummaries.find((summary) => summary.line === "L5")?.reports).toBe(0);
+    expect(data.recentReports).toHaveLength(1);
+  });
 });

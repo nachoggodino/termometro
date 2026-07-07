@@ -1,6 +1,6 @@
 import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Confidence, type HeatState } from "./heat";
 import { ESTIMATED_TOTAL_CARS, METRO_LINES, type MetroLine } from "./lines";
-import { getRangeStart, type TimeRange } from "./ranges";
+import { getRangeWindow, type TimeRange } from "./ranges";
 import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
@@ -47,7 +47,6 @@ export type DashboardData = {
   lineEvolution: LineEvolutionPoint[];
   recentReports: Report[];
   reportsLastDay: number;
-  hottestLine: LineSummary | null;
 };
 
 export function buildDashboardData(
@@ -56,7 +55,8 @@ export function buildDashboardData(
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
   range: TimeRange = "sevenDays",
 ): DashboardData {
-  const visibleReports = reports.filter((report) => !report.hiddenAt);
+  const rangeWindow = getRangeWindow(range, now);
+  const visibleReports = reports.filter((report) => !report.hiddenAt && report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
@@ -109,9 +109,8 @@ export function buildDashboardData(
     worstCars,
     trend,
     lineEvolution,
-    recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 18),
+    recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
     reportsLastDay,
-    hottestLine: lineSummaries.find((summary) => summary.reports > 0) ?? null,
   };
 }
 
@@ -148,8 +147,9 @@ function buildLineEvolution(
 }
 
 function buildBuckets(now: Date, range: TimeRange) {
+  const rangeWindow = getRangeWindow(range, now);
   if (range === "today") {
-    const start = getRangeStart("today", now);
+    const start = rangeWindow.start;
     return Array.from({ length: 24 }, (_, hour) => {
       const bucketStart = new Date(start);
       bucketStart.setHours(hour, 0, 0, 0);
@@ -163,9 +163,8 @@ function buildBuckets(now: Date, range: TimeRange) {
     });
   }
 
-  const start = getRangeStart(range, now);
   const buckets = [];
-  for (const day = new Date(start); day <= now; day.setDate(day.getDate() + 1)) {
+  for (const day = new Date(rangeWindow.start); day <= rangeWindow.end; day.setDate(day.getDate() + 1)) {
     const bucketStart = new Date(day);
     bucketStart.setHours(0, 0, 0, 0);
     const bucketEnd = new Date(bucketStart);

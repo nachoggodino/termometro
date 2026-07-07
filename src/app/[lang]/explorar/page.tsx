@@ -1,6 +1,6 @@
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
-import { HeatStateBadge } from "@/components/report/heat-state-badge";
+import { RecentReportRow } from "@/components/report/recent-report-row";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
@@ -9,7 +9,6 @@ import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
 import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
-import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 import { BarChart3 } from "lucide-react";
 
@@ -77,20 +76,7 @@ export default async function ExplorePage({
               <h2 className="text-base font-semibold">{dictionary.explore.modules.recent}</h2>
               <div className="mt-4 flex flex-col divide-y divide-border">
                 {data.recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount).map((report) => (
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 py-3" key={report.id}>
-                    <span
-                      className="rounded-sm px-1.5 py-1 text-xs font-bold"
-                      style={{
-                        background: LINE_COLORS[report.line].fill,
-                        color: LINE_COLORS[report.line].textOnFill,
-                      }}
-                    >
-                      {report.line}
-                    </span>
-                    <p className="min-w-0 truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
-                    <HeatStateBadge dictionary={dictionary} state={report.state} />
-                    <time className="font-mono text-xs text-muted">{formatTime(report.createdAt, lang)}</time>
-                  </div>
+                  <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
                 ))}
               </div>
             </section>
@@ -150,10 +136,6 @@ function parseSelectedLines(value: string | undefined) {
     }
   }
   return lines;
-}
-
-function formatTime(date: Date, locale: string) {
-  return date.toLocaleTimeString(locale === "en" ? "en-GB" : "es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatRelativeReport(date: Date | null, locale: string, dictionary: Awaited<ReturnType<typeof getDictionary>>) {

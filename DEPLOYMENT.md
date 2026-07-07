@@ -13,7 +13,7 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `TERMOMETRO_ABUSE_SECRET`
-4. Apply `supabase/migrations/0001_initial.sql` to the Supabase project.
+4. Apply all files in `supabase/migrations/` to the Supabase project in filename order.
 5. Seed non-production data with `supabase/seed.sql` if the preview project should have dashboard data immediately.
 6. Deploy a Preview build from a non-production branch.
 7. Verify the preview:
@@ -28,4 +28,4 @@ Vercel sets `VERCEL=1`, so the app will fail loudly if Supabase env vars or `TER
 
 - Supabase migrations exist, but they still need to be applied and verified against the real project.
 - CI is not configured yet. Vercel can build from Git, but test/typecheck gates are still manual.
-- Playwright coverage exists for core flows, but screenshots/accessibility checks should be reviewed before public launch.
+- Playwright coverage exists for core flows, language/theme switching, and undo, but screenshots/accessibility checks should be reviewed before public launch.

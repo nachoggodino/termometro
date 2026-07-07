@@ -25,7 +25,7 @@ export function InfoTooltip({ label, children }: { label: string; children: Reac
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content
           className={cn(
-            "z-50 max-w-64 rounded-md border border-border bg-surface-raised px-3 py-2 text-sm leading-5 text-foreground shadow-[0_6px_14px_oklch(0.19_0.018_160_/_0.12)]",
+            "z-50 max-w-64 rounded-md border border-border bg-surface-raised px-3 py-2 text-sm leading-5 text-foreground shadow-[var(--shadow-popover)]",
           )}
           onEscapeKeyDown={() => setOpen(false)}
           onPointerDownOutside={() => setOpen(false)}

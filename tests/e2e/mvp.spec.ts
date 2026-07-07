@@ -10,6 +10,7 @@ test("home exposes the two primary actions and switches language", async ({ page
   await page.getByRole("button", { name: "Menú" }).click();
   await page.getByTestId("lang-en").click();
   await expect(page).toHaveURL(/\/en$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.getByTestId("home-report")).toBeVisible();
 });
 
@@ -25,6 +26,12 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
   await expect(page.getByText("Líneas en peor estado")).toBeVisible();
   await expect(page.getByText("Peores coches")).toBeVisible();
+
+  const undoResponse = page.waitForResponse((response) => response.url().includes("/api/reports/") && response.request().method() === "DELETE");
+  await page.getByRole("button", { name: "Deshacer" }).click();
+  await undoResponse;
+  await page.reload();
+  await expect(page.getByText(`M-${carNumber}`)).toHaveCount(0);
 });
 
 test("report flow blocks invalid car codes", async ({ page }) => {

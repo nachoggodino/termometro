@@ -1,6 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import {
-  RATE_LIMIT_MAX_REPORTS,
   RATE_LIMIT_WINDOW_MINUTES,
   UNDO_WINDOW_SECONDS,
 } from "../domain/reports";
@@ -62,5 +61,3 @@ export function getUndoExpiresAt(now = new Date()) {
 export function getRateLimitStart(now = new Date()) {
   return new Date(now.getTime() - RATE_LIMIT_WINDOW_MS);
 }
-
-export { RATE_LIMIT_MAX_REPORTS };

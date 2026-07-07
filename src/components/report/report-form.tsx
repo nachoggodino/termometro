@@ -28,10 +28,17 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/cars?line=${line}`)
+    const controller = new AbortController();
+
+    fetch(`/api/cars?line=${line}`, { signal: controller.signal })
       .then((response) => response.json())
       .then((data: { suggestions?: string[] }) => setSuggestions(data.suggestions ?? []))
-      .catch(() => setSuggestions([]));
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setSuggestions([]);
+      });
+
+    return () => controller.abort();
   }, [line]);
 
   const submitLabel = dictionary.reportForm.submit[state];
@@ -137,7 +144,7 @@ function submitStyle(state: HeatState): CSSProperties {
   return {
     "--report-button": heatColor,
     "--action-report-border": `color-mix(in oklch, ${heatColor}, var(--border) 24%)`,
-    "--report-particle": state === "fresco" ? "oklch(0.96 0.045 235)" : state === "infierno" ? "oklch(0.98 0.05 42)" : "oklch(0.99 0.055 92)",
+    "--report-particle": state === "fresco" ? "var(--report-particle-fresco)" : state === "infierno" ? "var(--report-particle-infierno)" : "var(--report-particle-calor)",
     "--report-active-blur": `color-mix(in oklch, ${heatColor}, transparent 52%)`,
     color: state === "calor" ? "var(--foreground)" : "white",
   } as CSSProperties;

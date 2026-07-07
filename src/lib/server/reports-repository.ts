@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { buildDashboardData } from "@/lib/domain/dashboard";
-import { getRangeStart, type TimeRange } from "@/lib/domain/ranges";
+import { getRangeWindow, type TimeRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
   isDuplicateCandidate,
@@ -24,6 +24,17 @@ import { seedReports } from "./seed-data";
 type CreateResult =
   | { ok: true; report: Report; undoToken: string }
   | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" };
+
+type CreateReportRpcRow = {
+  ok: boolean;
+  reason: string | null;
+  id: string | null;
+  line: MetroLine | null;
+  car: string | null;
+  state: ReportInput["state"] | null;
+  created_at: string | null;
+  hidden_at: string | null;
+};
 
 type DashboardOptions = {
   range: TimeRange;
@@ -92,21 +103,23 @@ function getSupabase(options: { serviceRole?: boolean } = {}) {
 }
 
 export async function getReportsForDashboard(options: DashboardOptions) {
-  const start = getRangeStart(options.range);
+  const now = new Date();
+  const { start, end } = getRangeWindow(options.range, now);
   const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
   const supabase = getSupabase();
 
   if (!supabase) {
     const reports = getMemoryReports().filter((report) => {
-      return report.createdAt >= start && (!selectedLines || selectedLines.includes(report.line));
+      return report.createdAt >= start && report.createdAt <= end && (!selectedLines || selectedLines.includes(report.line));
     });
-    return buildDashboardData(reports, undefined, ESTIMATED_TOTAL_CARS, options.range);
+    return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
   }
 
   let query = supabase
     .from("reports")
     .select("id,line,car,state,created_at,hidden_at")
     .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
     .is("hidden_at", null)
     .order("created_at", { ascending: false });
 
@@ -141,7 +154,7 @@ export async function getReportsForDashboard(options: DashboardOptions) {
       createdAt: new Date(row.created_at),
       hiddenAt: row.hidden_at ? new Date(row.hidden_at) : null,
     })),
-    undefined,
+    now,
     fleetEstimates as Record<MetroLine, number>,
     options.range,
   );
@@ -185,47 +198,31 @@ export async function createReportForRequest(
     return { ok: true, report, undoToken };
   }
 
-  if (abuseKey) {
-    const { count, error: rateLimitError } = await supabase
-      .from("reports")
-      .select("id", { count: "exact", head: true })
-      .eq("abuse_key", abuseKey)
-      .gte("created_at", getRateLimitStart(now).toISOString());
-
-    if (rateLimitError) throw rateLimitError;
-    if ((count ?? 0) >= RATE_LIMIT_MAX_REPORTS) return { ok: false, reason: "rate_limited" };
-  }
-
-  const duplicateWindowStart = new Date(now.getTime() - DUPLICATE_WINDOW_MINUTES * 60_000).toISOString();
-  let duplicateQuery = supabase
-    .from("reports")
-    .select("id")
-    .eq("line", input.line)
-    .eq("state", input.state)
-    .gte("created_at", duplicateWindowStart)
-    .is("hidden_at", null)
-    .limit(1);
-
-  duplicateQuery = input.car ? duplicateQuery.eq("car", input.car) : duplicateQuery.is("car", null);
-
-  const { data: duplicateData, error: duplicateError } = await duplicateQuery;
-  if (duplicateError) throw duplicateError;
-  if ((duplicateData ?? []).length > 0) return { ok: false, reason: "duplicate" };
-
-  const { data, error } = await supabase
-    .from("reports")
-    .insert({
-      line: input.line,
-      car: input.car,
-      state: input.state,
-      abuse_key: abuseKey,
-      undo_token_hash: undoTokenHash,
-      undo_expires_at: undoExpiresAt.toISOString(),
+  const duplicateWindowStart = new Date(now.getTime() - DUPLICATE_WINDOW_MINUTES * 60_000);
+  const { data: rpcData, error } = await supabase
+    .rpc("create_report", {
+      input_line: input.line,
+      input_car: input.car,
+      input_state: input.state,
+      input_abuse_key: abuseKey,
+      input_undo_token_hash: undoTokenHash,
+      input_undo_expires_at: undoExpiresAt.toISOString(),
+      input_now: now.toISOString(),
+      input_rate_limit_start: getRateLimitStart(now).toISOString(),
+      input_rate_limit_max: RATE_LIMIT_MAX_REPORTS,
+      input_duplicate_window_start: duplicateWindowStart.toISOString(),
     })
-    .select("id,line,car,state,created_at,hidden_at")
     .single();
 
   if (error) throw error;
+  const data = rpcData as CreateReportRpcRow;
+  if (!data.ok) {
+    return { ok: false, reason: data.reason as "duplicate" | "rate_limited" };
+  }
+
+  if (!data.id || !data.line || !data.state || !data.created_at) {
+    throw new Error("Report creation returned an incomplete row.");
+  }
 
   return {
     ok: true,

@@ -28,10 +28,11 @@ Use a long random value for `TERMOMETRO_ABUSE_SECRET`; it salts private abuse ke
 
 ## Supabase
 
-When you create the Supabase project, apply:
+When you create the Supabase project, apply migrations in order, then seed optional development data:
 
 ```bash
 supabase/migrations/0001_initial.sql
+supabase/migrations/0002_create_report_rpc.sql
 supabase/seed.sql
 ```
 

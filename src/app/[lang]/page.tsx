@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { Clock3, Flame, ThermometerSun, TriangleAlert } from "lucide-react";
-import { HeatStateBadge } from "@/components/report/heat-state-badge";
+import { RecentReportRow } from "@/components/report/recent-report-row";
 import { Button } from "@/components/ui/button";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
-import { LINE_COLORS } from "@/lib/domain/lines";
-import { formatCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -69,20 +67,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             {recentReports.length > 0 ? (
               <div className="mt-3 flex flex-col divide-y divide-border">
                 {recentReports.map((report) => (
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 py-3" key={report.id}>
-                    <span
-                      className="rounded-sm px-1.5 py-1 text-xs font-bold"
-                      style={{
-                        background: LINE_COLORS[report.line].fill,
-                        color: LINE_COLORS[report.line].textOnFill,
-                      }}
-                    >
-                      {report.line}
-                    </span>
-                    <p className="min-w-0 truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
-                    <HeatStateBadge dictionary={dictionary} state={report.state} />
-                    <time className="font-mono text-xs text-muted">{formatTime(report.createdAt, lang)}</time>
-                  </div>
+                  <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
                 ))}
               </div>
             ) : (
@@ -101,10 +86,6 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
       </section>
     </main>
   );
-}
-
-function formatTime(date: Date, locale: string) {
-  return date.toLocaleTimeString(locale === "en" ? "en-GB" : "es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
 function TrainSilhouette() {

@@ -13,7 +13,7 @@ Those files are project constraints, not background notes. Do not contradict the
 
 - The app is Spanish-first and English-complete in v1. Do not hardcode user-facing strings in components. Put copy in locale dictionaries.
 - Keep route slugs stable across locales: `/es/reportar`, `/en/reportar`, `/es/explorar`, `/en/explorar`.
-- The public UI must not imply affiliation with Metro de Madrid. Always preserve the disclaimer: `Proyecto ciudadano no afiliado a Metro de Madrid.`
+- The public UI must not imply affiliation with Metro de Madrid. Always preserve the disclaimer: `Proyecto ciudadano no afiliado a Metro de Madrid`
 - Reports are anonymous publicly. Do not expose IPs, device hashes, user agents, or technical abuse keys.
 - Do not add accounts, GPS prompts, open text comments, backdating, or offline submission unless `PRODUCT.md` is intentionally revised first.
 - Treat reports as signals, not truth. Dashboards must show confidence, recency, disagreement, and estimated-fleet caveats where relevant.
@@ -28,7 +28,7 @@ Those files are project constraints, not background notes. Do not contradict the
 - Do not use glassmorphism, gradient text, decorative grid backgrounds, stripe backgrounds, cartoon flames, or large warm-tinted page backgrounds.
 - Metro line colors identify lines. Heat colors encode `Fresco`, `Calor`, and `Infierno`. Do not mix those meanings.
 - `Infierno` must not be visually baited before selection. Heat state options stay equal weight until selected.
-- Motion must convey state, use 150-250ms transitions, and support `prefers-reduced-motion`.
+- Motion must convey state, prefer 150-250ms transitions for controls, allow longer structural drawer transitions when they improve spatial clarity, and support `prefers-reduced-motion`.
 - All interactive states need default, hover, focus, active, disabled, loading/error where applicable.
 - Use tooltips/help popovers for methodology details instead of bloating primary UI text.
 
@@ -54,9 +54,9 @@ Those files are project constraints, not background notes. Do not contradict the
 
 ## Testing And Verification
 
-- Target at least 90% coverage for application/domain code. If a file cannot reasonably meet this, document why in the PR/summary.
+- Target at least 90% coverage for domain logic plus shared app helpers such as i18n and server security. Broaden component/page coverage incrementally as harnesses are added; if a file cannot reasonably meet this, document why in the PR/summary.
 - Test domain logic thoroughly: heat scoring, confidence, disagreement, time ranges, duplicate suppression, validation, i18n lookup, and car normalization.
-- Add component tests for important UI states: selected line, selected heat state, validation errors, loading, success, duplicate feedback, undo toast, empty dashboard, and dark mode.
+- Add component or Playwright tests for important UI states: selected line, selected heat state, validation errors, loading, success, duplicate feedback, undo toast, empty dashboard, and dark mode.
 - Use Playwright for every user-facing feature flow: home actions, report submission, undo submission, explore filters, language switch, theme switch, dashboard chart rendering, and mobile viewport behavior.
 - Capture and review Playwright screenshots for mobile and desktop before calling UI work complete.
 - At the end of UI-facing development sessions, make the local dev server reachable from a real phone when practical, report the exact phone URL, and document any firewall, WSL, or network limitation if phone access cannot be verified.

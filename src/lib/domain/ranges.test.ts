@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getRangeStart, getSummerEnd, isTimeRange } from "./ranges";
+import { getRangeEnd, getRangeStart, getRangeWindow, getSummerEnd, isTimeRange } from "./ranges";
 
 describe("time ranges", () => {
   it("validates range names", () => {
@@ -24,5 +24,25 @@ describe("time ranges", () => {
 
   it("uses previous summer before May 15", () => {
     expect(getRangeStart("summer", new Date("2027-02-01T12:00:00Z")).getFullYear()).toBe(2026);
+  });
+
+  it("caps summer at October 15 after the season ends", () => {
+    const now = new Date("2026-11-02T12:00:00Z");
+    const end = getRangeEnd("summer", now);
+
+    expect(end.getFullYear()).toBe(2026);
+    expect(end.getMonth()).toBe(9);
+    expect(end.getDate()).toBe(15);
+  });
+
+  it("returns bounded windows for summer", () => {
+    const window = getRangeWindow("summer", new Date("2026-11-02T12:00:00Z"));
+
+    expect(window.start.getFullYear()).toBe(2026);
+    expect(window.start.getMonth()).toBe(4);
+    expect(window.start.getDate()).toBe(15);
+    expect(window.end.getFullYear()).toBe(2026);
+    expect(window.end.getMonth()).toBe(9);
+    expect(window.end.getDate()).toBe(15);
   });
 });

@@ -118,7 +118,7 @@ Termometro de Madrid should feel like a sharp public evidence tool built for a h
 
 The default interface is light because people will use and screenshot it on phones in stations, trains, and outdoor transitions. Dark mode is supported from v1, but it should be a true theme switch, not the main visual identity. Heat is expressed through state, charts, and micro-motion, not through a permanently hot background.
 
-The system rejects official Metro de Madrid mimicry, generic complaint-counter dashboards, cartoon flames, glassmorphism, oversized rounded cards, and single average metrics that make L1 and L5 disappear into a network-wide score.
+The system rejects official Metro de Madrid mimicry, generic complaint-counter dashboards, cartoon flames, glassmorphism, oversized rounded cards, and single average metrics that make L1 and L5 disappear into a network-wide score. The dashboard can open with an evolution/status chart when that helps orientation, as long as line-level severity remains prominent.
 
 **Key Characteristics:**
 
@@ -253,7 +253,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 - **Home:** Compact civic landing with title, mission sentence, live snapshot, two large action buttons, language switch, theme switch, and mandatory disclaimer.
 - **App Header:** Small logo mark, current route title, language/theme utilities, and clear back/home affordance on `/reportar`.
 - **Raycast-Style Nav:** Use a compact floating or inset top utility bar with crisp active states, icon+label actions where useful, and fast state transitions. It should feel light, precise, and app-like, not like a marketing navbar.
-- **No Hamburger By Default:** V1 has few routes. Prefer visible actions and utility buttons. Add a drawer only if methodology/settings grow beyond header capacity.
+- **Compact Drawer Navigation:** V1 uses a compact top drawer so language, theme, methodology, and core routes stay reachable without crowding the mobile header. Keep the primary home actions visible; the drawer must stay lightweight and keyboard-accessible.
 - **Dashboard Filters:** Sticky or near-sticky line and range controls on mobile. They should never cover chart content.
 
 ### Heat State Selector
@@ -262,7 +262,7 @@ Three equal-size options: Fresco, Calor, Infierno. Calor is selected by default,
 
 ### Dashboard Modules
 
-Dashboard modules are evidence blocks, not generic metric cards. Lead with ranking and distribution rather than a single average. Modules should include compact helper tooltips for `Indicador Termómetro`, confidence, fleet estimates, and summer range definitions.
+Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termómetro`, confidence, fleet estimates, and summer range definitions.
 
 Required module styles:
 
@@ -289,7 +289,7 @@ Use a flat red tilted lozenge/diamond behind a blue vertical thermometer. The ma
 - **Do** show confidence as simple labels (`baja`, `media`, `alta`) with tap/hover explanation.
 - **Do** distinguish line identity colors from heat-state colors.
 - **Do** use subtle heat shimmer or ember-like motion only around selected heat state or critical dashboard feedback, with reduced-motion alternatives.
-- **Do** include the mandatory disclaimer: `Proyecto ciudadano no afiliado a Metro de Madrid.`
+- **Do** include the mandatory disclaimer: `Proyecto ciudadano no afiliado a Metro de Madrid`
 - **Do** keep Spanish and English copy complete in v1, with all UI strings in dictionaries.
 
 ### Don't:

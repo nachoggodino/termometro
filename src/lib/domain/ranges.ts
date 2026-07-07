@@ -33,3 +33,19 @@ export function getSummerEnd(now = new Date()) {
   const start = getRangeStart("summer", now);
   return new Date(start.getFullYear(), 9, 15, 23, 59, 59, 999);
 }
+
+export function getRangeEnd(range: TimeRange, now = new Date()) {
+  if (range === "summer") {
+    const summerEnd = getSummerEnd(now);
+    return now < summerEnd ? now : summerEnd;
+  }
+
+  return now;
+}
+
+export function getRangeWindow(range: TimeRange, now = new Date()) {
+  return {
+    start: getRangeStart(range, now),
+    end: getRangeEnd(range, now),
+  };
+}
