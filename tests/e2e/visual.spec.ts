@@ -22,6 +22,18 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
   await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-explorar.png` });
 
+  await page.goto("/es/metodologia");
+  await expect(page.getByRole("heading", { name: "Misión y Metodología" })).toBeVisible();
+  await page.getByRole("button", { name: "Secciones" }).click();
+  await expect(page.getByText("Ir a sección")).toBeVisible();
+  await page.getByRole("link", { name: "Indicador Termo" }).click();
+  await expect(page.getByText("indicador_termo =")).toBeVisible();
+  await page.goto("/es/metodologia");
+  await expect(page.getByText("Valores actuales usados por línea")).toBeVisible();
+  await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-metodologia.png` });
+
+  await page.goto("/es/explorar");
+  await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await page.getByRole("button", { name: "Filtros" }).click();
   await expect(page.getByText("Filtrar exploración")).toBeVisible();
   await page.screenshot({ fullPage: false, path: `/tmp/termo-${project}-filters.png` });
