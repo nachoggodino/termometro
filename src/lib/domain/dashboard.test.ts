@@ -91,16 +91,19 @@ describe("dashboard data", () => {
 
   it("uses accumulated summer reports for the Termo Indicator trend", () => {
     const estimatedCarsByLine = Object.fromEntries(METRO_LINES.map((line) => [line, 10])) as Record<MetroLine, number>;
-    const data = buildDashboardData([
+    const reports = [
       report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-06-01T08:30:00Z") }),
-    ], now, estimatedCarsByLine, "sevenDays");
+    ];
+    const data = buildDashboardData(reports, now, estimatedCarsByLine, "sevenDays");
+    const monthData = buildDashboardData(reports, now, estimatedCarsByLine, "month");
 
     const l1Values = data.trend.map((point) => point.L1);
 
-    expect(l1Values).toEqual(Array.from({ length: 7 }, () => 0.1));
+    expect(l1Values).toEqual([0.03, 0.02, 0.02, 0.01, 0.01, 0.01, 0.01]);
+    expect(monthData.trend.slice(-7).map((point) => point.L1)).toEqual(l1Values);
   });
 
-  it("scores heat evolution from indicator, report count, and affected fleet percentage", () => {
+  it("scores heat evolution with the cumulative Metro Heat Index", () => {
     const noAffectedFleetScore = getHeatEvolutionScore([
       report({ id: "1", line: "L1", state: "fresco", car: "M1001" }),
     ], 10, now);
@@ -117,9 +120,10 @@ describe("dashboard data", () => {
     ), 10, now);
 
     expect(noAffectedFleetScore).toBe(0);
-    expect(singleCarScore).toBe(0.06);
-    expect(widerFleetSignalScore).toBe(0.54);
-    expect(fullFleetScore).toBe(10);
+    expect(singleCarScore).toBe(9.96);
+    expect(widerFleetSignalScore).toBeGreaterThan(singleCarScore);
+    expect(fullFleetScore).toBeGreaterThan(widerFleetSignalScore);
+    expect(fullFleetScore).toBeLessThanOrEqual(100);
   });
 
   it("excludes reports after the summer window", () => {

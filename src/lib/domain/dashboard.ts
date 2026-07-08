@@ -1,4 +1,13 @@
-import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Confidence, type HeatState } from "./heat";
+import {
+  calculateMetroHeatIndex,
+  getAgreement,
+  getConfidence,
+  getHeatTone,
+  getWeightedHeatScore,
+  type Confidence,
+  type HeatIndexDiagnostics,
+  type HeatState,
+} from "./heat";
 import { ESTIMATED_TOTAL_CARS } from "./fleet-estimates";
 import { METRO_LINES, type MetroLine } from "./lines";
 import { getRangeWindow, type TimeRange } from "./ranges";
@@ -13,6 +22,7 @@ export const DASHBOARD_LIMITS = {
 export type LineSummary = {
   line: MetroLine;
   score: number;
+  heatIndex: HeatIndexDiagnostics;
   tone: HeatState;
   reports: number;
   confidence: Confidence;
@@ -26,7 +36,6 @@ export type LineSummary = {
 export type CarSummary = {
   car: string;
   line: MetroLine;
-  score: number;
   reports: number;
   confidence: Confidence;
 };
@@ -59,11 +68,14 @@ export function buildDashboardData(
   const usableReports = reports.filter((report) => !report.hiddenAt);
   const visibleReports = usableReports.filter((report) => report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
   const recentReports = usableReports.filter((report) => report.createdAt <= rangeWindow.end);
+  const summerStart = getRangeWindow("summer", now).start;
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
+    const lineIndexReports = usableReports.filter((report) => report.line === line && report.createdAt >= summerStart && report.createdAt <= rangeWindow.end);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
     const reportedCarsWithoutAc = new Set(lineReports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-    const score = getWeightedHeatScore(lineReports, now);
+    const heatIndex = calculateMetroHeatIndex(lineIndexReports, estimatedCarsByLine[line], rangeWindow.end);
+    const score = heatIndex.heat_index;
     const latestReportAt =
       lineReports.length > 0
         ? lineReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
@@ -71,6 +83,7 @@ export function buildDashboardData(
     return {
       line,
       score,
+      heatIndex,
       tone: getHeatTone(score),
       reports: lineReports.length,
       confidence: getConfidence(lineReports),
@@ -95,13 +108,14 @@ export function buildDashboardData(
       return {
         line,
         car,
-        score: getWeightedHeatScore(carReports, now),
+        heatSortScore: getWeightedHeatScore(carReports, now),
         reports: carReports.length,
         confidence: getConfidence(carReports),
       };
     })
-    .sort((a, b) => b.score - a.score || b.reports - a.reports)
-    .slice(0, DASHBOARD_LIMITS.worstCarCount);
+    .sort((a, b) => b.heatSortScore - a.heatSortScore || b.reports - a.reports)
+    .slice(0, DASHBOARD_LIMITS.worstCarCount)
+    .map(({ line, car, reports, confidence }) => ({ line, car, reports, confidence }));
 
   const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
@@ -133,8 +147,9 @@ function buildTrend(
       reports: bucketReports.length,
     };
     for (const line of METRO_LINES) {
-      const lineReports = accumulatedReports.filter((report) => report.line === line);
-      point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], now);
+      const bucketAsOf = bucket.end < now ? bucket.end : now;
+      const lineReports = accumulatedReports.filter((report) => report.line === line && report.createdAt < bucketAsOf);
+      point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], bucketAsOf);
     }
     return point;
   });
@@ -172,16 +187,7 @@ export function getHeatEvolutionScore(
   estimatedCars = 1,
   now = new Date(),
 ) {
-  if (estimatedCars <= 0 || reports.length === 0) return 0;
-
-  const thermometerIndicator = getWeightedHeatScore(reports, now) / 100;
-  const affectedCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-  const fleetPercentage = affectedCars.size / estimatedCars;
-  return roundToTwo(thermometerIndicator * reports.length * fleetPercentage);
-}
-
-function roundToTwo(value: number) {
-  return Math.round(value * 100) / 100;
+  return calculateMetroHeatIndex(reports, estimatedCars, now).heat_index;
 }
 
 function buildBuckets(now: Date, range: TimeRange) {

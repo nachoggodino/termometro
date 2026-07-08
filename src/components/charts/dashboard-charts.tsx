@@ -237,7 +237,7 @@ function WorstCarsList({ data, dictionary }: { data: DashboardData; dictionary: 
               <span className="font-mono text-sm font-semibold">{formatCarCode(car.car)}</span>
             </div>
             <p className="mt-1 text-xs text-muted">
-              {dictionary.explore.score}: <span className="font-mono font-semibold text-foreground">{car.score}</span> · {dictionary.common.confidence} {dictionary.common[car.confidence]}
+              {dictionary.common.confidence} {dictionary.common[car.confidence]}
             </p>
           </div>
           <div className="text-right">
