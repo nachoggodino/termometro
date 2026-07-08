@@ -33,8 +33,8 @@ begin
     if (
       select count(*)
       from public.reports
-      where abuse_key = input_abuse_key
-        and created_at >= input_rate_limit_start
+      where reports.abuse_key = input_abuse_key
+        and reports.created_at >= input_rate_limit_start
     ) >= input_rate_limit_max then
       return query select false, 'rate_limited'::text, null::uuid, null::text, null::text, null::public.heat_state, null::timestamptz, null::timestamptz;
       return;

@@ -15,7 +15,7 @@ describe("Supabase migration contracts", () => {
   });
 
   it("keeps report creation behind the service role RPC", () => {
-    const rpcMigration = readFileSync(join(root, "supabase/migrations/0005_fix_create_report_created_at_ambiguity.sql"), "utf8");
+    const rpcMigration = readFileSync(join(root, "supabase/migrations/0002_create_report_rpc.sql"), "utf8");
 
     expect(rpcMigration).toContain("security definer");
     expect(rpcMigration).toContain("revoke all on function public.create_report");
@@ -24,7 +24,7 @@ describe("Supabase migration contracts", () => {
   });
 
   it("only applies duplicate suppression when a car identifier is present", () => {
-    const rpcMigration = readFileSync(join(root, "supabase/migrations/0005_fix_create_report_created_at_ambiguity.sql"), "utf8");
+    const rpcMigration = readFileSync(join(root, "supabase/migrations/0002_create_report_rpc.sql"), "utf8");
 
     expect(rpcMigration).toContain("if input_car is not null then");
     expect(rpcMigration).toContain("reports.car = input_car");

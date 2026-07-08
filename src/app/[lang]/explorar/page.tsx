@@ -7,7 +7,7 @@ import { InfoTooltip } from "@/components/ui/tooltip";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { formatRelativeReportAge } from "@/lib/i18n/format";
+import { formatNumber, formatRelativeReportAge } from "@/lib/i18n/format";
 import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
 import { isMetroLine, LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
@@ -50,7 +50,7 @@ export default async function ExplorePage({
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-          <DashboardCharts data={data} dictionary={dictionary} rangeLabel={rangeLabel} selectedRange={selectedRange} selectedLines={selectedLines} />
+          <DashboardCharts data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedRange={selectedRange} selectedLines={selectedLines} />
           <aside className="flex flex-col gap-4">
             <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id="fleet">
               <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ export default async function ExplorePage({
               <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
                 <div>
                   <dt className="text-muted">{dictionary.explore.score}</dt>
-                  <dd className="font-mono font-semibold">{summary.score}</dd>
+                  <dd className="font-mono font-semibold">{formatNumber(summary.score, lang)}</dd>
                 </div>
                 <div>
                   <dt className="flex items-center gap-1 text-muted">

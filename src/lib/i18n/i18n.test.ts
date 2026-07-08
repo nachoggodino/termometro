@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultAppCopy } from "./app-copy";
 import { DEFAULT_LOCALE, isLocale, LOCALES, localeNames } from "./config";
-import { formatRelativeReportAge, formatReportTime, getIntlLocale } from "./format";
+import { formatNumber, formatRelativeReportAge, formatReportTime, getIntlLocale } from "./format";
 import { messages as enMessages } from "./messages/en";
 import { messages as esMessages } from "./messages/es";
 
@@ -43,5 +43,10 @@ describe("i18n configuration", () => {
     expect(formatRelativeReportAge(null, "es", "Sin reportes", now)).toBe("Sin reportes");
     expect(formatRelativeReportAge(new Date("2026-07-05T12:05:00Z"), "es", "Sin reportes", now)).toBe("25m");
     expect(formatRelativeReportAge(new Date("2026-07-05T10:30:00Z"), "en", "No reports", now)).toBe("2h");
+  });
+
+  it("formats decimals with locale-specific separators", () => {
+    expect(formatNumber(12.34, "es")).toBe("12,34");
+    expect(formatNumber(12.34, "en")).toBe("12.34");
   });
 });

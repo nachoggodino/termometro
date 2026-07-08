@@ -17,6 +17,13 @@ export function formatReportDateTime(date: Date, locale: Locale) {
   });
 }
 
+export function formatNumber(value: number, locale: Locale, options: Intl.NumberFormatOptions = {}) {
+  return new Intl.NumberFormat(getIntlLocale(locale), {
+    maximumFractionDigits: 2,
+    ...options,
+  }).format(value);
+}
+
 export function formatRelativeReportAge(date: Date | null, locale: Locale, emptyLabel: string, now = new Date()) {
   if (!date) return emptyLabel;
   const minutes = Math.max(0, Math.round((now.getTime() - date.getTime()) / 60_000));

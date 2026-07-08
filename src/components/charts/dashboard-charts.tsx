@@ -19,18 +19,22 @@ import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { TimeRange } from "@/lib/domain/ranges";
 import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import type { Locale } from "@/lib/i18n/config";
+import { formatNumber } from "@/lib/i18n/format";
 import { LineBadge } from "@/components/ui/line-badge";
 import { ChartCard } from "./chart-card";
 
 export function DashboardCharts({
   data,
   dictionary,
+  locale,
   rangeLabel,
   selectedRange,
   selectedLines,
 }: {
   data: DashboardData;
   dictionary: Dictionary;
+  locale: Locale;
   rangeLabel: string;
   selectedRange: TimeRange;
   selectedLines: MetroLine[];
@@ -57,7 +61,7 @@ export function DashboardCharts({
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
-              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} />} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} />} />
               {lineEvolutionLines.map((line) => (
                 <Line
                   animationDuration={CHART_TOKENS.animationDurationMs}
@@ -88,7 +92,7 @@ export function DashboardCharts({
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
-              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} />} cursor={{ fill: "var(--surface)" }} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} />} cursor={{ fill: "var(--surface)" }} />
               <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius}>
                 {reportVolumeLines.map((item) => (
                   <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
@@ -112,7 +116,7 @@ export function DashboardCharts({
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
-              <Tooltip content={<LocalizedTooltip labelName={dictionary.explore.carsReportedLabel} />} cursor={{ fill: "var(--surface)" }} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.explore.carsReportedLabel} locale={locale} />} cursor={{ fill: "var(--surface)" }} />
               <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="carsReported" name={dictionary.explore.carsReportedLabel} radius={CHART_TOKENS.barRadius}>
                 {carLines.map((item) => (
                   <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
@@ -146,8 +150,8 @@ export function DashboardCharts({
             <LineChart data={data.trend} margin={CHART_TOKENS.compactMargin}>
               <CartesianGrid stroke="var(--border)" vertical={false} />
               <XAxis axisLine={false} dataKey="label" interval={xAxisInterval} tickLine={false} />
-              <YAxis axisLine={false} tickLine={false} />
-              <Tooltip content={<LocalizedTooltip footer={dictionary.explore.fleetAdjustedScoreHelp} labelName={dictionary.explore.fleetAdjustedScoreLabel} />} />
+              <YAxis axisLine={false} tickFormatter={(value) => formatNumber(Number(value), locale)} tickLine={false} />
+              <Tooltip content={<LocalizedTooltip footer={dictionary.explore.fleetAdjustedScoreHelp} labelName={dictionary.explore.fleetAdjustedScoreLabel} locale={locale} />} />
               {heatTrendLines.map((line) => (
                 <Line
                   animationDuration={CHART_TOKENS.animationDurationMs}
@@ -174,9 +178,11 @@ function LocalizedTooltip({
   payload,
   label,
   labelName,
+  locale,
   footer,
 }: Partial<TooltipContentProps<number, string>> & {
   labelName: string;
+  locale: Locale;
   footer?: string;
 }) {
   if (!active || !payload?.length) return null;
@@ -193,7 +199,7 @@ function LocalizedTooltip({
           <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2" key={`${item.name}-${item.dataKey}`}>
             <span aria-hidden="true" className="size-2 rounded-full" style={{ background: item.color }} />
             <span className="text-muted">{String(item.name ?? labelName)}</span>
-            <span className="font-mono font-semibold tabular-nums">{Number(item.value)}</span>
+            <span className="font-mono font-semibold tabular-nums">{formatNumber(Number(item.value), locale)}</span>
           </div>
         ))}
       </div>

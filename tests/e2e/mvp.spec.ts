@@ -1,4 +1,10 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type TestInfo } from "@playwright/test";
+
+function uniqueCarNumber(testInfo: TestInfo) {
+  const projectOffset = testInfo.project.name === "desktop" ? 45_000 : 0;
+  const runOffset = (Date.now() + testInfo.workerIndex * 997 + testInfo.retry * 1_991 + testInfo.repeatEachIndex * 3_001) % 45_000;
+  return String(10_000 + projectOffset + runOffset);
+}
 
 test("home exposes the two primary actions and switches language", async ({ page }) => {
   await page.goto("/es");
@@ -19,7 +25,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
 
   await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
   await page.getByTestId("heat-infierno").click();
-  const carNumber = String(10_000 + ((Date.now() + testInfo.workerIndex) % 90_000));
+  const carNumber = uniqueCarNumber(testInfo);
   await page.getByPlaceholder("Ej. M1234 o R-5469").fill(`m${carNumber}`);
   await page.getByTestId("submit-report").click();
 
