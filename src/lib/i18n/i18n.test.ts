@@ -33,8 +33,8 @@ describe("i18n configuration", () => {
 
     expect(getIntlLocale("es")).toBe("es-ES");
     expect(getIntlLocale("en")).toBe("en-GB");
-    expect(formatReportTime(date, "es")).toMatch(/\d{2}:\d{2}/);
-    expect(formatReportTime(date, "en")).toMatch(/\d{2}:\d{2}/);
+    expect(formatReportTime(date, "es")).toBe("12:30");
+    expect(formatReportTime(date, "en")).toBe("12:30");
   });
 
   it("formats compact relative report ages", () => {

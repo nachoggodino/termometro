@@ -124,14 +124,16 @@ describe("dashboard data", () => {
 
   it("uses hourly buckets for today charts", () => {
     const data = buildDashboardData([
+      report({ id: "0", line: "L1", state: "calor", createdAt: new Date("2026-07-04T22:30:00Z") }),
       report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-07-05T08:30:00Z") }),
       report({ id: "2", line: "L5", state: "calor", createdAt: new Date("2026-07-05T10:45:00Z") }),
     ], now, undefined, "today");
 
     expect(data.trend).toHaveLength(24);
-    expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(2);
+    expect(data.trend[0].label).toBe("00");
+    expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(3);
     expect(data.lineEvolution).toHaveLength(24);
-    expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0) + (point.L5 ?? 0), 0)).toBe(2);
+    expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0) + (point.L5 ?? 0), 0)).toBe(3);
   });
 
   it("uses daily buckets for wider range charts and tracks the busiest lines", () => {

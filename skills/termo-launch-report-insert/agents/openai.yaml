@@ -1,0 +1,4 @@
+interface:
+  display_name: "Termo Launch Report Insert"
+  short_description: "Generate and execute reviewed launch report inserts for Termo."
+  default_prompt: "Generate a reviewed SQL insert for Termo launch report CSV data, then execute it only after approval."

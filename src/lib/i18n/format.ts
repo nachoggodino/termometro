@@ -1,11 +1,12 @@
 import type { Locale } from "./config";
+import { APP_TIME_ZONE } from "@/lib/domain/time";
 
 export function getIntlLocale(locale: Locale) {
   return locale === "en" ? "en-GB" : "es-ES";
 }
 
 export function formatReportTime(date: Date, locale: Locale) {
-  return date.toLocaleTimeString(getIntlLocale(locale), { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString(getIntlLocale(locale), { hour: "2-digit", minute: "2-digit", timeZone: APP_TIME_ZONE });
 }
 
 export function formatReportDateTime(date: Date, locale: Locale) {
@@ -14,6 +15,7 @@ export function formatReportDateTime(date: Date, locale: Locale) {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: APP_TIME_ZONE,
   });
 }
 

@@ -12,6 +12,7 @@ import { ESTIMATED_TOTAL_CARS } from "./fleet-estimates";
 import { METRO_LINES, type MetroLine } from "./lines";
 import { getRangeWindow, type TimeRange } from "./ranges";
 import type { Report } from "./reports";
+import { APP_TIME_ZONE, getMadridStartOfDay } from "./time";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
@@ -278,28 +279,28 @@ function buildBuckets(now: Date, range: TimeRange) {
   if (range === "today") {
     const start = rangeWindow.start;
     return Array.from({ length: 24 }, (_, hour) => {
-      const bucketStart = new Date(start);
-      bucketStart.setHours(hour, 0, 0, 0);
-      const bucketEnd = new Date(bucketStart);
-      bucketEnd.setHours(hour + 1, 0, 0, 0);
+      const bucketStart = new Date(start.getTime() + hour * 3_600_000);
+      const bucketEnd = new Date(bucketStart.getTime() + 3_600_000);
       return {
         start: bucketStart,
         end: bucketEnd,
-        label: bucketStart.toLocaleTimeString("es-ES", { hour: "2-digit" }),
+        label: bucketStart.toLocaleTimeString("es-ES", { hour: "2-digit", timeZone: APP_TIME_ZONE }),
       };
     });
   }
 
   const buckets = [];
-  for (const day = new Date(rangeWindow.start); day <= rangeWindow.end; day.setDate(day.getDate() + 1)) {
-    const bucketStart = new Date(day);
-    bucketStart.setHours(0, 0, 0, 0);
-    const bucketEnd = new Date(bucketStart);
-    bucketEnd.setDate(bucketEnd.getDate() + 1);
+  for (let offset = 0; ; offset += 1) {
+    const bucketStart = getMadridStartOfDay(rangeWindow.start, offset);
+    if (bucketStart > rangeWindow.end) break;
+    const bucketEnd = getMadridStartOfDay(rangeWindow.start, offset + 1);
     buckets.push({
       start: bucketStart,
       end: bucketEnd,
-      label: bucketStart.toLocaleDateString("es-ES", range === "sevenDays" ? { weekday: "short" } : { day: "2-digit", month: "short" }),
+      label: bucketStart.toLocaleDateString("es-ES", {
+        ...(range === "sevenDays" ? { weekday: "short" as const } : { day: "2-digit" as const, month: "short" as const }),
+        timeZone: APP_TIME_ZONE,
+      }),
     });
   }
   return buckets;

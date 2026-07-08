@@ -1,3 +1,5 @@
+import { fromMadridTime, getMadridDateParts, getMadridStartOfDay } from "./time";
+
 export const TIME_RANGES = ["today", "sevenDays", "month", "summer"] as const;
 
 export type TimeRange = (typeof TIME_RANGES)[number];
@@ -7,31 +9,25 @@ export function isTimeRange(value: unknown): value is TimeRange {
 }
 
 export function getRangeStart(range: TimeRange, now = new Date()) {
-  const start = new Date(now);
   if (range === "today") {
-    start.setHours(0, 0, 0, 0);
-    return start;
+    return getMadridStartOfDay(now);
   }
   if (range === "sevenDays") {
-    start.setDate(start.getDate() - 6);
-    start.setHours(0, 0, 0, 0);
-    return start;
+    return getMadridStartOfDay(now, -6);
   }
   if (range === "month") {
-    start.setDate(start.getDate() - 29);
-    start.setHours(0, 0, 0, 0);
-    return start;
+    return getMadridStartOfDay(now, -29);
   }
 
-  const year = now.getMonth() < 4 || (now.getMonth() === 4 && now.getDate() < 15)
-    ? now.getFullYear() - 1
-    : now.getFullYear();
-  return new Date(year, 4, 15, 0, 0, 0, 0);
+  const { year: madridYear, month, day } = getMadridDateParts(now);
+  const year = month < 5 || (month === 5 && day < 15) ? madridYear - 1 : madridYear;
+  return fromMadridTime(year, 4, 15);
 }
 
 export function getSummerEnd(now = new Date()) {
   const start = getRangeStart("summer", now);
-  return new Date(start.getFullYear(), 9, 15, 23, 59, 59, 999);
+  const { year } = getMadridDateParts(start);
+  return new Date(fromMadridTime(year, 9, 16).getTime() - 1);
 }
 
 export function getRangeEnd(range: TimeRange, now = new Date()) {
