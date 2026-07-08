@@ -10,6 +10,8 @@ import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
 import type { Report } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();

@@ -5,7 +5,12 @@ export const THEME_COLORS = {
 
 export const CHART_TOKENS = {
   animationDurationMs: 220,
-  heatScoreDomain: [0, 100] as [number, number],
+  barRadius: [6, 6, 0, 0] as [number, number, number, number],
   moduleHeightClass: "h-56",
   compactMargin: { left: -24, right: 8, top: 8, bottom: 0 },
+  tooltipPayloadLimit: 8,
+} as const;
+
+export const FEEDBACK_TOKENS = {
+  undoToastDurationMs: 12_000,
 } as const;

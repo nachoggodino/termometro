@@ -98,6 +98,7 @@ export function ChartCard({
 
 async function renderElementAsPng(element: HTMLElement | null) {
   if (!element) return null;
+  if (typeof XMLSerializer === "undefined" || typeof Image === "undefined") return null;
   const clone = element.cloneNode(true) as HTMLElement;
   clone.querySelectorAll("[data-share-exclude]").forEach((node) => node.remove());
   inlineComputedStyles(element, clone);
@@ -105,6 +106,7 @@ async function renderElementAsPng(element: HTMLElement | null) {
   const rect = element.getBoundingClientRect();
   const width = Math.ceil(rect.width);
   const height = Math.ceil(rect.height);
+  if (width <= 0 || height <= 0 || width > 2400 || height > 3200) return null;
   const serialized = new XMLSerializer().serializeToString(clone);
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
@@ -116,7 +118,7 @@ async function renderElementAsPng(element: HTMLElement | null) {
   const image = new Image();
   image.decoding = "async";
   image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  await image.decode();
+  await withTimeout(image.decode(), 3000);
 
   const canvas = document.createElement("canvas");
   const scale = Math.min(2, window.devicePixelRatio || 1);
@@ -130,6 +132,22 @@ async function renderElementAsPng(element: HTMLElement | null) {
   context.drawImage(image, 0, 0, width, height);
 
   return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number) {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("Image export timed out")), timeoutMs);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error: unknown) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
 }
 
 function inlineComputedStyles(source: Element, target: Element) {

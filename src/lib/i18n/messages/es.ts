@@ -154,7 +154,7 @@ export const messages = {
       "Hace 2 años me mudé a vivir al lado de la estación de Estrecho de la L1, por lo que cojo esa línea muchas veces a la semana para ir a trabajar, al centro o a Plaza de Castilla. Es la línea más utilizada de Madrid, y la más antigua.",
       "El primer verano pensé que el inaceptable calor y el desastroso estado del aire acondicionado eran casualidad. El segundo verano me sorprendió que nadie hubiese arreglado o mejorado nada, sino que además había empeorado.",
       "El tercer verano es este año 2026, y no solo ha empeorado, sino que he podido ver cómo en Twitter la cuenta oficial del Metro de Madrid responde cientos de quejas diarias con los mismos mensajes vacíos y genéricos que no sirven para nada. Mientras tanto, la misma cuenta de Twitter se auto-califica como el Metro más moderno del mundo, y publicita sus mejoras tecnológicas en otras líneas.",
-      "Hay claramente una intención política en todo esto: las mejoras tecnológicas punteras son vistosas, los 70.000 usuarios diarios de la L1 que se asan de calor no lo son tanto.",
+      "Hay claramente una decisión política en todo esto: las mejoras tecnológicas punteras son vistosas, los 70.000 usuarios diarios de la L1 que se asan de calor no lo son tanto.",
       "Mi única intención es crear un histórico y unos gráficos que muestren el vergonzoso estado del Metro, para visibilizar lo que lleva años siendo evidente para sus usuarios.",
       "No tengo ninguna intención monetaria ni política personal, solo quiero que la financiación de mis impuestos se dirija a lo que realmente nos importa a todos.",
       "Muchas gracias por utilizar la herramienta con cabeza, sinceridad y veracidad.",

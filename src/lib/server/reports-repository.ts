@@ -17,6 +17,7 @@ import {
   getRequestFingerprint,
   getUndoExpiresAt,
   hashUndoToken,
+  shouldRequirePersistentStore,
   verifyUndoToken,
   type RequestFingerprint,
 } from "./report-security";
@@ -63,20 +64,16 @@ function getMemoryReports() {
 let supabaseClient: SupabaseClient | null = null;
 let supabaseServiceClient: SupabaseClient | null = null;
 
-function shouldRequireSupabase() {
-  return process.env.VERCEL === "1" || process.env.TERMO_REQUIRE_SUPABASE === "1";
-}
-
 function getSupabase(options: { serviceRole?: boolean } = {}) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  if (shouldRequireSupabase() && !process.env.TERMO_ABUSE_SECRET) {
+  if (shouldRequirePersistentStore() && !process.env.TERMO_ABUSE_SECRET) {
     throw new Error("TERMO_ABUSE_SECRET is required in this environment.");
   }
 
   if (!url || !key) {
-    if (shouldRequireSupabase()) {
+    if (shouldRequirePersistentStore()) {
       const missing = [
         !url ? "NEXT_PUBLIC_SUPABASE_URL" : null,
         !key ? (options.serviceRole ? "SUPABASE_SERVICE_ROLE_KEY" : "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") : null,

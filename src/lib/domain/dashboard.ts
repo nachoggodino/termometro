@@ -172,16 +172,6 @@ function buildLineEvolution(
   });
 }
 
-export function getFleetAffectedScore(
-  reports: Array<{ state: HeatState; car: string | null }>,
-  estimatedCars = 1,
-) {
-  if (estimatedCars <= 0) return 0;
-
-  const reportedHotCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-  return Math.round(Math.min(100, (reportedHotCars.size / estimatedCars) * 100));
-}
-
 export function getHeatEvolutionScore(
   reports: Array<{ state: HeatState; car: string | null; createdAt: Date }>,
   estimatedCars = 1,

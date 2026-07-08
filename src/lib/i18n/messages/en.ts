@@ -154,7 +154,7 @@ export const messages = {
       "Two years ago I moved next to Estrecho station on L1, so I take that line many times a week to go to work, to the city center, or to Plaza de Castilla. It is Madrid's most used line, and its oldest.",
       "The first summer I thought the unacceptable heat and disastrous state of the air conditioning were a coincidence. The second summer I was surprised that nobody had fixed or improved anything, and that it had actually got worse.",
       "The third summer is this year, 2026, and it has not only got worse: I have also seen Metro de Madrid's official Twitter account answer hundreds of daily complaints with the same empty, generic messages that solve nothing. Meanwhile, that same Twitter account calls itself the most modern Metro in the world and advertises its technology upgrades on other lines.",
-      "There is clearly a political intention in all this: cutting-edge technology upgrades are visible, while the 70,000 daily L1 users roasting in the heat are not as visible.",
+      "There is clearly a political decision in all this: cutting-edge technology upgrades are visible, while the 70,000 daily L1 users roasting in the heat are not as visible.",
       "My only intention is to create a historical record and charts that show the shameful state of the Metro, to make visible what has been obvious to its users for years.",
       "I have no monetary intention or personal political agenda. I only want the funding from my taxes to go toward what actually matters to all of us.",
       "Thank you very much for using the tool responsibly, honestly, and truthfully.",

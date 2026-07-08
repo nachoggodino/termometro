@@ -2,14 +2,15 @@ import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
 import { RecentReportRow } from "@/components/report/recent-report-row";
 import { ExploreActionIcon } from "@/components/ui/action-icons";
+import { LineBadge } from "@/components/ui/line-badge";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { formatRelativeReportAge } from "@/lib/i18n/format";
 import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
-import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
-import { LINE_COLORS } from "@/lib/domain/lines";
+import { isMetroLine, LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
 import { notFound } from "next/navigation";
 
 export default async function ExplorePage({
@@ -65,15 +66,7 @@ export default async function ExplorePage({
                   return (
                     <div key={summary.line}>
                       <div className="mb-1 flex items-center justify-between text-sm">
-                        <span
-                          className="rounded-sm px-1.5 py-1 text-xs font-bold"
-                          style={{
-                            background: LINE_COLORS[summary.line].fill,
-                            color: LINE_COLORS[summary.line].textOnFill,
-                          }}
-                        >
-                          {summary.line}
-                        </span>
+                        <LineBadge line={summary.line} />
                         <span className="text-muted">
                           {coverage}% {dictionary.explore.fleetWithoutAc} ({summary.carsWithoutAcReported}/{summary.estimatedCars})
                         </span>
@@ -102,15 +95,7 @@ export default async function ExplorePage({
           {reportSummaryCards.map((summary) => (
             <div className="rounded-md border border-border bg-surface-raised p-4" key={summary.line}>
               <div className="flex items-center justify-between">
-                <span
-                  className="rounded-sm px-2 py-1 text-sm font-bold"
-                  style={{
-                    background: LINE_COLORS[summary.line].fill,
-                    color: LINE_COLORS[summary.line].textOnFill,
-                  }}
-                >
-                  {summary.line}
-                </span>
+                <LineBadge className="px-2 text-sm" line={summary.line} />
                 <span className="font-mono text-2xl font-semibold">{summary.reports}</span>
               </div>
               <p className="mt-3 flex items-center gap-2 text-sm text-muted">
@@ -131,7 +116,7 @@ export default async function ExplorePage({
                 </div>
                 <div>
                   <dt className="text-muted">{dictionary.explore.latestReport}</dt>
-                  <dd className="font-mono font-semibold">{formatRelativeReport(summary.latestReportAt, lang, dictionary)}</dd>
+                  <dd className="font-mono font-semibold">{formatRelativeReportAge(summary.latestReportAt, lang, dictionary.explore.noRecentReport)}</dd>
                 </div>
               </dl>
             </div>
@@ -151,12 +136,4 @@ function parseSelectedLines(value: string | undefined) {
     }
   }
   return lines;
-}
-
-function formatRelativeReport(date: Date | null, locale: string, dictionary: Awaited<ReturnType<typeof getDictionary>>) {
-  if (!date) return dictionary.explore.noRecentReport;
-  const minutes = Math.max(0, Math.round((Date.now() - date.getTime()) / 60_000));
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.round(minutes / 60);
-  return locale === "en" ? `${hours}h` : `${hours}h`;
 }

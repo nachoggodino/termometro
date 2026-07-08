@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, useTransition, type CSSProperties } from 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
+import { FEEDBACK_TOKENS } from "@/lib/design/tokens";
 import { formatCarCode, normalizeCarCode } from "@/lib/domain/reports";
 import type { HeatState } from "@/lib/domain/heat";
 import type { MetroLine } from "@/lib/domain/lines";
@@ -80,7 +81,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
             }).catch(() => undefined);
           },
         },
-        duration: 12_000,
+        duration: FEEDBACK_TOKENS.undoToastDurationMs,
       });
       startTransition(() => router.push(`/${locale}/explorar?reported=1`));
     } catch {

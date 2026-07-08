@@ -16,3 +16,11 @@ export function formatReportDateTime(date: Date, locale: Locale) {
     minute: "2-digit",
   });
 }
+
+export function formatRelativeReportAge(date: Date | null, locale: Locale, emptyLabel: string, now = new Date()) {
+  if (!date) return emptyLabel;
+  const minutes = Math.max(0, Math.round((now.getTime() - date.getTime()) / 60_000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  return locale === "en" ? `${hours}h` : `${hours}h`;
+}

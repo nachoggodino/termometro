@@ -116,7 +116,7 @@ components:
 
 Termo de Madrid should feel like a sharp public evidence tool built for a hot train platform: fast to read, easy to share, and calm enough to trust while still carrying a dry satirical edge. The product should combine Flighty-like mobile status intelligence with Raycast-like action clarity: a confident current-state surface first, then two obvious actions.
 
-The default interface is light because people will use and screenshot it on phones in stations, trains, and outdoor transitions. Dark mode is supported from v1, but it should be a true theme switch, not the main visual identity. Heat is expressed through state, charts, and micro-motion, not through a permanently hot background.
+The default interface is light because people will use and screenshot it on phones in stations, trains, and outdoor transitions. Dark mode is supported from v1, but it should be a true theme switch, not the main visual identity. Heat is expressed through state, charts, and micro-motion, not through a permanently hot background. A restrained page glow is part of the current app shell, but it must stay quiet and must not become heat wallpaper.
 
 The system rejects official Metro de Madrid mimicry, generic complaint-counter dashboards, cartoon flames, glassmorphism, oversized rounded cards, and single average metrics that make L1 and L5 disappear into a network-wide score. The dashboard can open with an evolution/status chart when that helps orientation, as long as line-level severity remains prominent.
 
@@ -171,7 +171,7 @@ The palette is creamy civic utility with a quiet green primary, Metro red/blue r
 
 **The Selected Fill Rule.** Unselected line chips stay neutral with a colored dot or short mark. Selected line chips may use the line color as a fill with contrast-correct white or black text plus a check icon or outline.
 
-**The No Heat Wallpaper Rule.** Heat belongs in data, selected states, and primary report action motion, not in the global page background.
+**The No Heat Wallpaper Rule.** Heat belongs in data, selected states, and primary report action motion, not in the global page background. The global app glow is allowed only as a subtle neutral shell treatment.
 
 **Metro Line Color Working Set.** Use a token map for L1-L12, based on official-ish line identity colors and verified before launch against the current Metro map/source. Suggested implementation tokens: L1 light blue, L2 red, L3 yellow, L4 brown, L5 green, L6 gray, L7 orange, L8 pink, L9 purple, L10 dark blue, L11 teal green, L12 olive. Each line token must define `fill`, `textOnFill`, and `ring`.
 
@@ -264,12 +264,13 @@ Three equal-size options: Fresco, Calor, Infierno. Calor is selected by default,
 
 Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termo`, confidence, fleet estimates, and summer range definitions.
 
-Required module styles:
+Current module styles:
 
-- Heat ranking by line: line identity marks plus heat score bars.
-- Heat trend: time-series with heat-color encoding and compact range labels.
-- Report volume: bars or area chart with line filtering.
-- Worst cars: dense table/list with car code, line, heat score, report count, confidence.
+- Line evolution: time-series by line identity color and compact range labels.
+- Report volume: bars by line identity color.
+- Cars by line: bars for distinct reported cars.
+- Termo indicator trend: time-series by line identity color with methodology help.
+- Worst cars: dense list with car code, line, report count, confidence.
 - Fleet coverage: estimated/known caveat visible, with tooltip explanation.
 - Recent reports: capped feed/table with line, optional car, state, and time.
 

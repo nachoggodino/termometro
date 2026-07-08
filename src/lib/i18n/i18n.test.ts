@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultAppCopy } from "./app-copy";
 import { DEFAULT_LOCALE, isLocale, LOCALES, localeNames } from "./config";
-import { formatReportTime, getIntlLocale } from "./format";
+import { formatRelativeReportAge, formatReportTime, getIntlLocale } from "./format";
 import { messages as enMessages } from "./messages/en";
 import { messages as esMessages } from "./messages/es";
 
@@ -35,5 +35,13 @@ describe("i18n configuration", () => {
     expect(getIntlLocale("en")).toBe("en-GB");
     expect(formatReportTime(date, "es")).toMatch(/\d{2}:\d{2}/);
     expect(formatReportTime(date, "en")).toMatch(/\d{2}:\d{2}/);
+  });
+
+  it("formats compact relative report ages", () => {
+    const now = new Date("2026-07-05T12:30:00Z");
+
+    expect(formatRelativeReportAge(null, "es", "Sin reportes", now)).toBe("Sin reportes");
+    expect(formatRelativeReportAge(new Date("2026-07-05T12:05:00Z"), "es", "Sin reportes", now)).toBe("25m");
+    expect(formatRelativeReportAge(new Date("2026-07-05T10:30:00Z"), "en", "No reports", now)).toBe("2h");
   });
 });

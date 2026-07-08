@@ -19,6 +19,7 @@ import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { TimeRange } from "@/lib/domain/ranges";
 import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
+import { LineBadge } from "@/components/ui/line-badge";
 import { ChartCard } from "./chart-card";
 
 export function DashboardCharts({
@@ -88,7 +89,7 @@ export function DashboardCharts({
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
               <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} />} cursor={{ fill: "var(--surface)" }} />
-              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" name={dictionary.common.reports} radius={[6, 6, 0, 0]}>
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius}>
                 {reportVolumeLines.map((item) => (
                   <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
                 ))}
@@ -112,7 +113,7 @@ export function DashboardCharts({
               <XAxis axisLine={false} dataKey="line" tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
               <Tooltip content={<LocalizedTooltip labelName={dictionary.explore.carsReportedLabel} />} cursor={{ fill: "var(--surface)" }} />
-              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="carsReported" name={dictionary.explore.carsReportedLabel} radius={[6, 6, 0, 0]}>
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="carsReported" name={dictionary.explore.carsReportedLabel} radius={CHART_TOKENS.barRadius}>
                 {carLines.map((item) => (
                   <Cell fill={LINE_COLORS[item.line].fill} key={item.line} />
                 ))}
@@ -182,7 +183,7 @@ function LocalizedTooltip({
   const visiblePayload = payload
     .filter((item) => typeof item.value === "number")
     .toSorted((a, b) => Number(b.value) - Number(a.value))
-    .slice(0, 8);
+    .slice(0, CHART_TOKENS.tooltipPayloadLimit);
 
   return (
     <div className="max-w-64 rounded-md border border-border bg-surface-raised px-3 py-2 text-xs text-foreground shadow-[var(--shadow-popover)]">
@@ -225,15 +226,7 @@ function WorstCarsList({ data, dictionary }: { data: DashboardData; dictionary: 
         <div className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border border-border bg-surface p-3" key={`${car.line}-${car.car}`}>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span
-                className="rounded-sm px-1.5 py-1 text-xs font-bold"
-                style={{
-                  background: LINE_COLORS[car.line].fill,
-                  color: LINE_COLORS[car.line].textOnFill,
-                }}
-              >
-                {car.line}
-              </span>
+              <LineBadge line={car.line} />
               <span className="font-mono text-sm font-semibold">{formatCarCode(car.car)}</span>
             </div>
             <p className="mt-1 text-xs text-muted">
