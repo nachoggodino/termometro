@@ -6,7 +6,7 @@ import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
-  recentReportCount: 100,
+  recentReportCount: 25,
   worstCarCount: 8,
 } as const;
 
@@ -58,6 +58,7 @@ export function buildDashboardData(
   const rangeWindow = getRangeWindow(range, now);
   const usableReports = reports.filter((report) => !report.hiddenAt);
   const visibleReports = usableReports.filter((report) => report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
+  const recentReports = usableReports.filter((report) => report.createdAt <= rangeWindow.end);
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
@@ -112,7 +113,7 @@ export function buildDashboardData(
     worstCars,
     trend,
     lineEvolution,
-    recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
+    recentReports: recentReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
     reportsLastDay,
   };
 }

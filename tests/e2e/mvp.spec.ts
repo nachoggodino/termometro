@@ -20,7 +20,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
   await page.getByTestId("heat-infierno").click();
   const carNumber = String(10_000 + ((Date.now() + testInfo.workerIndex) % 90_000));
-  await page.getByPlaceholder("M1234 o R-5469").fill(`m${carNumber}`);
+  await page.getByPlaceholder("Ej. M1234 o R-5469").fill(`m${carNumber}`);
   await page.getByTestId("submit-report").click();
 
   await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
@@ -37,7 +37,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
 test("report flow blocks invalid car codes", async ({ page }) => {
   await page.goto("/es/reportar");
 
-  await page.getByPlaceholder("M1234 o R-5469").fill("1234");
+  await page.getByPlaceholder("Ej. M1234 o R-5469").fill("1234");
   await expect(page.getByText("Usa una letra y 4 o 5 números")).toBeVisible();
   await expect(page.getByTestId("submit-report")).toBeDisabled();
 });

@@ -42,7 +42,7 @@ export const messages = {
     reportsInWindow: "reportes en el último día",
     noReports: "Sin reportes recientes",
     noReportsCopy: "Si el vagón parece sauna, puedes ser la primera persona en avisar",
-    reportDescription: "Cuéntanos cómo está el aire acondicionado ahora",
+    reportDescription: "Cuéntanos cómo está el AC ahora",
     exploreDescription: "Explora líneas, coches y tendencias",
   },
   reportForm: {
@@ -51,7 +51,7 @@ export const messages = {
     line: "Línea",
     heatState: "Estado del aire acondicionado",
     car: "Coche",
-    carPlaceholder: "M1234 o R-5469",
+    carPlaceholder: "Ej. M1234 o R-5469",
     carInvalid: "Usa una letra y 4 o 5 números, por ejemplo M1234, o deja el campo vacío",
     carHelp: "Suele aparecer en una placa al inicio y final del vagón, o en los laterales de los trenes continuos. Si no lo encuentras, déjalo vacío",
     submit: {
@@ -70,11 +70,11 @@ export const messages = {
   states: {
     fresco: {
       label: "Fresco",
-      description: "..El aire funciona, para variar...",
+      description: "El ambiente es cómodo. El aire funciona, para variar...",
     },
     calor: {
       label: "Calor",
-      description: "El aire acondicionado del vagón no es suficiente, la gente está incómoda",
+      description: "El aire acondicionado del vagón no es suficiente, hay ambiente de sauna",
     },
     infierno: {
       label: "Infierno",

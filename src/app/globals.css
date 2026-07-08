@@ -238,10 +238,10 @@ body {
 
 .centered-popover {
   animation: centered-popover-enter var(--duration-base) var(--ease-out);
-  background: var(--surface-raised);
+  background: color-mix(in oklch, var(--surface), var(--border) 28%);
   left: 50% !important;
   position: fixed !important;
-  top: clamp(11.5rem, 24dvh, 14rem) !important;
+  top: clamp(8.75rem, 16dvh, 10rem) !important;
   transform: translateX(-50%) scale(1) !important;
   transform-origin: top center !important;
 }

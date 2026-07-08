@@ -27,7 +27,7 @@ describe("dashboard data", () => {
     expect(data.recentReports).toHaveLength(3);
   });
 
-  it("caps recent reports at the latest 100 reports", () => {
+  it("caps recent reports at the latest 25 reports", () => {
     const reports = Array.from({ length: 105 }, (_, index) =>
       report({
         id: String(index),
@@ -39,9 +39,18 @@ describe("dashboard data", () => {
 
     const data = buildDashboardData(reports, now);
 
-    expect(data.recentReports).toHaveLength(100);
+    expect(data.recentReports).toHaveLength(25);
     expect(data.recentReports[0].id).toBe("0");
-    expect(data.recentReports.at(-1)?.id).toBe("99");
+    expect(data.recentReports.at(-1)?.id).toBe("24");
+  });
+
+  it("keeps latest reports even when they are before the selected range start", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-06-01T08:30:00Z") }),
+    ], now, undefined, "sevenDays");
+
+    expect(data.lineSummaries.find((summary) => summary.line === "L1")?.reports).toBe(0);
+    expect(data.recentReports).toHaveLength(1);
   });
 
   it("excludes hidden reports and counts the last day", () => {
