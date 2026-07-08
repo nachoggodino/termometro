@@ -1,6 +1,7 @@
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { FilterBar } from "@/components/charts/filter-bar";
 import { RecentReportRow } from "@/components/report/recent-report-row";
+import { ExploreActionIcon } from "@/components/ui/action-icons";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
@@ -10,7 +11,6 @@ import { isTimeRange } from "@/lib/domain/ranges";
 import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import { LINE_COLORS } from "@/lib/domain/lines";
 import { notFound } from "next/navigation";
-import { BarChart3 } from "lucide-react";
 
 export default async function ExplorePage({
   params,
@@ -43,7 +43,7 @@ export default async function ExplorePage({
 
         <section className="py-6">
           <div className="flex items-center justify-center gap-2">
-            <BarChart3 aria-hidden="true" className="size-6 text-muted" />
+            <ExploreActionIcon className="h-6 w-8" />
             <h1 className="text-center text-2xl font-[650] tracking-[-0.015em]">{dictionary.explore.title}</h1>
           </div>
         </section>

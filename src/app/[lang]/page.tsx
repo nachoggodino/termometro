@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Clock3, Flame, ThermometerSun, TriangleAlert } from "lucide-react";
+import { Clock3, Flame, ThermometerSun } from "lucide-react";
 import { RecentReportRow } from "@/components/report/recent-report-row";
+import { ExploreActionIcon, ReportActionIcon } from "@/components/ui/action-icons";
 import { Button } from "@/components/ui/button";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -42,7 +43,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <span className="block text-base">{dictionary.common.report}</span>
                   <span className="mt-px block text-xs font-normal opacity-90">{dictionary.home.reportDescription}</span>
                 </span>
-                <TriangleAlert aria-hidden="true" className="home-action-icon size-[1.875rem] shrink-0 text-white" />
+                <ReportActionIcon className="home-action-icon size-[1.875rem] text-white" />
               </Link>
             </Button>
             <Button asChild className="home-explore-action min-h-0 justify-between rounded-md py-1.5 pl-3 pr-6 text-left" data-testid="home-explore" variant="secondary">
@@ -51,11 +52,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <span className="block text-base">{dictionary.common.explore}</span>
                   <span className="mt-px block text-xs font-normal text-muted">{dictionary.home.exploreDescription}</span>
                 </span>
-                <span aria-hidden="true" className="home-action-icon flex h-[1.875rem] w-9 shrink-0 items-end justify-center gap-1.5">
-                  <span className="h-4 w-1.5 rounded-sm bg-heat-fresco" />
-                  <span className="h-6 w-1.5 rounded-sm bg-success" />
-                  <span className="h-5 w-1.5 rounded-sm bg-heat-infierno" />
-                </span>
+                <ExploreActionIcon className="home-action-icon h-[1.875rem] w-9" />
               </Link>
             </Button>
           </div>
@@ -69,7 +66,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             </div>
             {recentReports.length > 0 ? (
               <>
-                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="mt-3 flex items-center gap-x-3 overflow-hidden whitespace-nowrap">
                   {topRecentLines.map(({ line, reports }) => (
                     <span
                       className="inline-flex items-center gap-1 font-mono text-xs font-semibold tabular-nums"
@@ -118,6 +115,5 @@ function getTopRecentLines(reports: Report[]) {
 
   return Array.from(counts.entries())
     .map(([line, count]) => ({ line, reports: count }))
-    .toSorted((a, b) => b.reports - a.reports || a.line.localeCompare(b.line))
-    .slice(0, 4);
+    .toSorted((a, b) => b.reports - a.reports || a.line.localeCompare(b.line));
 }
