@@ -14,21 +14,35 @@ test("home exposes the two primary actions and switches language", async ({ page
   await expect(page.getByTestId("home-report")).toBeVisible();
 });
 
-test("report flow submits and lands on filtered dashboard", async ({ page }) => {
+test("report flow submits and lands on filtered dashboard", async ({ page }, testInfo) => {
+  const car = getUniqueTestCar(testInfo.project.name);
+  const formattedCar = `${car[0]}-${car.slice(1)}`;
+
   await page.goto("/es/reportar");
 
   await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
+  await page.getByPlaceholder("Ej. M1234 o R-5469").fill(car);
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
 
-  await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
+  await expect(page).toHaveURL(new RegExp(`/es/explorar\\?reported=1&coche=${car}`));
   await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await expect(page.getByText("Peores coches")).toBeVisible();
+  await expect(page.getByText("Explorar coche")).toBeVisible();
+  await expect(page.locator("#car-explorer-input")).toHaveValue(formattedCar);
 
   const undoResponse = page.waitForResponse((response) => response.url().includes("/api/reports/") && response.request().method() === "DELETE");
   await page.getByRole("button", { name: "Deshacer" }).click();
   expect((await undoResponse).ok()).toBe(true);
 });
+
+function getUniqueTestCar(projectName: string) {
+  const runId = Number(process.env.GITHUB_RUN_ID ?? Date.now());
+  const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT ?? 0);
+  const projectOffset = projectName === "mobile" ? 10_000 : 20_000;
+  const numericCode = 10_000 + ((runId + runAttempt * 997 + projectOffset) % 90_000);
+  return `M${numericCode}`;
+}
 
 test("report flow blocks invalid car codes", async ({ page }) => {
   await page.goto("/es/reportar");
@@ -58,6 +72,9 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
   await expect(page).not.toHaveURL(/rango=/);
+
+  await page.getByTestId("worst-car-row").first().click();
+  await expect(page.locator("#car-explorer")).toBeInViewport();
 
   await page.getByRole("button", { name: "Menú" }).click();
   await expect(page.getByTestId("theme-toggle")).toBeVisible();

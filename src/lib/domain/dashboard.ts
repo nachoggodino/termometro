@@ -35,9 +35,26 @@ export type LineSummary = {
 
 export type CarSummary = {
   car: string;
-  line: MetroLine;
+  lines: MetroLine[];
   reports: number;
+  totalReports: number;
+  heatReports: number;
+  calorReports: number;
+  infiernoReports: number;
   confidence: Confidence;
+};
+
+export type CarExplorerOption = {
+  car: string;
+  reports: number;
+  heatReports: number;
+  calorReports: number;
+  infiernoReports: number;
+  lines: MetroLine[];
+};
+
+export type CarExplorerSelection = CarExplorerOption & {
+  history: TrendPoint[];
 };
 
 export type TrendPoint = {
@@ -52,6 +69,11 @@ export type LineEvolutionPoint = {
 export type DashboardData = {
   lineSummaries: LineSummary[];
   worstCars: CarSummary[];
+  carExplorer: {
+    options: CarExplorerOption[];
+    selections: CarExplorerSelection[];
+    defaultCar: CarExplorerSelection | null;
+  };
   trend: TrendPoint[];
   lineEvolution: LineEvolutionPoint[];
   recentReports: Report[];
@@ -98,25 +120,41 @@ export function buildDashboardData(
   const carGroups = new Map<string, Report[]>();
   for (const report of visibleReports) {
     if (!report.car) continue;
-    const key = `${report.line}:${report.car}`;
-    carGroups.set(key, [...(carGroups.get(key) ?? []), report]);
+    carGroups.set(report.car, [...(carGroups.get(report.car) ?? []), report]);
   }
 
   const worstCars = Array.from(carGroups.entries())
-    .map(([key, carReports]) => {
-      const [line, car] = key.split(":") as [MetroLine, string];
+    .map(([car, carReports]) => {
+      const heatCounts = getCarHeatCounts(carReports);
       return {
-        line,
         car,
+        lines: getReportedLines(carReports),
         heatSortScore: getWeightedHeatScore(carReports, now),
-        reports: carReports.length,
+        reports: heatCounts.heatReports,
+        totalReports: carReports.length,
+        ...heatCounts,
         confidence: getConfidence(carReports),
       };
     })
-    .sort((a, b) => b.heatSortScore - a.heatSortScore || b.reports - a.reports)
+    .filter((car) => car.heatReports > 0)
+    .sort((a, b) => b.heatReports - a.heatReports || b.heatSortScore - a.heatSortScore || a.car.localeCompare(b.car))
     .slice(0, DASHBOARD_LIMITS.worstCarCount)
-    .map(({ line, car, reports, confidence }) => ({ line, car, reports, confidence }));
+    .map(({ car, lines, reports, totalReports, heatReports, calorReports, infiernoReports, confidence }) => ({
+      car,
+      lines,
+      reports,
+      totalReports,
+      heatReports,
+      calorReports,
+      infiernoReports,
+      confidence,
+    }));
 
+  const carExplorerOptions = buildCarExplorerOptions(visibleReports);
+  const carExplorerSelections = carExplorerOptions
+    .map((option) => buildCarExplorerSelection(option.car, visibleReports, now, range, carExplorerOptions))
+    .filter((selection): selection is CarExplorerSelection => selection !== null);
+  const defaultCar = carExplorerSelections[0] ?? null;
   const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
@@ -125,10 +163,65 @@ export function buildDashboardData(
   return {
     lineSummaries,
     worstCars,
+    carExplorer: {
+      options: carExplorerOptions,
+      selections: carExplorerSelections,
+      defaultCar,
+    },
     trend,
     lineEvolution,
     recentReports: recentReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
     reportsLastDay,
+  };
+}
+
+export function buildCarExplorerSelection(
+  car: string,
+  reports: Report[],
+  now: Date,
+  range: TimeRange,
+  options = buildCarExplorerOptions(reports),
+): CarExplorerSelection | null {
+  const option = options.find((item) => item.car === car);
+  if (!option) return null;
+  const carReports = reports.filter((report) => report.car === car);
+  return {
+    ...option,
+    history: buildBuckets(now, range).map((bucket) => ({
+      label: bucket.label,
+      reports: carReports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
+    })),
+  };
+}
+
+function buildCarExplorerOptions(reports: Report[]) {
+  const carGroups = new Map<string, Report[]>();
+  for (const report of reports) {
+    if (!report.car) continue;
+    carGroups.set(report.car, [...(carGroups.get(report.car) ?? []), report]);
+  }
+
+  return Array.from(carGroups.entries())
+    .map(([car, carReports]) => ({
+      car,
+      reports: carReports.length,
+      ...getCarHeatCounts(carReports),
+      lines: getReportedLines(carReports),
+    }))
+    .toSorted((a, b) => b.heatReports - a.heatReports || b.reports - a.reports || a.car.localeCompare(b.car));
+}
+
+function getReportedLines(reports: Report[]) {
+  return Array.from(new Set(reports.map((report) => report.line))).sort((a, b) => a.localeCompare(b)) as MetroLine[];
+}
+
+function getCarHeatCounts(reports: Report[]) {
+  const calorReports = reports.filter((report) => report.state === "calor").length;
+  const infiernoReports = reports.filter((report) => report.state === "infierno").length;
+  return {
+    heatReports: calorReports + infiernoReports,
+    calorReports,
+    infiernoReports,
   };
 }
 

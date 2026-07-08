@@ -123,9 +123,10 @@ export function getExponentialDecayWeight(timestamp: Date, asOf = new Date(), ha
 
 export function getAgreement(reports: Array<{ state: HeatState }>) {
   if (reports.length === 0) return 0;
-  const counts = new Map<HeatState, number>();
+  const counts = new Map<"fresco" | "heat", number>();
   for (const report of reports) {
-    counts.set(report.state, (counts.get(report.state) ?? 0) + 1);
+    const bucket = report.state === "fresco" ? "fresco" : "heat";
+    counts.set(bucket, (counts.get(bucket) ?? 0) + 1);
   }
   return Math.max(...counts.values()) / reports.length;
 }

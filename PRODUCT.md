@@ -123,6 +123,7 @@ V1 dashboard modules:
 - Distinct cars reported by line.
 - Termo indicator trend over time.
 - Worst cars.
+- Explore car: select an existing reported car and inspect total reports, reported lines, and report history by day/hour for the active range.
 - Fleet coverage using known and estimated car counts.
 - Recent reports feed, capped and anonymized.
 - Line summary cards with confidence, disagreement, latest report, and score.

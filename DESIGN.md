@@ -262,7 +262,7 @@ Three equal-size options: Fresco, Calor, Infierno. Calor is selected by default,
 
 ### Dashboard Modules
 
-Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termo`, confidence, fleet estimates, and summer range definitions.
+Dashboard modules are evidence blocks, not generic metric cards. The default order may lead with line evolution/status, followed by trend, volume, fleet/car coverage, worst cars, car exploration, and ranking. Never lead with or overemphasize a single network average. Modules should include compact helper tooltips for `Indicador Termo`, confidence, fleet estimates, and summer range definitions.
 
 Current module styles:
 
@@ -271,6 +271,7 @@ Current module styles:
 - Cars by line: bars for distinct reported cars.
 - Termo indicator trend: time-series by line identity color with methodology help.
 - Worst cars: dense list with car code, line, report count, confidence.
+- Explore car: compact search input for cars with reports in the active range, local skeleton transition on car changes, total reports, reported line badges, and a day/hour history chart.
 - Fleet coverage: estimated/known caveat visible, with tooltip explanation.
 - Recent reports: capped feed/table with line, optional car, state, and time.
 
