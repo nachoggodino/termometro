@@ -2,6 +2,11 @@ export const messages = {
   meta: {
     title: "Termo de Madrid",
     description: "Reportes ciudadanos sobre el aire acondicionado del Metro de Madrid",
+    socialTitle: "Termo de Madrid | Calor en el Metro, línea por línea",
+    socialDescription:
+      "Reporta y explora señales ciudadanas sobre coches y líneas del Metro de Madrid sin aire acondicionado.",
+    socialImageAlt:
+      "Vista previa de Termo de Madrid con un resumen ciudadano de reportes de calor en el Metro de Madrid",
   },
   common: {
     appName: "Termo de Madrid",

@@ -4,8 +4,10 @@ import { ThemeProvider } from "@/components/shell/theme-provider";
 import { Toaster } from "sonner";
 import { THEME_COLORS } from "@/lib/design/tokens";
 import { defaultAppCopy } from "@/lib/i18n/app-copy";
+import { getMetadataBase } from "@/lib/metadata";
 
 export const metadata: Metadata = {
+  metadataBase: getMetadataBase(),
   title: defaultAppCopy.title,
   description: defaultAppCopy.description,
   manifest: "/manifest.webmanifest",

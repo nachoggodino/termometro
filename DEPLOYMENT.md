@@ -11,6 +11,7 @@ Use a Vercel Preview deployment first. Keep the production branch private/unprom
 3. Set these Vercel environment variables for Preview and Production:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - `NEXT_PUBLIC_SITE_URL=https://termodemadrid.es`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `TERMO_ABUSE_SECRET`
 4. Apply all files in `supabase/migrations/` to the Supabase project in filename order.

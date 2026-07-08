@@ -2,6 +2,10 @@ export const messages = {
   meta: {
     title: "Termo de Madrid",
     description: "Citizen reports about air conditioning in Metro de Madrid",
+    socialTitle: "Termo de Madrid | Metro heat, line by line",
+    socialDescription:
+      "Report and explore citizen signals about Metro de Madrid cars and lines without air conditioning.",
+    socialImageAlt: "Termo de Madrid preview with a citizen summary of heat reports in Metro de Madrid",
   },
   common: {
     appName: "Termo de Madrid",

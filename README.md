@@ -20,12 +20,14 @@ Copy `.env.example` to `.env.local` when wiring Supabase:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SITE_URL=https://termodemadrid.es
 SUPABASE_SERVICE_ROLE_KEY=
 TERMO_ABUSE_SECRET=
 TERMO_ALLOW_MEMORY_STORE=
 ```
 
 Use a long random value for `TERMO_ABUSE_SECRET`; it salts private abuse keys and undo token hashes.
+Set `NEXT_PUBLIC_SITE_URL` to `https://termodemadrid.es` in production so social preview metadata uses absolute public URLs.
 
 ## Supabase
 
