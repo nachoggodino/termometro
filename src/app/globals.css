@@ -121,6 +121,7 @@ body {
   background:
     radial-gradient(circle at 50% -10%, var(--page-glow), transparent 32rem),
     var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -238,7 +239,7 @@ body {
 
 .centered-popover {
   animation: centered-popover-enter var(--duration-base) var(--ease-out);
-  background: color-mix(in oklch, var(--surface), var(--border) 28%);
+  background: var(--background);
   left: 50% !important;
   position: fixed !important;
   top: clamp(8.75rem, 16dvh, 10rem) !important;

@@ -37,7 +37,7 @@ export default async function ExplorePage({
   const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
 
   return (
-    <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
+    <main className="min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 pb-5">
         <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
