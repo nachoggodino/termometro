@@ -83,7 +83,9 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         },
         duration: FEEDBACK_TOKENS.undoToastDurationMs,
       });
-      startTransition(() => router.push(`/${locale}/explorar?reported=1`));
+      const params = new URLSearchParams({ reported: "1" });
+      if (normalizedCar) params.set("coche", normalizedCar);
+      startTransition(() => router.push(`/${locale}/explorar?${params.toString()}`));
     } catch {
       toast(dictionary.reportForm.submitFailed);
       setSubmitting(false);

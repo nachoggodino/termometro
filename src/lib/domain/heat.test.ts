@@ -105,13 +105,14 @@ describe("heat scoring", () => {
     expect(getConfidence(reports)).toBe("high");
   });
 
-  it("uses lower confidence when samples are small or conflicted", () => {
+  it("uses lower confidence when samples are small or split between fresh and heat", () => {
     const conflicted = [
       { state: "infierno" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
       { state: "fresco" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
-      { state: "calor" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
-      { state: "infierno" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
       { state: "fresco" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "calor" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "fresco" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "infierno" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
     ];
     expect(getConfidence(conflicted)).toBe("low");
     expect(
@@ -123,5 +124,18 @@ describe("heat scoring", () => {
         { state: "infierno", createdAt: new Date("2026-07-05T12:00:00Z") },
       ]),
     ).toBe("medium");
+  });
+
+  it("treats calor and infierno as agreement against fresco", () => {
+    const reports = [
+      { state: "calor" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "infierno" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "calor" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "infierno" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+      { state: "fresco" as const, createdAt: new Date("2026-07-05T12:00:00Z") },
+    ];
+
+    expect(getAgreement(reports)).toBe(0.8);
+    expect(getConfidence(reports)).toBe("medium");
   });
 });

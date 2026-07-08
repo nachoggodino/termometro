@@ -163,6 +163,7 @@ const EXPLORE_SECTIONS = [
   { id: "report-volume", module: "volume" },
   { id: "line-cars", module: "lineCars" },
   { id: "worst-cars", module: "worstCars" },
+  { id: "car-explorer", module: "carExplorer" },
   { id: "heat-trend", module: "trend" },
   { id: "fleet", module: "fleet" },
   { id: "recent-reports", module: "recent" },

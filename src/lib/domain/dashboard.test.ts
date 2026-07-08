@@ -27,6 +27,64 @@ describe("dashboard data", () => {
     expect(data.recentReports).toHaveLength(3);
   });
 
+  it("builds the car explorer default from the most reported car in the selected range", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-07-05T08:30:00Z") }),
+      report({ id: "2", line: "L5", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T10:45:00Z") }),
+      report({ id: "3", line: "L2", state: "calor", car: "M2002", createdAt: new Date("2026-07-05T11:00:00Z") }),
+      report({ id: "4", line: "L1", state: "calor", car: "M1001", createdAt: new Date("2026-06-01T11:00:00Z") }),
+    ], now, undefined, "today");
+
+    expect(data.carExplorer.defaultCar?.car).toBe("M1001");
+    expect(data.carExplorer.defaultCar?.reports).toBe(2);
+    expect(data.carExplorer.defaultCar?.lines).toEqual(["L1", "L5"]);
+    expect(data.carExplorer.defaultCar?.history).toHaveLength(24);
+    expect(data.carExplorer.defaultCar?.history.reduce((total, point) => total + point.reports, 0)).toBe(2);
+    expect(data.carExplorer.options.map((option) => option.car)).toEqual(["M1001", "M2002"]);
+  });
+
+  it("keeps worst car totals aligned with car explorer totals", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-07-05T08:30:00Z") }),
+      report({ id: "2", line: "L5", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T10:45:00Z") }),
+      report({ id: "3", line: "L1", state: "fresco", car: "M1001", createdAt: new Date("2026-07-05T11:15:00Z") }),
+      report({ id: "4", line: "L2", state: "infierno", car: "M2002", createdAt: new Date("2026-07-05T11:30:00Z") }),
+    ], now, undefined, "today");
+
+    const worstCar = data.worstCars.find((car) => car.car === "M1001");
+    const explorerCar = data.carExplorer.selections.find((car) => car.car === "M1001");
+
+    expect(worstCar?.reports).toBe(2);
+    expect(worstCar?.totalReports).toBe(3);
+    expect(worstCar?.calorReports).toBe(1);
+    expect(worstCar?.infiernoReports).toBe(1);
+    expect(worstCar?.lines).toEqual(["L1", "L5"]);
+    expect(explorerCar?.reports).toBe(worstCar?.totalReports);
+    expect(explorerCar?.calorReports).toBe(worstCar?.calorReports);
+    expect(explorerCar?.infiernoReports).toBe(worstCar?.infiernoReports);
+    expect(explorerCar?.history.reduce((total, point) => total + point.reports, 0)).toBe(worstCar?.totalReports);
+  });
+
+  it("ranks worst cars by hot report count before heat severity and ignores fresh reports", () => {
+    const reports = [
+      ...Array.from({ length: 10 }, (_, index) =>
+        report({ id: `m2168-${index}`, line: "L1", state: "calor", car: "M2168", createdAt: new Date("2026-07-05T08:30:00Z") }),
+      ),
+      ...Array.from({ length: 30 }, (_, index) =>
+        report({ id: `fresh-${index}`, line: "L1", state: "fresco", car: "M9999", createdAt: new Date("2026-07-05T08:30:00Z") }),
+      ),
+      ...Array.from({ length: 8 }, (_, index) =>
+        report({ id: `hot-${index}`, line: "L5", state: "infierno", car: `R20${String(index).padStart(2, "0")}`, createdAt: new Date("2026-07-05T09:30:00Z") }),
+      ),
+    ];
+
+    const data = buildDashboardData(reports, now, undefined, "today");
+
+    expect(data.worstCars[0].car).toBe("M2168");
+    expect(data.worstCars[0].reports).toBe(10);
+    expect(data.worstCars.some((car) => car.car === "M9999")).toBe(false);
+  });
+
   it("caps recent reports at the latest 25 reports", () => {
     const reports = Array.from({ length: 105 }, (_, index) =>
       report({

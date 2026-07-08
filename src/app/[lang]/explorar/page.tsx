@@ -11,6 +11,7 @@ import { formatNumber, formatRelativeReportAge } from "@/lib/i18n/format";
 import { isLocale } from "@/lib/i18n/config";
 import { isTimeRange } from "@/lib/domain/ranges";
 import { isMetroLine, LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
+import { normalizeCarCode } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 
 export default async function ExplorePage({
@@ -18,7 +19,7 @@ export default async function ExplorePage({
   searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ linea?: string; rango?: string }>;
+  searchParams: Promise<{ linea?: string; rango?: string; coche?: string; reported?: string }>;
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
@@ -26,6 +27,7 @@ export default async function ExplorePage({
   const dictionary = await getDictionary(lang);
   const selectedRange = isTimeRange(search.rango) ? search.rango : "summer";
   const selectedLines = parseSelectedLines(search.linea);
+  const selectedCar = search.coche ? normalizeCarCode(search.coche) : null;
   const data = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
   const rangeLabel = dictionary.explore.ranges[selectedRange];
   const visibleSummaries = data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
@@ -50,9 +52,17 @@ export default async function ExplorePage({
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
-          <DashboardCharts data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedRange={selectedRange} selectedLines={selectedLines} />
+          <DashboardCharts
+            data={data}
+            dictionary={dictionary}
+            initialCar={selectedCar}
+            locale={lang}
+            rangeLabel={rangeLabel}
+            selectedRange={selectedRange}
+            selectedLines={selectedLines}
+          />
           <aside className="flex flex-col gap-4">
-            <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id="fleet">
+            <section className="scroll-mt-[13rem] rounded-md border border-border bg-surface-raised p-4" id="fleet">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold">{dictionary.explore.modules.fleet}</h2>
                 <InfoTooltip label={dictionary.explore.modules.fleet}>{dictionary.explore.caveats.fleet}</InfoTooltip>
@@ -80,7 +90,7 @@ export default async function ExplorePage({
               </div>
             </section>
 
-            <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id="recent-reports">
+            <section className="scroll-mt-[13rem] rounded-md border border-border bg-surface-raised p-4" id="recent-reports">
               <h2 className="text-base font-semibold">{dictionary.explore.modules.recent}</h2>
               <div className="mt-4 flex flex-col divide-y divide-border">
                 {data.recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount).map((report) => (

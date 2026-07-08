@@ -62,7 +62,7 @@ export function ChartCard({
   }
 
   return (
-    <section className="scroll-mt-32 rounded-md border border-border bg-surface-raised p-4" id={id} ref={cardRef}>
+    <section className="scroll-mt-[13rem] rounded-md border border-border bg-surface-raised p-4" id={id} ref={cardRef}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export function ChartCard({
         </Button>
       </div>
       {children}
-      {takeaway ? <p className="mt-4 text-sm font-semibold leading-5">{takeaway}</p> : null}
+      {takeaway ? <p className="mt-4 text-xs font-semibold leading-4 text-muted">{takeaway}</p> : null}
       {caveat ? <p className="mt-1 text-xs leading-5 text-muted">{caveat}</p> : null}
       <p className="mt-4 truncate whitespace-nowrap text-[0.66rem] font-semibold leading-4 text-muted sm:text-[0.7rem]">
         {dictionary.common.attribution}
