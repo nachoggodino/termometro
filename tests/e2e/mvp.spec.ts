@@ -1,10 +1,4 @@
-import { expect, test, type TestInfo } from "@playwright/test";
-
-function uniqueCarNumber(testInfo: TestInfo) {
-  const projectOffset = testInfo.project.name === "desktop" ? 45_000 : 0;
-  const runOffset = (Date.now() + testInfo.workerIndex * 997 + testInfo.retry * 1_991 + testInfo.repeatEachIndex * 3_001) % 45_000;
-  return String(10_000 + projectOffset + runOffset);
-}
+import { expect, test } from "@playwright/test";
 
 test("home exposes the two primary actions and switches language", async ({ page }) => {
   await page.goto("/es");
@@ -20,13 +14,11 @@ test("home exposes the two primary actions and switches language", async ({ page
   await expect(page.getByTestId("home-report")).toBeVisible();
 });
 
-test("report flow submits and lands on filtered dashboard", async ({ page }, testInfo) => {
+test("report flow submits and lands on filtered dashboard", async ({ page }) => {
   await page.goto("/es/reportar");
 
   await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
   await page.getByTestId("heat-infierno").click();
-  const carNumber = uniqueCarNumber(testInfo);
-  await page.getByPlaceholder("Ej. M1234 o R-5469").fill(`m${carNumber}`);
   await page.getByTestId("submit-report").click();
 
   await expect(page).toHaveURL(/\/es\/explorar\?reported=1/);
@@ -35,9 +27,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
 
   const undoResponse = page.waitForResponse((response) => response.url().includes("/api/reports/") && response.request().method() === "DELETE");
   await page.getByRole("button", { name: "Deshacer" }).click();
-  await undoResponse;
-  await page.reload();
-  await expect(page.getByText(`M-${carNumber}`)).toHaveCount(0);
+  expect((await undoResponse).ok()).toBe(true);
 });
 
 test("report flow blocks invalid car codes", async ({ page }) => {

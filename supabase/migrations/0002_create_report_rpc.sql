@@ -93,4 +93,5 @@ end;
 $$;
 
 revoke all on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) from public;
+revoke execute on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) from anon, authenticated;
 grant execute on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) to service_role;
