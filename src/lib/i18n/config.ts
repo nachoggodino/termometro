@@ -9,6 +9,6 @@ export function isLocale(value: string | undefined): value is Locale {
 }
 
 export const localeNames: Record<Locale, string> = {
-  es: "ES",
-  en: "EN",
+  es: "Español",
+  en: "Inglés",
 };

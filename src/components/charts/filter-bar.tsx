@@ -1,7 +1,7 @@
 "use client";
 
 import * as Popover from "@radix-ui/react-popover";
-import { ListTree, SlidersHorizontal, X } from "lucide-react";
+import { ListTree, SlidersHorizontal } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
@@ -10,6 +10,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
 
 export function FilterBar({
   dictionary,
@@ -26,15 +27,13 @@ export function FilterBar({
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
-  const [hasOpenedFilters, setHasOpenedFilters] = useState(false);
-  const [hasOpenedNavigation, setHasOpenedNavigation] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
 
   function href(lines: MetroLine[], range = selectedRange) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
-    if (range !== "sevenDays") params.set("rango", range);
+    if (range !== "summer") params.set("rango", range);
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
 
@@ -47,7 +46,7 @@ export function FilterBar({
 
   function clearFilters() {
     setDraftLines([]);
-    setDraftRange("sevenDays");
+    setDraftRange("summer");
   }
 
   function toggleLine(line: MetroLine) {
@@ -56,25 +55,18 @@ export function FilterBar({
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
-      setHasOpenedFilters(true);
       setDraftLines(selectedLines);
       setDraftRange(selectedRange);
     }
     setOpen(nextOpen);
   }
 
-  function handleNavigationOpenChange(nextOpen: boolean) {
-    if (nextOpen) setHasOpenedNavigation(true);
-    setNavigationOpen(nextOpen);
-  }
-
   const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
-    <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-3">
-      <Popover.Root open={open} onOpenChange={handleOpenChange}>
-        <div className="rounded-lg border border-border bg-[var(--drawer-surface)] px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
+    <Popover.Root open={open} onOpenChange={handleOpenChange}>
+      <StickyUtilityBar>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
@@ -83,7 +75,7 @@ export function FilterBar({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Popover.Root open={navigationOpen} onOpenChange={handleNavigationOpenChange}>
+              <Popover.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
                 <Popover.Trigger asChild>
                   <Button aria-label={dictionary.explore.navigation.button} className="min-h-10 px-3 py-2" type="button" variant="secondary">
                     <ListTree aria-hidden="true" className="size-4" />
@@ -91,22 +83,8 @@ export function FilterBar({
                   </Button>
                 </Popover.Trigger>
                 <Popover.Portal>
-                  <Popover.Content
-                    align="end"
-                    aria-hidden={!navigationOpen}
-                    className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
-                    sideOffset={8}
-                    {...(hasOpenedNavigation ? { forceMount: true } : {})}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <h2 className="text-base font-semibold">{dictionary.explore.navigation.title}</h2>
-                      <Popover.Close
-                        aria-label={dictionary.common.closeMenu}
-                        className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                      >
-                        <X aria-hidden="true" className="size-4" />
-                      </Popover.Close>
-                    </div>
+                  {navigationOpen ? (
+                  <CenteredPopoverPanel closeLabel={dictionary.common.closeMenu} title={dictionary.explore.navigation.title}>
                     <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
                       {EXPLORE_SECTIONS.map((section) => (
                         <Popover.Close asChild key={section.id}>
@@ -119,7 +97,8 @@ export function FilterBar({
                         </Popover.Close>
                       ))}
                     </nav>
-                  </Popover.Content>
+                  </CenteredPopoverPanel>
+                  ) : null}
                 </Popover.Portal>
               </Popover.Root>
               <Popover.Trigger asChild>
@@ -130,24 +109,10 @@ export function FilterBar({
               </Popover.Trigger>
             </div>
           </div>
-        </div>
-        <Popover.Portal>
-          <Popover.Content
-            align="end"
-            aria-hidden={!open}
-            className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
-            sideOffset={8}
-            {...(hasOpenedFilters ? { forceMount: true } : {})}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold">{dictionary.explore.filters.title}</h2>
-              <Popover.Close
-                aria-label={dictionary.common.closeMenu}
-                className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <X aria-hidden="true" className="size-4" />
-              </Popover.Close>
-            </div>
+      </StickyUtilityBar>
+      <Popover.Portal>
+        {open ? (
+          <CenteredPopoverPanel closeLabel={dictionary.common.closeMenu} title={dictionary.explore.filters.title} widthClass="w-[min(calc(100vw-2rem),24rem)]">
 
             <div className="mt-4">
               <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
@@ -186,10 +151,10 @@ export function FilterBar({
                 {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
               </Button>
             </div>
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
-    </div>
+          </CenteredPopoverPanel>
+        ) : null}
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 

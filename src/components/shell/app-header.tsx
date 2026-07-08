@@ -62,7 +62,7 @@ export function AppHeader({
           <div className="flex items-center gap-3">
             <Link
               aria-label={dictionary.common.home}
-              className="flex min-w-0 flex-1 items-center gap-2 rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="click-wave flex min-w-0 flex-1 items-center gap-2 rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               href={`/${locale}`}
               onClick={() => setIsOpen(false)}
             >
@@ -73,7 +73,7 @@ export function AppHeader({
               aria-controls="app-navigation-drawer"
               aria-expanded={isOpen}
               aria-label={isOpen ? dictionary.common.closeMenu : dictionary.common.menu}
-              className="group relative flex size-10 shrink-0 items-center justify-center rounded-md text-foreground transition duration-[var(--duration-drawer)] ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="click-wave group relative flex size-10 shrink-0 items-center justify-center rounded-md text-foreground transition duration-[var(--duration-drawer)] ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               onClick={() => setIsOpen((current) => !current)}
               type="button"
             >
@@ -113,7 +113,7 @@ export function AppHeader({
                 <Link
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 items-center gap-3 rounded-md px-2.5 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                    "click-wave flex min-h-11 items-center gap-3 rounded-md px-2.5 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                     current ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:bg-surface hover:text-foreground",
                   )}
                   href={item.href}

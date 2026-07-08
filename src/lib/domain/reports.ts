@@ -20,9 +20,7 @@ export const reportInputSchema = z.object({
   line: z.string().refine(isMetroLine),
   state: z.string().refine(isHeatState),
   car: z
-    .string()
-    .trim()
-    .max(12)
+    .union([z.string().trim().max(12), z.null()])
     .optional()
     .transform((value, context) => {
       const raw = value ?? "";
@@ -69,6 +67,7 @@ export function isDuplicateCandidate(
   now = new Date(),
   windowMinutes = DUPLICATE_WINDOW_MINUTES,
 ) {
+  if (!current.car) return false;
   const ageMs = now.getTime() - previous.createdAt.getTime();
   return (
     previous.line === current.line &&

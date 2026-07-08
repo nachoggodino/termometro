@@ -5,7 +5,14 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
   const { id } = await context.params;
   const body = await request.json().catch(() => null);
   const undoToken = typeof body?.undoToken === "string" ? body.undoToken : "";
-  const undone = await undoReport(id, undoToken);
+  const undone = await undoReport(id, undoToken).catch((error: unknown) => {
+    console.error("Failed to undo report", error);
+    return "server_error" as const;
+  });
+
+  if (undone === "server_error") {
+    return NextResponse.json({ ok: false, reason: "server_error" }, { status: 500 });
+  }
 
   if (!undone) {
     return NextResponse.json({ ok: false, reason: "expired_or_invalid" }, { status: 403 });

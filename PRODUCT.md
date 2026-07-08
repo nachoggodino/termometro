@@ -100,7 +100,7 @@ V1 abuse controls:
 - Open anonymous submission without accounts.
 - Client and server validation.
 - Rate limiting by private abuse key.
-- Soft duplicate suppression for repeated line/car/status reports in a short window.
+- Soft duplicate suppression for repeated line/car/status reports in a short window. Reports without a car identifier are not globally suppressed as duplicates, because many riders can truthfully report the same line/status at once.
 - Friendly duplicate feedback such as "Ya hemos contado este reporte hace un momento."
 - Short undo window after submission, dismissible by the user.
 - Moderation fields in the database, but no admin UI in v1.
@@ -118,13 +118,14 @@ V1 routes:
 
 V1 dashboard modules:
 
-- Heat ranking by line.
-- Heat trend over time.
+- Line evolution by report volume.
 - Report volume by line and time range.
+- Distinct cars reported by line.
+- Termo indicator trend over time.
 - Worst cars.
 - Fleet coverage using known and estimated car counts.
 - Recent reports feed, capped and anonymized.
-- Confidence and disagreement indicators.
+- Line summary cards with confidence, disagreement, latest report, and score.
 
 Time ranges:
 

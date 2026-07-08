@@ -18,6 +18,17 @@ describe("report validation", () => {
     }
   });
 
+  it("accepts omitted or null optional car input", () => {
+    const omitted = parseReportInput({ line: "L1", state: "calor" });
+    const nullable = parseReportInput({ line: "L1", state: "calor", car: null });
+
+    expect(omitted.success).toBe(true);
+    expect(nullable.success).toBe(true);
+    if (nullable.success) {
+      expect(nullable.data.car).toBeNull();
+    }
+  });
+
   it("rejects non-empty invalid car input", () => {
     expect(parseReportInput({ line: "L1", state: "calor", car: "1234" }).success).toBe(false);
     expect(parseReportInput({ line: "L1", state: "calor", car: "AB1234" }).success).toBe(false);
@@ -33,6 +44,17 @@ describe("report validation", () => {
         now,
       ),
     ).toBe(true);
+  });
+
+  it("does not globally suppress no-car reports as duplicates", () => {
+    const now = new Date("2026-07-05T12:00:00Z");
+    expect(
+      isDuplicateCandidate(
+        { line: "L1", state: "calor", car: null },
+        { id: "1", line: "L1", state: "calor", car: null, createdAt: new Date("2026-07-05T11:55:00Z") },
+        now,
+      ),
+    ).toBe(false);
   });
 
   it("does not treat expired duplicate windows as duplicates", () => {

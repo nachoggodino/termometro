@@ -20,7 +20,7 @@ export function Button({ asChild, className, variant = "primary", ...props }: Bu
   return (
     <Comp
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-3 text-[0.875rem] font-semibold leading-none transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-55",
+        "click-wave inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-3 text-[0.875rem] font-semibold leading-none transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-55",
         variantClasses[variant],
         className,
       )}

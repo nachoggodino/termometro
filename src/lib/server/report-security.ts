@@ -12,10 +12,18 @@ export type RequestFingerprint = {
 export const RATE_LIMIT_WINDOW_MS = RATE_LIMIT_WINDOW_MINUTES * 60_000;
 export const UNDO_WINDOW_MS = UNDO_WINDOW_SECONDS * 1_000;
 
+export function shouldRequirePersistentStore() {
+  return process.env.TERMO_ALLOW_MEMORY_STORE !== "1" && (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL === "1" ||
+    process.env.TERMO_REQUIRE_SUPABASE === "1"
+  );
+}
+
 function getAbuseSecret() {
   const secret = process.env.TERMO_ABUSE_SECRET;
   if (secret) return secret;
-  if (process.env.VERCEL === "1" || process.env.TERMO_REQUIRE_SUPABASE === "1") {
+  if (shouldRequirePersistentStore()) {
     throw new Error("TERMO_ABUSE_SECRET is required in this environment.");
   }
   return "development-only-abuse-secret";

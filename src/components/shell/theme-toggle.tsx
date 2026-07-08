@@ -15,7 +15,7 @@ export function ThemeSegmentedSwitch({ label, lightLabel, darkLabel }: { label: 
         <button
           aria-pressed={!isDark}
           className={cn(
-            "flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            "click-wave flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
             !isDark ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:text-foreground",
           )}
           onClick={() => setTheme("light")}
@@ -27,7 +27,7 @@ export function ThemeSegmentedSwitch({ label, lightLabel, darkLabel }: { label: 
         <button
           aria-pressed={isDark}
           className={cn(
-            "flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+            "click-wave flex min-h-9 items-center justify-center gap-2 rounded-sm px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
             isDark ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:text-foreground",
           )}
           onClick={() => setTheme("dark")}

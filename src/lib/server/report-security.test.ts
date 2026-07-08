@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createAbuseKey,
   createUndoToken,
@@ -6,10 +6,15 @@ import {
   getRequestFingerprint,
   getUndoExpiresAt,
   hashUndoToken,
+  shouldRequirePersistentStore,
   verifyUndoToken,
 } from "./report-security";
 
 describe("report security helpers", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("derives stable private abuse keys without exposing raw request data", () => {
     const fingerprint = { ip: "203.0.113.8", userAgent: "test-browser" };
 
@@ -46,5 +51,13 @@ describe("report security helpers", () => {
 
     expect(getRateLimitStart(now).getTime()).toBeLessThan(now.getTime());
     expect(getUndoExpiresAt(now).getTime()).toBeGreaterThan(now.getTime());
+  });
+
+  it("requires persistent storage for production-like environments unless memory mode is explicit", () => {
+    vi.stubEnv("TERMO_REQUIRE_SUPABASE", "1");
+    expect(shouldRequirePersistentStore()).toBe(true);
+
+    vi.stubEnv("TERMO_ALLOW_MEMORY_STORE", "1");
+    expect(shouldRequirePersistentStore()).toBe(false);
   });
 });

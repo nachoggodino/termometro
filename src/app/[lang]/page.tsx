@@ -1,18 +1,24 @@
 import Link from "next/link";
-import { Clock3, Flame, ThermometerSun, TriangleAlert } from "lucide-react";
+import { Clock3, Flame, ThermometerSun } from "lucide-react";
 import { RecentReportRow } from "@/components/report/recent-report-row";
+import { ExploreActionIcon, ReportActionIcon } from "@/components/ui/action-icons";
 import { Button } from "@/components/ui/button";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
+import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
+import type { Report } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dictionary = await getDictionary(lang);
   const dashboard = await getDashboardDataForPage({ range: "today" });
-  const recentReports = dashboard.recentReports.slice(0, 5);
+  const recentReports = dashboard.recentReports;
+  const topRecentLines = getTopRecentLines(recentReports);
 
   return (
     <main>
@@ -39,7 +45,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <span className="block text-base">{dictionary.common.report}</span>
                   <span className="mt-px block text-xs font-normal opacity-90">{dictionary.home.reportDescription}</span>
                 </span>
-                <TriangleAlert aria-hidden="true" className="home-action-icon size-[1.875rem] shrink-0 text-white" />
+                <ReportActionIcon className="home-action-icon size-[1.875rem] text-white" />
               </Link>
             </Button>
             <Button asChild className="home-explore-action min-h-0 justify-between rounded-md py-1.5 pl-3 pr-6 text-left" data-testid="home-explore" variant="secondary">
@@ -48,11 +54,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
                   <span className="block text-base">{dictionary.common.explore}</span>
                   <span className="mt-px block text-xs font-normal text-muted">{dictionary.home.exploreDescription}</span>
                 </span>
-                <span aria-hidden="true" className="home-action-icon flex h-[1.875rem] w-9 shrink-0 items-end justify-center gap-1.5">
-                  <span className="h-4 w-1.5 rounded-sm bg-heat-fresco" />
-                  <span className="h-6 w-1.5 rounded-sm bg-success" />
-                  <span className="h-5 w-1.5 rounded-sm bg-heat-infierno" />
-                </span>
+                <ExploreActionIcon className="home-action-icon h-[1.875rem] w-9" />
               </Link>
             </Button>
           </div>
@@ -65,11 +67,26 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               <Clock3 aria-hidden="true" className="size-4 text-muted" />
             </div>
             {recentReports.length > 0 ? (
-              <div className="mt-3 flex flex-col divide-y divide-border">
-                {recentReports.map((report) => (
-                  <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
-                ))}
-              </div>
+              <>
+                <div className="mt-3 flex items-center gap-x-3 overflow-hidden whitespace-nowrap">
+                  {topRecentLines.map(({ line, reports }) => (
+                    <span
+                      className="inline-flex items-center gap-1 font-mono text-xs font-semibold tabular-nums"
+                      key={line}
+                      style={{
+                        color: LINE_COLORS[line].fill,
+                      }}
+                    >
+                      {line} <span className="text-muted">·</span> {reports}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3 flex max-h-[28rem] flex-col divide-y divide-border overflow-y-auto pr-1">
+                  {recentReports.map((report) => (
+                    <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="mt-4 flex items-start gap-3 rounded-md bg-surface p-3">
                 <Flame aria-hidden="true" className="mt-0.5 size-5 text-heat-calor" />
@@ -90,4 +107,15 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
 function TrainSilhouette() {
   return <span aria-hidden="true" className="home-train-silhouette mx-auto mb-1 h-16 w-48 text-muted opacity-35" />;
+}
+
+function getTopRecentLines(reports: Report[]) {
+  const counts = new Map<MetroLine, number>();
+  for (const report of reports) {
+    counts.set(report.line, (counts.get(report.line) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .map(([line, count]) => ({ line, reports: count }))
+    .toSorted((a, b) => b.reports - a.reports || a.line.localeCompare(b.line));
 }

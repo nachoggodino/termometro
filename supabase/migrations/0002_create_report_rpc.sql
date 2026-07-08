@@ -33,31 +33,30 @@ begin
     if (
       select count(*)
       from public.reports
-      where abuse_key = input_abuse_key
-        and created_at >= input_rate_limit_start
+      where reports.abuse_key = input_abuse_key
+        and reports.created_at >= input_rate_limit_start
     ) >= input_rate_limit_max then
       return query select false, 'rate_limited'::text, null::uuid, null::text, null::text, null::public.heat_state, null::timestamptz, null::timestamptz;
       return;
     end if;
   end if;
 
-  perform pg_advisory_xact_lock(hashtext('duplicate:' || input_line || ':' || coalesce(input_car, '') || ':' || input_state::text));
+  if input_car is not null then
+    perform pg_advisory_xact_lock(hashtext('duplicate:' || input_line || ':' || input_car || ':' || input_state::text));
 
-  if exists (
-    select 1
-    from public.reports
-    where reports.line = input_line
-      and reports.state = input_state
-      and reports.created_at >= input_duplicate_window_start
-      and reports.hidden_at is null
-      and (
-        (input_car is null and reports.car is null)
-        or reports.car = input_car
-      )
-    limit 1
-  ) then
-    return query select false, 'duplicate'::text, null::uuid, null::text, null::text, null::public.heat_state, null::timestamptz, null::timestamptz;
-    return;
+    if exists (
+      select 1
+      from public.reports
+      where reports.line = input_line
+        and reports.state = input_state
+        and reports.created_at >= input_duplicate_window_start
+        and reports.hidden_at is null
+        and reports.car = input_car
+      limit 1
+    ) then
+      return query select false, 'duplicate'::text, null::uuid, null::text, null::text, null::public.heat_state, null::timestamptz, null::timestamptz;
+      return;
+    end if;
   end if;
 
   insert into public.reports (
@@ -94,4 +93,5 @@ end;
 $$;
 
 revoke all on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) from public;
+revoke execute on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) from anon, authenticated;
 grant execute on function public.create_report(text, text, public.heat_state, text, text, timestamptz, timestamptz, timestamptz, integer, timestamptz) to service_role;

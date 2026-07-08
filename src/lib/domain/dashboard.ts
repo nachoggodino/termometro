@@ -1,4 +1,13 @@
-import { getAgreement, getConfidence, getHeatTone, getWeightedHeatScore, type Confidence, type HeatState } from "./heat";
+import {
+  calculateMetroHeatIndex,
+  getAgreement,
+  getConfidence,
+  getHeatTone,
+  getWeightedHeatScore,
+  type Confidence,
+  type HeatIndexDiagnostics,
+  type HeatState,
+} from "./heat";
 import { ESTIMATED_TOTAL_CARS } from "./fleet-estimates";
 import { METRO_LINES, type MetroLine } from "./lines";
 import { getRangeWindow, type TimeRange } from "./ranges";
@@ -6,13 +15,14 @@ import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
-  recentReportCount: 12,
+  recentReportCount: 25,
   worstCarCount: 8,
 } as const;
 
 export type LineSummary = {
   line: MetroLine;
   score: number;
+  heatIndex: HeatIndexDiagnostics;
   tone: HeatState;
   reports: number;
   confidence: Confidence;
@@ -26,7 +36,6 @@ export type LineSummary = {
 export type CarSummary = {
   car: string;
   line: MetroLine;
-  score: number;
   reports: number;
   confidence: Confidence;
 };
@@ -56,12 +65,17 @@ export function buildDashboardData(
   range: TimeRange = "sevenDays",
 ): DashboardData {
   const rangeWindow = getRangeWindow(range, now);
-  const visibleReports = reports.filter((report) => !report.hiddenAt && report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
+  const usableReports = reports.filter((report) => !report.hiddenAt);
+  const visibleReports = usableReports.filter((report) => report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
+  const recentReports = usableReports.filter((report) => report.createdAt <= rangeWindow.end);
+  const summerStart = getRangeWindow("summer", now).start;
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
+    const lineIndexReports = usableReports.filter((report) => report.line === line && report.createdAt >= summerStart && report.createdAt <= rangeWindow.end);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
     const reportedCarsWithoutAc = new Set(lineReports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-    const score = getWeightedHeatScore(lineReports, now);
+    const heatIndex = calculateMetroHeatIndex(lineIndexReports, estimatedCarsByLine[line], rangeWindow.end);
+    const score = heatIndex.heat_index;
     const latestReportAt =
       lineReports.length > 0
         ? lineReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
@@ -69,6 +83,7 @@ export function buildDashboardData(
     return {
       line,
       score,
+      heatIndex,
       tone: getHeatTone(score),
       reports: lineReports.length,
       confidence: getConfidence(lineReports),
@@ -93,15 +108,16 @@ export function buildDashboardData(
       return {
         line,
         car,
-        score: getWeightedHeatScore(carReports, now),
+        heatSortScore: getWeightedHeatScore(carReports, now),
         reports: carReports.length,
         confidence: getConfidence(carReports),
       };
     })
-    .sort((a, b) => b.score - a.score || b.reports - a.reports)
-    .slice(0, DASHBOARD_LIMITS.worstCarCount);
+    .sort((a, b) => b.heatSortScore - a.heatSortScore || b.reports - a.reports)
+    .slice(0, DASHBOARD_LIMITS.worstCarCount)
+    .map(({ line, car, reports, confidence }) => ({ line, car, reports, confidence }));
 
-  const trend = buildTrend(visibleReports, now, range, estimatedCarsByLine);
+  const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
   const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
@@ -111,7 +127,7 @@ export function buildDashboardData(
     worstCars,
     trend,
     lineEvolution,
-    recentReports: visibleReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
+    recentReports: recentReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
     reportsLastDay,
   };
 }
@@ -122,15 +138,18 @@ function buildTrend(
   range: TimeRange,
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
 ): TrendPoint[] {
+  const summerStart = getRangeWindow("summer", now).start;
   return buildBuckets(now, range).map((bucket) => {
     const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
+    const accumulatedReports = reports.filter((report) => report.createdAt >= summerStart && report.createdAt < bucket.end);
     const point: TrendPoint = {
       label: bucket.label,
       reports: bucketReports.length,
     };
     for (const line of METRO_LINES) {
-      const lineReports = bucketReports.filter((report) => report.line === line);
-      point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], now);
+      const bucketAsOf = bucket.end < now ? bucket.end : now;
+      const lineReports = accumulatedReports.filter((report) => report.line === line && report.createdAt < bucketAsOf);
+      point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], bucketAsOf);
     }
     return point;
   });
@@ -142,11 +161,7 @@ function buildLineEvolution(
   range: TimeRange,
   lineSummaries: LineSummary[],
 ): LineEvolutionPoint[] {
-  const lines = lineSummaries
-    .filter((summary) => summary.reports > 0)
-    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
-    .slice(0, 4)
-    .map((summary) => summary.line);
+  const lines = lineSummaries.map((summary) => summary.line);
 
   return buildBuckets(now, range).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };
@@ -157,31 +172,12 @@ function buildLineEvolution(
   });
 }
 
-export function getFleetAffectedScore(
-  reports: Array<{ state: HeatState; car: string | null }>,
-  estimatedCars = 1,
-) {
-  if (estimatedCars <= 0) return 0;
-
-  const reportedHotCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-  return Math.round(Math.min(100, (reportedHotCars.size / estimatedCars) * 100));
-}
-
 export function getHeatEvolutionScore(
   reports: Array<{ state: HeatState; car: string | null; createdAt: Date }>,
   estimatedCars = 1,
   now = new Date(),
 ) {
-  if (estimatedCars <= 0 || reports.length === 0) return 0;
-
-  const thermometerIndicator = getWeightedHeatScore(reports, now) / 100;
-  const affectedCars = new Set(reports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
-  const fleetPercentage = affectedCars.size / estimatedCars;
-  return roundToTwo(thermometerIndicator * reports.length * fleetPercentage);
-}
-
-function roundToTwo(value: number) {
-  return Math.round(value * 100) / 100;
+  return calculateMetroHeatIndex(reports, estimatedCars, now).heat_index;
 }
 
 function buildBuckets(now: Date, range: TimeRange) {
