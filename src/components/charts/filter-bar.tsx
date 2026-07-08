@@ -26,15 +26,13 @@ export function FilterBar({
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
-  const [hasOpenedFilters, setHasOpenedFilters] = useState(false);
-  const [hasOpenedNavigation, setHasOpenedNavigation] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
 
   function href(lines: MetroLine[], range = selectedRange) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
-    if (range !== "sevenDays") params.set("rango", range);
+    if (range !== "summer") params.set("rango", range);
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
 
@@ -47,7 +45,7 @@ export function FilterBar({
 
   function clearFilters() {
     setDraftLines([]);
-    setDraftRange("sevenDays");
+    setDraftRange("summer");
   }
 
   function toggleLine(line: MetroLine) {
@@ -56,16 +54,10 @@ export function FilterBar({
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
-      setHasOpenedFilters(true);
       setDraftLines(selectedLines);
       setDraftRange(selectedRange);
     }
     setOpen(nextOpen);
-  }
-
-  function handleNavigationOpenChange(nextOpen: boolean) {
-    if (nextOpen) setHasOpenedNavigation(true);
-    setNavigationOpen(nextOpen);
   }
 
   const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
@@ -83,7 +75,7 @@ export function FilterBar({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <Popover.Root open={navigationOpen} onOpenChange={handleNavigationOpenChange}>
+              <Popover.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
                 <Popover.Trigger asChild>
                   <Button aria-label={dictionary.explore.navigation.button} className="min-h-10 px-3 py-2" type="button" variant="secondary">
                     <ListTree aria-hidden="true" className="size-4" />
@@ -91,12 +83,11 @@ export function FilterBar({
                   </Button>
                 </Popover.Trigger>
                 <Popover.Portal>
-                  <Popover.Content
-                    align="end"
-                    aria-hidden={!navigationOpen}
-                    className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
-                    sideOffset={8}
-                    {...(hasOpenedNavigation ? { forceMount: true } : {})}
+                  {navigationOpen ? (
+                  <div
+                    aria-modal="true"
+                    className="centered-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),20rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
+                    role="dialog"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <h2 className="text-base font-semibold">{dictionary.explore.navigation.title}</h2>
@@ -119,7 +110,8 @@ export function FilterBar({
                         </Popover.Close>
                       ))}
                     </nav>
-                  </Popover.Content>
+                  </div>
+                  ) : null}
                 </Popover.Portal>
               </Popover.Root>
               <Popover.Trigger asChild>
@@ -132,12 +124,11 @@ export function FilterBar({
           </div>
         </div>
         <Popover.Portal>
-          <Popover.Content
-            align="end"
-            aria-hidden={!open}
-            className="filter-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
-            sideOffset={8}
-            {...(hasOpenedFilters ? { forceMount: true } : {})}
+          {open ? (
+          <div
+            aria-modal="true"
+            className="centered-popover z-[var(--z-popover)] w-[min(calc(100vw-2rem),24rem)] rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]"
+            role="dialog"
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold">{dictionary.explore.filters.title}</h2>
@@ -186,7 +177,8 @@ export function FilterBar({
                 {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
               </Button>
             </div>
-          </Popover.Content>
+          </div>
+          ) : null}
         </Popover.Portal>
       </Popover.Root>
     </div>

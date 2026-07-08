@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildDashboardData, getHeatEvolutionScore } from "./dashboard";
+import { METRO_LINES, type MetroLine } from "./lines";
 import type { Report } from "./reports";
 
 const now = new Date("2026-07-05T12:00:00Z");
@@ -24,6 +25,23 @@ describe("dashboard data", () => {
     expect(data.lineSummaries[0].line).toBe("L1");
     expect(data.worstCars[0].car).toBe("M1001");
     expect(data.recentReports).toHaveLength(3);
+  });
+
+  it("caps recent reports at the latest 100 reports", () => {
+    const reports = Array.from({ length: 105 }, (_, index) =>
+      report({
+        id: String(index),
+        line: "L1",
+        state: "calor",
+        createdAt: new Date(now.getTime() - index * 60_000),
+      }),
+    );
+
+    const data = buildDashboardData(reports, now);
+
+    expect(data.recentReports).toHaveLength(100);
+    expect(data.recentReports[0].id).toBe("0");
+    expect(data.recentReports.at(-1)?.id).toBe("99");
   });
 
   it("excludes hidden reports and counts the last day", () => {
@@ -60,6 +78,17 @@ describe("dashboard data", () => {
     expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(3);
     expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0), 0)).toBe(2);
     expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
+  });
+
+  it("uses accumulated summer reports for the Termo Indicator trend", () => {
+    const estimatedCarsByLine = Object.fromEntries(METRO_LINES.map((line) => [line, 10])) as Record<MetroLine, number>;
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-06-01T08:30:00Z") }),
+    ], now, estimatedCarsByLine, "sevenDays");
+
+    const l1Values = data.trend.map((point) => point.L1);
+
+    expect(l1Values).toEqual(Array.from({ length: 7 }, () => 0.1));
   });
 
   it("scores heat evolution from indicator, report count, and affected fleet percentage", () => {

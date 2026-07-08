@@ -23,7 +23,7 @@ export default async function ExplorePage({
   if (!isLocale(lang)) notFound();
   const search = await searchParams;
   const dictionary = await getDictionary(lang);
-  const selectedRange = isTimeRange(search.rango) ? search.rango : "sevenDays";
+  const selectedRange = isTimeRange(search.rango) ? search.rango : "summer";
   const selectedLines = parseSelectedLines(search.linea);
   const data = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
   const rangeLabel = dictionary.explore.ranges[selectedRange];
@@ -37,7 +37,7 @@ export default async function ExplorePage({
   const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
 
   return (
-    <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
+    <main className="min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 pb-5">
         <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
 
@@ -60,18 +60,26 @@ export default async function ExplorePage({
                 {dictionary.explore.moduleRange}: {rangeLabel}
               </p>
               <div className="mt-4 flex flex-col gap-3">
-                {fleetSummaries.slice(0, DASHBOARD_LIMITS.topLineCount).map((summary) => {
+                {fleetSummaries.map((summary) => {
                   const coverage = summary.fleetWithoutAcPercentage;
                   return (
                     <div key={summary.line}>
                       <div className="mb-1 flex items-center justify-between text-sm">
-                        <span className="font-semibold">{summary.line}</span>
+                        <span
+                          className="rounded-sm px-1.5 py-1 text-xs font-bold"
+                          style={{
+                            background: LINE_COLORS[summary.line].fill,
+                            color: LINE_COLORS[summary.line].textOnFill,
+                          }}
+                        >
+                          {summary.line}
+                        </span>
                         <span className="text-muted">
-                          {coverage}% {dictionary.explore.fleetWithoutAc}
+                          {coverage}% {dictionary.explore.fleetWithoutAc} ({summary.carsWithoutAcReported}/{summary.estimatedCars})
                         </span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-surface">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, coverage)}%` }} />
+                        <div className="h-full rounded-full" style={{ width: `${Math.min(100, coverage)}%`, background: LINE_COLORS[summary.line].fill }} />
                       </div>
                     </div>
                   );

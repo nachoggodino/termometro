@@ -6,7 +6,7 @@ import type { Report } from "./reports";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
-  recentReportCount: 12,
+  recentReportCount: 100,
   worstCarCount: 8,
 } as const;
 
@@ -56,7 +56,8 @@ export function buildDashboardData(
   range: TimeRange = "sevenDays",
 ): DashboardData {
   const rangeWindow = getRangeWindow(range, now);
-  const visibleReports = reports.filter((report) => !report.hiddenAt && report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
+  const usableReports = reports.filter((report) => !report.hiddenAt);
+  const visibleReports = usableReports.filter((report) => report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
@@ -101,7 +102,7 @@ export function buildDashboardData(
     .sort((a, b) => b.score - a.score || b.reports - a.reports)
     .slice(0, DASHBOARD_LIMITS.worstCarCount);
 
-  const trend = buildTrend(visibleReports, now, range, estimatedCarsByLine);
+  const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
   const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
@@ -122,14 +123,16 @@ function buildTrend(
   range: TimeRange,
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
 ): TrendPoint[] {
+  const summerStart = getRangeWindow("summer", now).start;
   return buildBuckets(now, range).map((bucket) => {
     const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
+    const accumulatedReports = reports.filter((report) => report.createdAt >= summerStart && report.createdAt < bucket.end);
     const point: TrendPoint = {
       label: bucket.label,
       reports: bucketReports.length,
     };
     for (const line of METRO_LINES) {
-      const lineReports = bucketReports.filter((report) => report.line === line);
+      const lineReports = accumulatedReports.filter((report) => report.line === line);
       point[line] = getHeatEvolutionScore(lineReports, estimatedCarsByLine[line], now);
     }
     return point;
@@ -142,11 +145,7 @@ function buildLineEvolution(
   range: TimeRange,
   lineSummaries: LineSummary[],
 ): LineEvolutionPoint[] {
-  const lines = lineSummaries
-    .filter((summary) => summary.reports > 0)
-    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
-    .slice(0, 4)
-    .map((summary) => summary.line);
+  const lines = lineSummaries.map((summary) => summary.line);
 
   return buildBuckets(now, range).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };

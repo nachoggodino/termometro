@@ -38,12 +38,12 @@ export const messages = {
     },
   },
   home: {
-    mission: "A citizen thermometer for making overheated Metro cars visible during Madrid summer",
+    mission: "A citizen project to make visible the Metro de Madrid lines and cars without air conditioning",
     reportsInWindow: "reports in the last day",
     noReports: "No recent reports",
     noReportsCopy: "If the car feels like a sauna, you can be the first to report it",
-    reportDescription: "Tell us how the AC feels now",
-    exploreDescription: "See lines, cars, and trends",
+    reportDescription: "Tell us how the air conditioning is now",
+    exploreDescription: "Explore lines, cars, and trends",
   },
   reportForm: {
     title: "Report heat",
@@ -51,9 +51,9 @@ export const messages = {
     line: "Line",
     heatState: "AC state",
     car: "Car",
-    carPlaceholder: "E.g. M1234 or R12345",
+    carPlaceholder: "M1234 or R-5469",
     carInvalid: "Use one letter and 4 or 5 numbers, for example M1234, or leave this empty",
-    carHelp: "It is usually shown inside or outside the car. If you cannot find it, leave this empty",
+    carHelp: "It is usually shown on a plate at the start and end of the car, or on the sides of continuous trains. If you cannot find it, leave this empty",
     submit: {
       fresco: "Report fresh air",
       calor: "Report heat",
@@ -70,15 +70,15 @@ export const messages = {
   states: {
     fresco: {
       label: "Fresh",
-      description: "The car feels comfortable. The AC works, for once",
+      description: "..The AC works, for once...",
     },
     calor: {
       label: "Hot",
-      description: "It is bearable, but the car is already asking for shade",
+      description: "The car's air conditioning is not enough, people are uncomfortable",
     },
     infierno: {
       label: "Hell",
-      description: "This is not air conditioning. It is endurance training",
+      description: "People are roasting, the AC is not working, and someone could faint",
     },
   },
   explore: {
@@ -107,7 +107,7 @@ export const messages = {
       title: "Go to module",
     },
     modules: {
-      trend: "Heat trend",
+      trend: "Termo Indicator",
       volume: "Reports by line",
       lineCars: "Cars by line",
       lineEvolution: "Each line evolution",
@@ -116,21 +116,20 @@ export const messages = {
       recent: "Recent reports",
     },
     score: "Termo Indicator",
-    scoreHelp: "Weighted average: Fresh 0, Hot 60, Hell 100",
-    fleetAdjustedScoreHelp:
-      "Formula: Termo indicator for the period × reports in the period × affected fleet percentage for the period. Indicator and percentage use 0 to 1 scale.",
+    scoreHelp: "Formula: Weighted average of reports x Number of reports x % of reported fleet",
+    fleetAdjustedScoreHelp: "Formula: Weighted average of reports x Number of reports x % of reported fleet",
     confidenceHelp: "Calculated from recent report volume and agreement",
     disagreementHelp: "Share of recent reports that do not match the dominant state",
     latestReport: "Latest report",
     noRecentReport: "No reports in this range",
     reportsLabel: "reports",
     carsReportedLabel: "reported cars",
-    fleetAdjustedScoreLabel: "Affected fleet",
+    fleetAdjustedScoreLabel: "Termo Indicator",
     fleetWithoutAc: "of fleet without AC",
     noCar: "No car",
     moduleRange: "Range",
     chartTakeaways: {
-      trend: "The line rises when heat, report volume, and affected fleet coverage coincide in the period",
+      trend: "The indicator grows with accumulated summer reports, more heat, and more reported fleet",
       volume: "More reports do not mean more heat: they show where citizen signal is stronger",
       lineCars: "Shows how many distinct cars appear in reports for this range",
       lineEvolution: "The lines with the most reports show when the signal concentrates",
@@ -138,14 +137,14 @@ export const messages = {
     },
     caveats: {
       confidence: "Confidence, recency, and disagreement qualify each signal",
-      fleet: "Calculated from cars reported as Hot or Hell, estimated fleet counts, and incomplete inventories",
+      fleet: "Share of cars reported as Hot or Hell over the estimated fleet",
     },
   },
   methodology: {
     title: "Methodology",
     intro: "Termo turns citizen reports into public signals, not absolute truths",
     scoreTitle: "Termo Indicator",
-    scoreBody: "Fresh is 0, Hot is 60, and Hell is 100. Recent reports weigh more in today views",
+    scoreBody: "Formula: Weighted average of reports x Number of reports x % of reported fleet",
     confidenceTitle: "Confidence",
     confidenceBody: "Confidence rises with more recent reports and stronger agreement. Disagreement is shown, not hidden",
     fleetTitle: "Estimated fleet",

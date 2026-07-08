@@ -38,12 +38,12 @@ export const messages = {
     },
   },
   home: {
-    mission: "Un termo ciudadano para visibilizar los vagones que convierten el verano en una prueba de resistencia",
+    mission: "Un proyecto ciudadano para visibilizar las líneas y vagones del Metro de Madrid que no tienen aire acondicionado",
     reportsInWindow: "reportes en el último día",
     noReports: "Sin reportes recientes",
     noReportsCopy: "Si el vagón parece sauna, puedes ser la primera persona en avisar",
-    reportDescription: "Cuéntanos cómo está el aire ahora",
-    exploreDescription: "Mira líneas, coches y tendencias",
+    reportDescription: "Cuéntanos cómo está el aire acondicionado ahora",
+    exploreDescription: "Explora líneas, coches y tendencias",
   },
   reportForm: {
     title: "Reportar calor",
@@ -51,9 +51,9 @@ export const messages = {
     line: "Línea",
     heatState: "Estado del aire acondicionado",
     car: "Coche",
-    carPlaceholder: "Ej. M1234 o R12345",
+    carPlaceholder: "M1234 o R-5469",
     carInvalid: "Usa una letra y 4 o 5 números, por ejemplo M1234, o deja el campo vacío",
-    carHelp: "Suele aparecer dentro o fuera del coche. Si no lo encuentras, déjalo vacío",
+    carHelp: "Suele aparecer en una placa al inicio y final del vagón, o en los laterales de los trenes continuos. Si no lo encuentras, déjalo vacío",
     submit: {
       fresco: "Reportar fresquito",
       calor: "Reportar calor",
@@ -70,15 +70,15 @@ export const messages = {
   states: {
     fresco: {
       label: "Fresco",
-      description: "El ambiente es cómodo. El aire funciona, para variar",
+      description: "..El aire funciona, para variar...",
     },
     calor: {
       label: "Calor",
-      description: "Se puede aguantar, pero el vagón ya empieza a pedir sombra",
+      description: "El aire acondicionado del vagón no es suficiente, la gente está incómoda",
     },
     infierno: {
       label: "Infierno",
-      description: "Esto no es climatización: es una prueba de resistencia",
+      description: "La gente va asada, el aire no funciona y podría desmayarse alguien",
     },
   },
   explore: {
@@ -107,7 +107,7 @@ export const messages = {
       title: "Ir a módulo",
     },
     modules: {
-      trend: "Evolución del calor",
+      trend: "Indicador Termo",
       volume: "Reportes por línea",
       lineCars: "Coches por línea",
       lineEvolution: "Evolución de cada línea",
@@ -116,21 +116,20 @@ export const messages = {
       recent: "Últimos reportes",
     },
     score: "Indicador Termo",
-    scoreHelp: "Promedio ponderado: Fresco 0, Calor 60, Infierno 100",
-    fleetAdjustedScoreHelp:
-      "Fórmula: indicador Termo del periodo × reportes del periodo × porcentaje de flota afectada del periodo. Indicador y porcentaje se usan de 0 a 1.",
+    scoreHelp: "Fórmula: Media ponderada de los reportes x Número de reportes x % de flota reportada",
+    fleetAdjustedScoreHelp: "Fórmula: Media ponderada de los reportes x Número de reportes x % de flota reportada",
     confidenceHelp: "Calculada por cantidad de reportes recientes y nivel de acuerdo entre ellos",
     disagreementHelp: "Porcentaje de reportes recientes que no coinciden con el estado dominante",
     latestReport: "Último reporte",
     noRecentReport: "Sin reportes en el rango",
     reportsLabel: "reportes",
     carsReportedLabel: "coches reportados",
-    fleetAdjustedScoreLabel: "Flota afectada",
+    fleetAdjustedScoreLabel: "Indicador Termo",
     fleetWithoutAc: "de flota sin AC",
     noCar: "Sin coche",
     moduleRange: "Rango",
     chartTakeaways: {
-      trend: "La línea sube cuando coinciden más calor, más reportes y más flota afectada en el periodo",
+      trend: "El indicador crece con reportes acumulados de verano, más calor y más flota reportada",
       volume: "Más reportes no significan más calor: indican dónde hay más señal ciudadana",
       lineCars: "Muestra cuántos coches distintos aparecen en los reportes del rango",
       lineEvolution: "Las líneas con más reportes muestran cuándo se concentra la señal",
@@ -138,14 +137,14 @@ export const messages = {
     },
     caveats: {
       confidence: "Confianza, recencia y desacuerdo modulan cada señal",
-      fleet: "Porcentaje calculado con coches reportados en Calor o Infierno, flota estimada e inventarios incompletos",
+      fleet: "Porcentaje de coches reportados en Calor o Infierno sobre la flota estimada",
     },
   },
   methodology: {
     title: "Metodología",
     intro: "Termo convierte reportes ciudadanos en señales públicas, no en verdades absolutas",
     scoreTitle: "Indicador Termo",
-    scoreBody: "Fresco vale 0, Calor vale 60 e Infierno vale 100. Los reportes recientes pesan más en vistas de hoy",
+    scoreBody: "Fórmula: Media ponderada de los reportes x Número de reportes x % de flota reportada",
     confidenceTitle: "Confianza",
     confidenceBody: "La confianza sube con más reportes recientes y más acuerdo entre ellos. El desacuerdo se muestra, no se oculta",
     fleetTitle: "Flota estimada",

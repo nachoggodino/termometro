@@ -106,12 +106,14 @@ function getSupabase(options: { serviceRole?: boolean } = {}) {
 export async function getReportsForDashboard(options: DashboardOptions) {
   const now = new Date();
   const { start, end } = getRangeWindow(options.range, now);
+  const summerStart = getRangeWindow("summer", now).start;
+  const queryStart = summerStart < start ? summerStart : start;
   const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
   const supabase = getSupabase();
 
   if (!supabase) {
     const reports = getMemoryReports().filter((report) => {
-      return report.createdAt >= start && report.createdAt <= end && (!selectedLines || selectedLines.includes(report.line));
+      return report.createdAt >= queryStart && report.createdAt <= end && (!selectedLines || selectedLines.includes(report.line));
     });
     return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
   }
@@ -119,7 +121,7 @@ export async function getReportsForDashboard(options: DashboardOptions) {
   let query = supabase
     .from("reports")
     .select("id,line,car,state,created_at,hidden_at")
-    .gte("created_at", start.toISOString())
+    .gte("created_at", queryStart.toISOString())
     .lte("created_at", end.toISOString())
     .is("hidden_at", null)
     .order("created_at", { ascending: false });

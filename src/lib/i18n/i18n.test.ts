@@ -12,7 +12,7 @@ describe("i18n configuration", () => {
     expect(isLocale("es")).toBe(true);
     expect(isLocale("en")).toBe(true);
     expect(isLocale("fr")).toBe(false);
-    expect(localeNames).toEqual({ es: "ES", en: "EN" });
+    expect(localeNames).toEqual({ es: "Español", en: "Inglés" });
   });
 
   it("keeps core copy available in both dictionaries", () => {

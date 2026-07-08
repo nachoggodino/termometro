@@ -16,7 +16,7 @@ export function LanguageRadioGroup({ label, locale, pathname }: { label: string;
             <Link
               aria-checked={selected}
               className={cn(
-                "flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                "click-wave flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
                 selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
               )}
               data-testid={`lang-${candidate}`}

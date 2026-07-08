@@ -15,7 +15,7 @@ import {
 } from "recharts";
 import { DASHBOARD_LIMITS, type DashboardData } from "@/lib/domain/dashboard";
 import { CHART_TOKENS } from "@/lib/design/tokens";
-import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
+import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { TimeRange } from "@/lib/domain/ranges";
 import { formatCarCode } from "@/lib/domain/reports";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -38,11 +38,7 @@ export function DashboardCharts({
   const limitWhenUnfiltered = (items: typeof visibleLines) => (selectedLines.length > 0 ? items : items.slice(0, DASHBOARD_LIMITS.topLineCount));
   const reportVolumeLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.reports - a.reports || b.score - a.score));
   const carLines = limitWhenUnfiltered(visibleLines.toSorted((a, b) => b.carsReported - a.carsReported || b.score - a.score));
-  const lineEvolutionLines = visibleLines
-    .filter((summary) => summary.reports > 0)
-    .toSorted((a, b) => b.reports - a.reports || b.score - a.score)
-    .slice(0, 4)
-    .map((summary) => summary.line);
+  const lineEvolutionLines = selectedLines.length > 0 ? selectedLines : METRO_LINES;
   const heatTrendLines = selectedLines.length > 0 ? selectedLines : data.lineSummaries.map((summary) => summary.line);
   const xAxisInterval = selectedRange === "today" ? 2 : selectedRange === "sevenDays" ? 0 : "preserveStartEnd";
 
@@ -52,7 +48,6 @@ export function DashboardCharts({
         dictionary={dictionary}
         id="line-evolution"
         rangeLabel={rangeLabel}
-        takeaway={dictionary.explore.chartTakeaways.lineEvolution}
         title={dictionary.explore.modules.lineEvolution}
       >
         <div className={CHART_TOKENS.moduleHeightClass}>

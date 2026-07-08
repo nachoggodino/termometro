@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { getDashboardDataForPage } from "@/lib/server/page-data";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
+import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
+import type { Report } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
@@ -12,7 +14,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
   if (!isLocale(lang)) notFound();
   const dictionary = await getDictionary(lang);
   const dashboard = await getDashboardDataForPage({ range: "today" });
-  const recentReports = dashboard.recentReports.slice(0, 5);
+  const recentReports = dashboard.recentReports;
+  const topRecentLines = getTopRecentLines(recentReports);
 
   return (
     <main>
@@ -65,11 +68,26 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               <Clock3 aria-hidden="true" className="size-4 text-muted" />
             </div>
             {recentReports.length > 0 ? (
-              <div className="mt-3 flex flex-col divide-y divide-border">
-                {recentReports.map((report) => (
-                  <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
-                ))}
-              </div>
+              <>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {topRecentLines.map(({ line, reports }) => (
+                    <span
+                      className="inline-flex items-center gap-1 font-mono text-xs font-semibold tabular-nums"
+                      key={line}
+                      style={{
+                        color: LINE_COLORS[line].fill,
+                      }}
+                    >
+                      {line} <span className="text-muted">·</span> {reports}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3 flex max-h-[28rem] flex-col divide-y divide-border overflow-y-auto pr-1">
+                  {recentReports.map((report) => (
+                    <RecentReportRow dictionary={dictionary} key={report.id} locale={lang} report={report} />
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="mt-4 flex items-start gap-3 rounded-md bg-surface p-3">
                 <Flame aria-hidden="true" className="mt-0.5 size-5 text-heat-calor" />
@@ -90,4 +108,16 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
 function TrainSilhouette() {
   return <span aria-hidden="true" className="home-train-silhouette mx-auto mb-1 h-16 w-48 text-muted opacity-35" />;
+}
+
+function getTopRecentLines(reports: Report[]) {
+  const counts = new Map<MetroLine, number>();
+  for (const report of reports) {
+    counts.set(report.line, (counts.get(report.line) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .map(([line, count]) => ({ line, reports: count }))
+    .toSorted((a, b) => b.reports - a.reports || a.line.localeCompare(b.line))
+    .slice(0, 4);
 }
