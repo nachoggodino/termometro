@@ -50,7 +50,7 @@ export const messages = {
     exploreDescription: "Explore lines, cars, and trends",
   },
   reportForm: {
-    title: "Report heat",
+    title: "Report",
     subtitle: "It takes a few seconds. Report only what you are experiencing now",
     line: "Line",
     heatState: "AC state",

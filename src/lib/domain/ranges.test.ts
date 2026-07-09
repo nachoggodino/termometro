@@ -14,6 +14,14 @@ describe("time ranges", () => {
     expect(getRangeStart("month", now).toISOString()).toBe("2026-06-05T22:00:00.000Z");
   });
 
+  it("computes a rolling last 24 hour window", () => {
+    const now = new Date("2026-07-05T12:34:00Z");
+    const window = getRangeWindow("last24Hours", now);
+
+    expect(window.start.toISOString()).toBe("2026-07-04T12:34:00.000Z");
+    expect(window.end.toISOString()).toBe("2026-07-05T12:34:00.000Z");
+  });
+
   it("uses Madrid calendar days across UTC date boundaries", () => {
     const now = new Date("2026-07-04T22:30:00Z");
 

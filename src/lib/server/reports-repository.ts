@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { buildDashboardData } from "@/lib/domain/dashboard";
-import { getRangeWindow, type TimeRange } from "@/lib/domain/ranges";
+import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
   isDuplicateCandidate,
@@ -39,7 +39,7 @@ type CreateReportRpcRow = {
 };
 
 type DashboardOptions = {
-  range: TimeRange;
+  range: DashboardRange;
   line?: string | null;
   lines?: MetroLine[] | null;
 };

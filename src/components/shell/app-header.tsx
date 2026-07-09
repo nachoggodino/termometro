@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
-import { BarChart3, CircleHelp, Home, Send } from "lucide-react";
+import { CircleHelp, Home } from "lucide-react";
 import { AppLogo } from "@/components/ui/app-logo";
+import { ExploreActionIcon, ReportActionIcon } from "@/components/ui/action-icons";
 import { LanguageRadioGroup } from "./language-switcher";
 import { ThemeSegmentedSwitch } from "./theme-toggle";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -25,8 +26,8 @@ export function AppHeader({
   const topRowRef = useRef<HTMLDivElement>(null);
   const navItems = [
     { href: `/${locale}`, label: dictionary.common.home, icon: Home, path: "" },
-    { href: `/${locale}/reportar`, label: dictionary.common.report, icon: Send, path: "/reportar" },
-    { href: `/${locale}/explorar`, label: dictionary.common.explore, icon: BarChart3, path: "/explorar" },
+    { href: `/${locale}/reportar`, label: dictionary.common.report, icon: ReportActionIcon, path: "/reportar", iconClassName: "text-heat-infierno" },
+    { href: `/${locale}/explorar`, label: dictionary.common.explore, icon: ExploreActionIcon, path: "/explorar", iconClassName: "h-4 w-5" },
     {
       href: `/${locale}/metodologia`,
       label: dictionary.common.methodology,
@@ -120,7 +121,14 @@ export function AppHeader({
                   key={item.path}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon aria-hidden="true" className="size-4" />
+                  <Icon
+                    aria-hidden="true"
+                    className={cn(
+                      "size-4",
+                      "iconClassName" in item && item.iconClassName,
+                      current && item.path === "/reportar" ? "text-[var(--accent-contrast)]" : null,
+                    )}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );

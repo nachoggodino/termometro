@@ -10,7 +10,7 @@ import {
 } from "./heat";
 import { ESTIMATED_TOTAL_CARS } from "./fleet-estimates";
 import { METRO_LINES, type MetroLine } from "./lines";
-import { getRangeWindow, type TimeRange } from "./ranges";
+import { getRangeWindow, type DashboardRange } from "./ranges";
 import type { Report } from "./reports";
 import { APP_TIME_ZONE, getMadridStartOfDay } from "./time";
 
@@ -85,12 +85,13 @@ export function buildDashboardData(
   reports: Report[],
   now = new Date(),
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
-  range: TimeRange = "sevenDays",
+  range: DashboardRange = "sevenDays",
 ): DashboardData {
   const rangeWindow = getRangeWindow(range, now);
   const usableReports = reports.filter((report) => !report.hiddenAt);
   const visibleReports = usableReports.filter((report) => report.createdAt >= rangeWindow.start && report.createdAt <= rangeWindow.end);
-  const recentReports = usableReports.filter((report) => report.createdAt <= rangeWindow.end);
+  const recentReports =
+    range === "last24Hours" ? visibleReports : usableReports.filter((report) => report.createdAt <= rangeWindow.end);
   const summerStart = getRangeWindow("summer", now).start;
   const lineSummaries = METRO_LINES.map((line) => {
     const lineReports = visibleReports.filter((report) => report.line === line);
@@ -180,7 +181,7 @@ export function buildCarExplorerSelection(
   car: string,
   reports: Report[],
   now: Date,
-  range: TimeRange,
+  range: DashboardRange,
   options = buildCarExplorerOptions(reports),
 ): CarExplorerSelection | null {
   const option = options.find((item) => item.car === car);
@@ -229,7 +230,7 @@ function getCarHeatCounts(reports: Report[]) {
 function buildTrend(
   reports: Report[],
   now: Date,
-  range: TimeRange,
+  range: DashboardRange,
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
 ): TrendPoint[] {
   const summerStart = getRangeWindow("summer", now).start;
@@ -252,7 +253,7 @@ function buildTrend(
 function buildLineEvolution(
   reports: Report[],
   now: Date,
-  range: TimeRange,
+  range: DashboardRange,
   lineSummaries: LineSummary[],
 ): LineEvolutionPoint[] {
   const lines = lineSummaries.map((summary) => summary.line);
@@ -274,9 +275,9 @@ export function getHeatEvolutionScore(
   return calculateMetroHeatIndex(reports, estimatedCars, now).heat_index;
 }
 
-function buildBuckets(now: Date, range: TimeRange) {
+function buildBuckets(now: Date, range: DashboardRange) {
   const rangeWindow = getRangeWindow(range, now);
-  if (range === "today") {
+  if (range === "today" || range === "last24Hours") {
     const start = rangeWindow.start;
     return Array.from({ length: 24 }, (_, hour) => {
       const bucketStart = new Date(start.getTime() + hour * 3_600_000);

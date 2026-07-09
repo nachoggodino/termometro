@@ -26,7 +26,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           <p className="mx-auto max-w-md text-center text-pretty text-sm leading-5 text-muted sm:text-base sm:leading-6">{dictionary.home.mission}</p>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button asChild className="home-report-action min-h-0 justify-between rounded-md py-1.5 pl-3 pr-6 text-left" data-testid="home-report" variant="primary">
+            <Button asChild className="home-report-action min-h-0 justify-between rounded-md py-1.5 pl-3 pr-6 text-left text-white [&_*]:text-white" data-testid="home-report" variant="primary">
               <Link href={`/${lang}/reportar`}>
                 <span>
                   <span className="block text-base">{dictionary.common.report}</span>
@@ -58,7 +58,7 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 }
 
 async function HomeReports({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getDictionary>>; locale: "es" | "en" }) {
-  const dashboard = await getDashboardDataForPage({ range: "today" });
+  const dashboard = await getDashboardDataForPage({ range: "last24Hours" });
   const recentReports = dashboard.recentReports;
   const topRecentLines = getTopRecentLines(recentReports);
 

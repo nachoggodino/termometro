@@ -51,7 +51,7 @@ export const messages = {
     exploreDescription: "Explora líneas, coches y tendencias",
   },
   reportForm: {
-    title: "Reportar calor",
+    title: "Reportar",
     subtitle: "Tarda unos segundos. Reporta solo lo que estás viviendo ahora",
     line: "Línea",
     heatState: "Estado del aire acondicionado",

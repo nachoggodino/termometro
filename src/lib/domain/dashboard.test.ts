@@ -122,6 +122,18 @@ describe("dashboard data", () => {
     expect(data.lineSummaries.find((summary) => summary.line === "L1")?.reports).toBe(1);
   });
 
+  it("uses a rolling 24 hour range without resetting at Madrid midnight", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-07-05T11:30:00Z") }),
+      report({ id: "2", line: "L5", state: "calor", createdAt: new Date("2026-07-04T13:00:00Z") }),
+      report({ id: "3", line: "L5", state: "calor", createdAt: new Date("2026-07-04T11:30:00Z") }),
+    ], now, undefined, "last24Hours");
+
+    expect(data.reportsLastDay).toBe(2);
+    expect(data.lineSummaries.find((summary) => summary.line === "L5")?.reports).toBe(1);
+    expect(data.recentReports.map((recentReport) => recentReport.id)).toEqual(["1", "2"]);
+  });
+
   it("uses hourly buckets for today charts", () => {
     const data = buildDashboardData([
       report({ id: "0", line: "L1", state: "calor", createdAt: new Date("2026-07-04T22:30:00Z") }),
