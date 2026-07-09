@@ -27,7 +27,7 @@ export function AppHeader({
   const navItems = [
     { href: `/${locale}`, label: dictionary.common.home, icon: Home, path: "" },
     { href: `/${locale}/reportar`, label: dictionary.common.report, icon: ReportActionIcon, path: "/reportar", iconClassName: "text-heat-infierno" },
-    { href: `/${locale}/explorar`, label: dictionary.common.explore, icon: ExploreActionIcon, path: "/explorar", iconClassName: "h-4 w-5" },
+    { href: `/${locale}/explorar`, label: dictionary.common.explore, icon: ExploreActionIcon, path: "/explorar", iconClassName: "h-4 w-5 scale-[0.67]" },
     {
       href: `/${locale}/metodologia`,
       label: dictionary.common.methodology,
@@ -121,14 +121,16 @@ export function AppHeader({
                   key={item.path}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon
-                    aria-hidden="true"
-                    className={cn(
-                      "size-4",
-                      "iconClassName" in item && item.iconClassName,
-                      current && item.path === "/reportar" ? "text-[var(--accent-contrast)]" : null,
-                    )}
-                  />
+                  <span className="flex size-5 shrink-0 items-center justify-center">
+                    <Icon
+                      aria-hidden="true"
+                      className={cn(
+                        "size-4",
+                        "iconClassName" in item && item.iconClassName,
+                        current && item.path === "/reportar" ? "text-[var(--accent-contrast)]" : null,
+                      )}
+                    />
+                  </span>
                   <span>{item.label}</span>
                 </Link>
               );
