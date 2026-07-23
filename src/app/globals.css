@@ -187,6 +187,44 @@ body {
   animation: report-button-spin 800ms linear infinite;
 }
 
+.share-button {
+  overflow: hidden;
+  position: relative;
+}
+
+.share-button-icon,
+.share-button-spinner {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+}
+
+.share-button-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.share-button-spinner {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.42);
+}
+
+.share-button-spinner .report-button-spinner {
+  display: block;
+}
+
+.share-button[aria-busy="true"] .share-button-icon {
+  opacity: 0;
+  transform: rotate(95deg) scale(0.42);
+}
+
+.share-button[aria-busy="true"] .share-button-spinner {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  animation: share-button-morph var(--duration-base) var(--ease-out);
+}
+
 .home-explore-action {
   border-color: color-mix(in oklch, var(--border), var(--metro-blue) 48%);
   background:
@@ -323,6 +361,21 @@ button:disabled {
 @keyframes report-button-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes share-button-morph {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.42);
+  }
+  72% {
+    opacity: 1;
+    transform: rotate(12deg) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
   }
 }
 

@@ -83,14 +83,17 @@ export function ChartCard({
         <Button
           aria-busy={isSharing}
           aria-label={`${isSharing ? dictionary.common.sharePreparing : dictionary.common.shareCard}: ${title}`}
-          className="size-9 min-h-0 px-0 py-0"
+          className="share-button grid size-9 min-h-0 place-items-center px-0 py-0"
           data-share-exclude="true"
           disabled={isSharing}
           onClick={shareModule}
           type="button"
           variant="secondary"
         >
-          {isSharing ? <span aria-hidden="true" className="report-button-spinner" /> : <Share2 aria-hidden="true" />}
+          <Share2 aria-hidden="true" className="share-button-icon" />
+          <span aria-hidden="true" className="share-button-spinner">
+            <span className="report-button-spinner" />
+          </span>
         </Button>
       </div>
       {children}
