@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,7 +23,46 @@ describe("ChartCard", () => {
 
     await userEvent.click(screen.getByRole("button", { name: `${esMessages.common.shareCard}: Modulo de prueba` }));
 
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Modulo de prueba"));
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining(esMessages.common.disclaimer));
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Modulo de prueba"));
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining(esMessages.common.disclaimer));
+    });
+  });
+
+  it("shows loading feedback while share fallback is pending", async () => {
+    let resolveWrite: () => void = () => {};
+    const writeText = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveWrite = resolve;
+        }),
+    );
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    render(
+      <TooltipProvider>
+        <ChartCard dictionary={esMessages} rangeLabel="Hoy" title="Modulo de prueba">
+          <p>Contenido</p>
+        </ChartCard>
+      </TooltipProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: `${esMessages.common.shareCard}: Modulo de prueba` }));
+
+    const busyButton = screen.getByRole("button", { name: `${esMessages.common.sharePreparing}: Modulo de prueba` });
+    expect(busyButton).toBeDisabled();
+    expect(busyButton).toHaveAttribute("aria-busy", "true");
+
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalled();
+    });
+    resolveWrite();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: `${esMessages.common.shareCard}: Modulo de prueba` })).toBeEnabled();
+    });
   });
 });

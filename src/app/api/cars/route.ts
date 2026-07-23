@@ -8,7 +8,14 @@ export async function GET(request: Request) {
   const line = isMetroLine(requestedLine) ? requestedLine : "L1";
   try {
     const suggestions = await getCarSuggestions(line);
-    return NextResponse.json({ suggestions });
+    return NextResponse.json(
+      { suggestions },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+        },
+      },
+    );
   } catch (error) {
     console.error("Failed to load car suggestions", error);
     return NextResponse.json({ suggestions: [], error: "server_error" }, { status: 500 });

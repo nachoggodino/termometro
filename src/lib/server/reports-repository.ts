@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { buildDashboardData } from "@/lib/domain/dashboard";
+import { buildDashboardData, getCarSeries } from "@/lib/domain/dashboard";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
@@ -42,6 +42,7 @@ type DashboardOptions = {
   range: DashboardRange;
   line?: string | null;
   lines?: MetroLine[] | null;
+  carSeries?: number[] | null;
 };
 
 const globalForReports = globalThis as typeof globalThis & {
@@ -106,12 +107,13 @@ export async function getReportsForDashboard(options: DashboardOptions) {
   const summerStart = getRangeWindow("summer", now).start;
   const queryStart = summerStart < start ? summerStart : start;
   const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
+  const selectedCarSeries = normalizeCarSeries(options.carSeries);
   const supabase = getSupabase();
 
   if (!supabase) {
     const reports = getMemoryReports().filter((report) => {
       return report.createdAt >= queryStart && report.createdAt <= end && (!selectedLines || selectedLines.includes(report.line));
-    });
+    }).filter((report) => matchesCarSeries(report, selectedCarSeries));
     return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
   }
 
@@ -145,19 +147,33 @@ export async function getReportsForDashboard(options: DashboardOptions) {
     }
   }
 
-  return buildDashboardData(
-    (data ?? []).map((row) => ({
+  const reports = (data ?? []).map((row) => ({
       id: row.id,
       line: row.line,
       car: row.car,
       state: row.state,
       createdAt: new Date(row.created_at),
       hiddenAt: row.hidden_at ? new Date(row.hidden_at) : null,
-    })),
+    })).filter((report) => matchesCarSeries(report, selectedCarSeries));
+
+  return buildDashboardData(
+    reports,
     now,
     fleetEstimates as Record<MetroLine, number>,
     options.range,
   );
+}
+
+function normalizeCarSeries(series: number[] | null | undefined) {
+  if (!series?.length) return null;
+  return new Set(series.filter((item) => Number.isInteger(item) && item >= 0));
+}
+
+function matchesCarSeries(report: Report, selectedCarSeries: Set<number> | null) {
+  if (!selectedCarSeries) return true;
+  if (!report.car) return false;
+  const series = getCarSeries(report.car);
+  return series !== null && selectedCarSeries.has(series);
 }
 
 export async function createReportForRequest(

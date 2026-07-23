@@ -24,6 +24,18 @@ describe("API routes", () => {
     expect(payload).toEqual({ suggestions: [], error: "server_error" });
   });
 
+  it("caches successful car suggestions briefly", async () => {
+    repositoryMock.getCarSuggestions.mockResolvedValue(["M1234"]);
+    const { GET } = await import("./cars/route");
+
+    const response = await GET(new Request("https://termo.test/api/cars?line=L5"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("public, s-maxage=300, stale-while-revalidate=600");
+    expect(payload).toEqual({ suggestions: ["M1234"] });
+  });
+
   it("returns controlled errors when undo fails server-side", async () => {
     repositoryMock.undoReport.mockRejectedValue(new Error("database unavailable"));
     const { DELETE } = await import("./reports/[id]/route");

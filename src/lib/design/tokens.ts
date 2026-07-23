@@ -5,11 +5,30 @@ export const THEME_COLORS = {
 
 export const CHART_TOKENS = {
   animationDurationMs: 220,
+  angledTickFontSizePx: 10,
+  angledTickHeightPx: 42,
   barRadius: [6, 6, 0, 0] as [number, number, number, number],
+  hourTickFontSizePx: 9,
+  hourTickHeightPx: 24,
   moduleHeightClass: "h-56",
-  compactMargin: { left: -24, right: 8, top: 8, bottom: 0 },
+  compactMargin: { left: -12, right: 8, top: 8, bottom: 0 },
   tooltipPayloadLimit: 8,
 } as const;
+
+export const SERIES_CHART_COLORS = [
+  "oklch(0.58 0.16 22)",
+  "oklch(0.64 0.15 58)",
+  "oklch(0.56 0.14 145)",
+  "oklch(0.60 0.13 190)",
+  "oklch(0.55 0.16 245)",
+  "oklch(0.60 0.16 305)",
+  "oklch(0.58 0.15 350)",
+  "oklch(0.68 0.13 105)",
+  "oklch(0.52 0.11 205)",
+  "oklch(0.62 0.12 275)",
+  "oklch(0.50 0.12 35)",
+  "oklch(0.54 0.11 165)",
+] as const;
 
 export const FEEDBACK_TOKENS = {
   undoToastDurationMs: 12_000,

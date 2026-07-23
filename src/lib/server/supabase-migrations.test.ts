@@ -24,10 +24,14 @@ describe("Supabase migration contracts", () => {
   });
 
   it("only applies duplicate suppression when a car identifier is present", () => {
-    const rpcMigration = readFileSync(join(root, "supabase/migrations/0002_create_report_rpc.sql"), "utf8");
+    const rpcMigration = [
+      readFileSync(join(root, "supabase/migrations/0002_create_report_rpc.sql"), "utf8"),
+      readFileSync(join(root, "supabase/migrations/0005_tighten_report_abuse_and_no_car_duplicates.sql"), "utf8"),
+    ].join("\n");
 
+    expect(rpcMigration).toContain("if input_car is null then");
+    expect(rpcMigration).toContain("reports.car is null");
     expect(rpcMigration).toContain("if input_car is not null then");
     expect(rpcMigration).toContain("reports.car = input_car");
-    expect(rpcMigration).not.toContain("(input_car is null and reports.car is null)");
   });
 });

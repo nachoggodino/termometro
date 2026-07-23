@@ -13,7 +13,7 @@ export type Report = {
 
 export const DUPLICATE_WINDOW_MINUTES = 12;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
-export const RATE_LIMIT_MAX_REPORTS = 8;
+export const RATE_LIMIT_MAX_REPORTS = 4;
 export const UNDO_WINDOW_SECONDS = 90;
 
 export const reportInputSchema = z.object({
@@ -67,13 +67,13 @@ export function isDuplicateCandidate(
   now = new Date(),
   windowMinutes = DUPLICATE_WINDOW_MINUTES,
 ) {
-  if (!current.car) return false;
   const ageMs = now.getTime() - previous.createdAt.getTime();
-  return (
-    previous.line === current.line &&
-    previous.state === current.state &&
-    (previous.car ?? null) === (current.car ?? null) &&
-    ageMs >= 0 &&
-    ageMs <= windowMinutes * 60_000
-  );
+  const isWithinWindow = ageMs >= 0 && ageMs <= windowMinutes * 60_000;
+  if (!isWithinWindow || previous.line !== current.line) return false;
+
+  if (!current.car) {
+    return previous.car === null;
+  }
+
+  return previous.state === current.state && previous.car === current.car;
 }

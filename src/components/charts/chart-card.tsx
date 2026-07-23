@@ -1,7 +1,7 @@
 "use client";
 
 import { Share2 } from "lucide-react";
-import { useRef, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
@@ -29,10 +29,14 @@ export function ChartCard({
   id?: string;
 }) {
   const cardRef = useRef<HTMLElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   async function shareModule() {
+    if (isSharing) return;
+    setIsSharing(true);
     const text = shareText ?? [title, rangeLabel, takeaway, caveat, dictionary.common.disclaimer].filter(Boolean).join("\n");
     try {
+      await letBusyStatePaint();
       const blob = await renderElementAsPng(cardRef.current);
       if (!blob) throw new Error("Image export failed");
       const file = new File([blob], `${slugify(title)}.png`, { type: "image/png" });
@@ -58,6 +62,8 @@ export function ChartCard({
       } catch {
         toast.error(dictionary.common.shareImageUnavailable);
       }
+    } finally {
+      setIsSharing(false);
     }
   }
 
@@ -76,14 +82,19 @@ export function ChartCard({
           ) : null}
         </div>
         <Button
-          aria-label={`${dictionary.common.shareCard}: ${title}`}
-          className="size-9 min-h-0 px-0 py-0"
+          aria-busy={isSharing}
+          aria-label={`${isSharing ? dictionary.common.sharePreparing : dictionary.common.shareCard}: ${title}`}
+          className="share-button grid size-9 min-h-0 place-items-center px-0 py-0"
           data-share-exclude="true"
+          disabled={isSharing}
           onClick={shareModule}
           type="button"
           variant="secondary"
         >
-          <Share2 aria-hidden="true" />
+          <Share2 aria-hidden="true" className="share-button-icon" />
+          <span aria-hidden="true" className="share-button-spinner">
+            <span className="report-button-spinner" />
+          </span>
         </Button>
       </div>
       {children}
@@ -94,6 +105,13 @@ export function ChartCard({
       </p>
     </section>
   );
+}
+
+function letBusyStatePaint() {
+  if (typeof requestAnimationFrame === "undefined") return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => setTimeout(resolve, 0));
+  });
 }
 
 async function renderElementAsPng(element: HTMLElement | null) {

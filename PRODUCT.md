@@ -17,7 +17,7 @@ Termo de Madrid is a citizen-run, multilingual PWA that collects crowdsourced AC
 The product has two primary actions:
 
 - Reportar: submit a current AC condition report with line, heat state, and optional car identifier.
-- Explorar: browse charts, tables, confidence indicators, recent reports, and shareable evidence cards.
+- Explorar: browse charts, tables, confidence indicators, car/line detail, and shareable evidence cards.
 
 Reports use three states:
 
@@ -100,7 +100,7 @@ V1 abuse controls:
 - Open anonymous submission without accounts.
 - Client and server validation.
 - Rate limiting by private abuse key.
-- Soft duplicate suppression for repeated line/car/status reports in a short window. Reports without a car identifier are not globally suppressed as duplicates, because many riders can truthfully report the same line/status at once.
+- Soft duplicate suppression in a short window. Reports with a car identifier are suppressed when line, car, and state match. Reports without a car identifier are suppressed only against recent no-car reports on the same line, because they are lower-specificity signals and should not let one rider flood a line.
 - Friendly duplicate feedback such as "Ya hemos contado este reporte hace un momento."
 - Short undo window after submission, dismissible by the user.
 - Moderation fields in the database, but no admin UI in v1.
@@ -113,20 +113,25 @@ V1 routes:
 
 - Home: compact civic landing with title, mission sentence, two visible actions, live snapshot, and disclaimer.
 - /reportar: dedicated report screen with easy exit, line picker, heat state selector, optional car autocomplete, and success feedback.
-- /explorar: dashboard with global line filter, time range controls, charts, recent reports, confidence indicators, and share cards.
+- /explorar: dashboard with global line, car-series, and time range filters, charts, confidence indicators, car/line detail, and share cards.
 - /metodologia: lightweight methodology, privacy, abuse, confidence, fleet estimates, and affiliation disclaimer.
 
 V1 dashboard modules:
 
 - Line evolution by report volume.
+- Total reports by day, including all states, lines, and reports with or without a car identifier.
 - Report volume by line and time range.
 - Distinct cars reported by line.
-- Termo indicator trend over time.
-- Worst cars.
+- Reports by car series, grouped by the thousand number in the car identifier and sorted by series.
+- Worst cars, collapsed to the top 4 by default and expandable to 15.
 - Explore car: select an existing reported car and inspect total reports, reported lines, and report history by day/hour for the active range.
-- Fleet coverage using known and estimated car counts.
-- Recent reports feed, capped and anonymized.
+- Termo indicator trend over time.
+- Distribution by hour from 5 to 23, using one bar per hour and counting reports from `HH:00` through `HH:59`.
+- Fleet coverage using known and estimated car counts, collapsed to the 5 worst lines by default and expandable to all lines.
 - Line summary cards with confidence, disagreement, latest report, and score.
+- Line detail modal from summary cards: show reported cars for the active line/range, total distinct reported cars, per-car report totals, and non-zero Fresco/Calor/Infierno counters. Car rows link into the car explorer.
+
+The Explore page no longer includes the capped recent reports feed as a dashboard module. Recent report data may still be used for Home snapshots and internal calculations.
 
 Time ranges:
 
