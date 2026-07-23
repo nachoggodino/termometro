@@ -34,4 +34,18 @@ describe("Supabase migration contracts", () => {
     expect(rpcMigration).toContain("if input_car is not null then");
     expect(rpcMigration).toContain("reports.car = input_car");
   });
+
+  it("adds dashboard aggregate RPCs without granting private report fields", () => {
+    const dashboardMigration = readFileSync(join(root, "supabase/migrations/0006_dashboard_aggregate_rpcs.sql"), "utf8");
+
+    expect(dashboardMigration).toContain("create index if not exists reports_visible_created_line_idx");
+    expect(dashboardMigration).toContain("create or replace function public.dashboard_line_summaries");
+    expect(dashboardMigration).toContain("create or replace function public.dashboard_bucket_counts");
+    expect(dashboardMigration).toContain("create or replace function public.dashboard_car_summaries");
+    expect(dashboardMigration).toContain("create or replace function public.dashboard_car_histories");
+    expect(dashboardMigration).toContain("create or replace function public.dashboard_heat_trend");
+    expect(dashboardMigration).toContain("grant execute on function public.dashboard_line_summaries to anon, authenticated");
+    expect(dashboardMigration).not.toContain("abuse_key");
+    expect(dashboardMigration).not.toContain("undo_token_hash");
+  });
 });

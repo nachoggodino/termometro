@@ -25,7 +25,7 @@ export function ExploreFleetPanel({
   rangeLabel,
   selectedLines,
 }: {
-  data: DashboardData;
+  data: Pick<DashboardData, "lineSummaries">;
   dictionary: Dictionary;
   locale: Locale;
   rangeLabel: string;
@@ -105,7 +105,7 @@ export function LineDetailCards({
   selectedLines,
   locale,
 }: {
-  data: DashboardData;
+  data: Pick<DashboardData, "lineSummaries" | "lineCarReports">;
   cards?: LineSummary[];
   dictionary: Dictionary;
   selectedLines: MetroLine[];
