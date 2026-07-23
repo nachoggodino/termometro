@@ -107,7 +107,7 @@ export function DashboardCharts({
                 dataKey="reports"
                 dot={data.totalReportsTrend.length <= 1}
                 name={dictionary.common.reports}
-                stroke="var(--primary)"
+                stroke="var(--accent)"
                 strokeWidth={2}
                 type="monotone"
               />
@@ -278,7 +278,7 @@ export function DashboardCharts({
               <XAxis axisLine={false} dataKey="label" height={CHART_TOKENS.hourTickHeightPx} interval={0} tick={<HourTick />} tickLine={false} />
               <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
               <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} footer={dictionary.explore.hourIntervalLabel} />} cursor={{ fill: "var(--surface)" }} />
-              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" fill="var(--primary)" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius} />
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" fill="var(--accent)" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius} />
             </BarChart>
           </ResponsiveContainer>
         </div>

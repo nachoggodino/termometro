@@ -46,11 +46,22 @@ describe("report validation", () => {
     ).toBe(true);
   });
 
-  it("does not globally suppress no-car reports as duplicates", () => {
+  it("suppresses same-line no-car reports inside the duplicate window", () => {
     const now = new Date("2026-07-05T12:00:00Z");
     expect(
       isDuplicateCandidate(
-        { line: "L1", state: "calor", car: null },
+        { line: "L1", state: "infierno", car: null },
+        { id: "1", line: "L1", state: "calor", car: null, createdAt: new Date("2026-07-05T11:55:00Z") },
+        now,
+      ),
+    ).toBe(true);
+  });
+
+  it("does not suppress no-car reports across different lines", () => {
+    const now = new Date("2026-07-05T12:00:00Z");
+    expect(
+      isDuplicateCandidate(
+        { line: "L2", state: "calor", car: null },
         { id: "1", line: "L1", state: "calor", car: null, createdAt: new Date("2026-07-05T11:55:00Z") },
         now,
       ),

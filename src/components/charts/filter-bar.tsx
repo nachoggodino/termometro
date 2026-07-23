@@ -4,6 +4,7 @@ import * as Popover from "@radix-ui/react-popover";
 import { ListTree, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { CarSeriesSummary } from "@/lib/domain/dashboard";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import { TIME_RANGES, type TimeRange } from "@/lib/domain/ranges";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -13,13 +14,17 @@ import { Button } from "@/components/ui/button";
 import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
 
 export function FilterBar({
+  availableCarSeries,
   dictionary,
   locale,
+  selectedCarSeries,
   selectedLines,
   selectedRange,
 }: {
+  availableCarSeries: CarSeriesSummary[];
   dictionary: Dictionary;
   locale: Locale;
+  selectedCarSeries: number[];
   selectedLines: MetroLine[];
   selectedRange: TimeRange;
 }) {
@@ -28,6 +33,7 @@ export function FilterBar({
   const [open, setOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
+  const [draftCarSeries, setDraftCarSeries] = useState<number[]>(selectedCarSeries);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
 
   useEffect(() => {
@@ -39,22 +45,24 @@ export function FilterBar({
     };
   }, [open, navigationOpen]);
 
-  function href(lines: MetroLine[], range = selectedRange) {
+  function href(lines: MetroLine[], range = selectedRange, carSeries = selectedCarSeries) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
+    if (carSeries.length > 0) params.set("serie", carSeries.join(","));
     if (range !== "summer") params.set("rango", range);
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
 
   function applyFilters() {
     startTransition(() => {
-      router.push(href(draftLines, draftRange));
+      router.push(href(draftLines, draftRange, draftCarSeries));
       setOpen(false);
     });
   }
 
   function clearFilters() {
     setDraftLines([]);
+    setDraftCarSeries([]);
     setDraftRange("summer");
   }
 
@@ -62,15 +70,21 @@ export function FilterBar({
     setDraftLines((current) => (current.includes(line) ? current.filter((item) => item !== line) : [...current, line]));
   }
 
+  function toggleCarSeries(series: number) {
+    setDraftCarSeries((current) => (current.includes(series) ? current.filter((item) => item !== series) : [...current, series]));
+  }
+
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
       setDraftLines(selectedLines);
+      setDraftCarSeries(selectedCarSeries);
       setDraftRange(selectedRange);
     }
     setOpen(nextOpen);
   }
 
   const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
+  const selectedCarSeriesLabel = getSelectedCarSeriesLabel(selectedCarSeries, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
@@ -80,7 +94,7 @@ export function FilterBar({
             <div className="min-w-0">
               <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
               <p className="truncate text-sm font-semibold">
-                {selectedLineLabel} · {activeRangeLabel}
+                {[selectedLineLabel, selectedCarSeriesLabel, activeRangeLabel].filter(Boolean).join(" · ")}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -135,6 +149,25 @@ export function FilterBar({
               </div>
             </div>
 
+            {availableCarSeries.length > 0 ? (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
+                <button className={allLinesClass(draftCarSeries.length === 0)} onClick={() => setDraftCarSeries([])} type="button">
+                  {dictionary.explore.allSeries}
+                </button>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {availableCarSeries.map((item) => (
+                    <SeriesSwatch
+                      active={draftCarSeries.includes(item.series)}
+                      key={item.series}
+                      label={item.label}
+                      onClick={() => toggleCarSeries(item.series)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5">
               <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.range}</p>
               <div className="grid grid-cols-2 gap-2">
@@ -164,6 +197,23 @@ export function FilterBar({
         ) : null}
       </Popover.Portal>
     </Popover.Root>
+  );
+}
+
+function SeriesSwatch({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      aria-label={label}
+      aria-pressed={active}
+      className={cn(
+        "selection-flow flex h-10 items-center justify-center rounded-md border px-2 font-mono text-xs font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        active ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-foreground hover:bg-surface",
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {label}
+    </button>
   );
 }
 
@@ -242,4 +292,10 @@ function getSelectedLineLabel(selectedLines: MetroLine[], dictionary: Dictionary
   if (selectedLines.length === 0) return dictionary.explore.allLines;
   if (selectedLines.length <= 3) return selectedLines.join(", ");
   return dictionary.explore.filters.lineCount.replace("{count}", String(selectedLines.length));
+}
+
+function getSelectedCarSeriesLabel(selectedCarSeries: number[], dictionary: Dictionary) {
+  if (selectedCarSeries.length === 0) return null;
+  if (selectedCarSeries.length <= 2) return selectedCarSeries.map((series) => `${dictionary.explore.seriesLabel} ${series}`).join(", ");
+  return dictionary.explore.filters.seriesCount.replace("{count}", String(selectedCarSeries.length));
 }

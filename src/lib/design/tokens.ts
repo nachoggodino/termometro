@@ -11,7 +11,7 @@ export const CHART_TOKENS = {
   hourTickFontSizePx: 9,
   hourTickHeightPx: 24,
   moduleHeightClass: "h-56",
-  compactMargin: { left: -24, right: 8, top: 8, bottom: 0 },
+  compactMargin: { left: 8, right: 8, top: 8, bottom: 0 },
   tooltipPayloadLimit: 8,
 } as const;
 

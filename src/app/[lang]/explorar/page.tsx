@@ -15,7 +15,7 @@ export default async function ExplorePage({
   searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ linea?: string; rango?: string; coche?: string; reported?: string }>;
+  searchParams: Promise<{ linea?: string; rango?: string; coche?: string; reported?: string; serie?: string }>;
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
@@ -23,14 +23,28 @@ export default async function ExplorePage({
   const dictionary = await getDictionary(lang);
   const selectedRange = isTimeRange(search.rango) ? search.rango : "summer";
   const selectedLines = parseSelectedLines(search.linea);
+  const selectedCarSeries = parseSelectedCarSeries(search.serie);
   const selectedCar = search.coche ? normalizeCarCode(search.coche) : null;
-  const data = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
+  const unfilteredSeriesData = await getDashboardDataForPage({ range: selectedRange, lines: selectedLines });
+  const availableCarSeries = unfilteredSeriesData.carSeries;
+  const validSelectedCarSeries = selectedCarSeries.filter((series) => availableCarSeries.some((item) => item.series === series));
+  const data =
+    validSelectedCarSeries.length > 0
+      ? await getDashboardDataForPage({ range: selectedRange, lines: selectedLines, carSeries: validSelectedCarSeries })
+      : unfilteredSeriesData;
   const rangeLabel = dictionary.explore.ranges[selectedRange];
 
   return (
     <main className="min-h-dvh">
       <div className="mx-auto max-w-5xl px-4 pb-5">
-        <FilterBar dictionary={dictionary} locale={lang} selectedLines={selectedLines} selectedRange={selectedRange} />
+        <FilterBar
+          availableCarSeries={availableCarSeries}
+          dictionary={dictionary}
+          locale={lang}
+          selectedCarSeries={validSelectedCarSeries}
+          selectedLines={selectedLines}
+          selectedRange={selectedRange}
+        />
 
         <section className="py-6">
           <div className="flex items-center justify-center gap-2">
@@ -66,4 +80,16 @@ function parseSelectedLines(value: string | undefined) {
     }
   }
   return lines;
+}
+
+function parseSelectedCarSeries(value: string | undefined) {
+  if (!value) return [];
+  const series: number[] = [];
+  for (const item of value.split(",")) {
+    const parsed = Number(item);
+    if (Number.isInteger(parsed) && parsed >= 0 && !series.includes(parsed)) {
+      series.push(parsed);
+    }
+  }
+  return series;
 }

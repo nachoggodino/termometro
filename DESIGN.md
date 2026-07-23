@@ -228,6 +228,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 ### Chips
 
 - **Line Chips:** Fixed-size compact buttons. Unselected chips use neutral background, line-colored dot/short bar, ink label, and border. Selected chips use line-color fill, contrast-correct text, check icon, and strong outline.
+- **Series Chips:** Compact fixed-height data chips for car-series filters. Use mono tabular labels, neutral unselected state, and the civic accent selected state. Do not use Metro line colors or heat colors for series selection.
 - **Range Chips:** Neutral segmented controls for `Hoy`, `7 dias`, `1 mes`, `Este verano`. Selected state uses Civic Green or neutral dark fill, not heat color.
 - **Status Chips:** Fresco/Calor/Infierno colors only when status is the data meaning.
 
@@ -254,7 +255,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 - **App Header:** Small logo mark, current route title, language/theme utilities, and clear back/home affordance on `/reportar`.
 - **Raycast-Style Nav:** Use a compact floating or inset top utility bar with crisp active states, icon+label actions where useful, and fast state transitions. It should feel light, precise, and app-like, not like a marketing navbar.
 - **Compact Drawer Navigation:** V1 uses a compact top drawer so language, theme, methodology, and core routes stay reachable without crowding the mobile header. Keep the primary home actions visible; the drawer must stay lightweight and keyboard-accessible.
-- **Dashboard Filters:** Sticky or near-sticky line and range controls on mobile. They should never cover chart content. Filter and shortcut popovers must be scroll-contained, lock page scroll while open, keep an accessible dialog title, and retain a visible close button.
+- **Dashboard Filters:** Sticky or near-sticky line, car-series, and range controls on mobile. The active filter summary should include selected lines, selected series when present, and the active range. Filters should never cover chart content. Filter and shortcut popovers must be scroll-contained, lock page scroll while open, keep an accessible dialog title, and retain a visible close button.
 
 ### Heat State Selector
 

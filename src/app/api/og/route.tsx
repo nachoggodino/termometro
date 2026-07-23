@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const dictionary = locale === "en" ? enMessages : esMessages;
   const origin = request.nextUrl.origin;
 
-  return new ImageResponse(
+  const response = new ImageResponse(
     (
       <div
         style={{
@@ -300,4 +300,6 @@ export async function GET(request: NextRequest) {
       height: SOCIAL_IMAGE_TOKENS.height,
     },
   );
+  response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");
+  return response;
 }

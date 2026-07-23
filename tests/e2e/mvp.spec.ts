@@ -69,8 +69,10 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   expect(box!.y - (filtersButtonBox!.y + filtersButtonBox!.height)).toBeLessThanOrEqual(80);
   await page.getByRole("button", { name: "L5", exact: true }).click();
   await page.getByRole("button", { name: "L1", exact: true }).click();
+  await page.getByRole("button", { name: "1000", exact: true }).click();
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
+  await expect(page).toHaveURL(/serie=1000/);
   await expect(page).not.toHaveURL(/rango=/);
 
   await page.getByTestId("worst-car-row").first().click();
