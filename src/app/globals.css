@@ -190,6 +190,18 @@ body {
 .share-button {
   overflow: hidden;
   position: relative;
+  touch-action: manipulation;
+}
+
+.share-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.6);
+  background: radial-gradient(circle, color-mix(in oklch, currentColor, transparent 84%) 0 46%, transparent 58%);
 }
 
 .share-button-icon,
@@ -223,6 +235,10 @@ body {
   opacity: 1;
   transform: rotate(0deg) scale(1);
   animation: share-button-morph var(--duration-base) var(--ease-out);
+}
+
+.share-button[aria-busy="true"]::after {
+  animation: share-button-touch-wave calc(var(--duration-base) * 1.6) var(--ease-out);
 }
 
 .home-explore-action {
@@ -376,6 +392,17 @@ button:disabled {
   100% {
     opacity: 1;
     transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes share-button-touch-wave {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.42);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
   }
 }
 

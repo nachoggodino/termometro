@@ -36,6 +36,7 @@ export function ChartCard({
     setIsSharing(true);
     const text = shareText ?? [title, rangeLabel, takeaway, caveat, dictionary.common.disclaimer].filter(Boolean).join("\n");
     try {
+      await letBusyStatePaint();
       const blob = await renderElementAsPng(cardRef.current);
       if (!blob) throw new Error("Image export failed");
       const file = new File([blob], `${slugify(title)}.png`, { type: "image/png" });
@@ -104,6 +105,13 @@ export function ChartCard({
       </p>
     </section>
   );
+}
+
+function letBusyStatePaint() {
+  if (typeof requestAnimationFrame === "undefined") return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => setTimeout(resolve, 0));
+  });
 }
 
 async function renderElementAsPng(element: HTMLElement | null) {

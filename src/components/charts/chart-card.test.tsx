@@ -23,8 +23,10 @@ describe("ChartCard", () => {
 
     await userEvent.click(screen.getByRole("button", { name: `${esMessages.common.shareCard}: Modulo de prueba` }));
 
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Modulo de prueba"));
-    expect(writeText).toHaveBeenCalledWith(expect.stringContaining(esMessages.common.disclaimer));
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining("Modulo de prueba"));
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining(esMessages.common.disclaimer));
+    });
   });
 
   it("shows loading feedback while share fallback is pending", async () => {
@@ -54,6 +56,9 @@ describe("ChartCard", () => {
     expect(busyButton).toBeDisabled();
     expect(busyButton).toHaveAttribute("aria-busy", "true");
 
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalled();
+    });
     resolveWrite();
 
     await waitFor(() => {
