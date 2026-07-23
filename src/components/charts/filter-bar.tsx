@@ -139,7 +139,7 @@ export function FilterBar({
 
             <div className="mt-4">
               <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.range}</p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="flex flex-nowrap items-stretch gap-1.5">
                 {TIME_RANGES.map((range) => (
                   <button
                     aria-pressed={draftRange === range}
@@ -209,7 +209,7 @@ function SeriesSwatch({ active, ariaLabel, label, onClick }: { active: boolean; 
       aria-label={ariaLabel ?? label}
       aria-pressed={active}
       className={cn(
-        "selection-flow flex h-10 items-center justify-center rounded-md border px-0.5 font-mono text-[0.5rem] font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "filter-swatch-text selection-flow flex h-10 items-center justify-center rounded-md border px-0.5 font-mono font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         active ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
@@ -251,7 +251,7 @@ function LineSwatch({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "selection-flow flex h-10 items-center justify-center gap-1 rounded-md border px-0.5 text-[0.5rem] font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "filter-swatch-text selection-flow flex h-10 items-center justify-center gap-1 rounded-md border px-0.5 font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         active ? "border-transparent" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
@@ -279,14 +279,14 @@ function LineSwatch({
 
 function allLinesClass(selected: boolean) {
   return cn(
-    "flex min-h-10 w-full items-center justify-center rounded-md border px-3 text-[0.5rem] font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "filter-swatch-text flex min-h-10 w-full items-center justify-center rounded-md border px-3 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
     selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
   );
 }
 
 function rangeClass(selected: boolean) {
   return cn(
-    "rounded-md border px-1 py-2 text-[0.5rem] font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "filter-date-swatch filter-swatch-text rounded-md border px-2 py-2 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
     selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:text-foreground",
   );
 }
