@@ -22,7 +22,7 @@ export const DASHBOARD_LIMITS = {
   fleetCollapsedCount: 5,
 } as const;
 
-const DASHBOARD_TIME = {
+export const DASHBOARD_TIME = {
   millisecondsPerHour: 3_600_000,
   hoursPerDay: 24,
   worstHourStart: 5,
@@ -240,7 +240,7 @@ export function buildCarExplorerSelection(
   const carReports = reports.filter((report) => report.car === car);
   return {
     ...option,
-    history: buildBuckets(now, range).map((bucket) => ({
+    history: buildDashboardBuckets(now, range).map((bucket) => ({
       label: bucket.label,
       reports: carReports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
     })),
@@ -306,7 +306,7 @@ function buildTrend(
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
 ): TrendPoint[] {
   const summerStart = getRangeWindow("summer", now).start;
-  return buildBuckets(now, range).map((bucket) => {
+  return buildDashboardBuckets(now, range).map((bucket) => {
     const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
     const accumulatedReports = reports.filter((report) => report.createdAt >= summerStart && report.createdAt < bucket.end);
     const point: TrendPoint = {
@@ -330,7 +330,7 @@ function buildLineEvolution(
 ): LineEvolutionPoint[] {
   const lines = lineSummaries.map((summary) => summary.line);
 
-  return buildBuckets(now, range).map((bucket) => {
+  return buildDashboardBuckets(now, range).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };
     for (const line of lines) {
       point[line] = reports.filter((report) => report.line === line && report.createdAt >= bucket.start && report.createdAt < bucket.end).length;
@@ -340,7 +340,7 @@ function buildLineEvolution(
 }
 
 function buildTotalReportsTrend(reports: Report[], now: Date, range: DashboardRange): TotalReportsPoint[] {
-  return buildDayBuckets(now, range).map((bucket) => ({
+  return buildDashboardDayBuckets(now, range).map((bucket) => ({
     label: bucket.label,
     reports: reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
   }));
@@ -403,7 +403,7 @@ function buildLineCarReports(reports: Report[]): LineCarReportSummary[] {
   });
 }
 
-function buildDayBuckets(now: Date, range: DashboardRange) {
+export function buildDashboardDayBuckets(now: Date, range: DashboardRange) {
   const rangeWindow = getRangeWindow(range, now);
   const buckets = [];
   for (let offset = 0; ; offset += 1) {
@@ -444,7 +444,7 @@ export function getHeatEvolutionScore(
   return calculateMetroHeatIndex(reports, estimatedCars, now).heat_index;
 }
 
-function buildBuckets(now: Date, range: DashboardRange) {
+export function buildDashboardBuckets(now: Date, range: DashboardRange) {
   const rangeWindow = getRangeWindow(range, now);
   if (range === "today" || range === "last24Hours") {
     const start = rangeWindow.start;

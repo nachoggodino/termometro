@@ -46,6 +46,7 @@
   --space-lg: 16px;
   --space-xl: 24px;
   --space-xxl: 32px;
+  --filter-swatch-font-size: 15px;
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-drawer: 500ms;
@@ -289,6 +290,18 @@ body {
 
 .filter-popover {
   transform-origin: var(--radix-popover-content-transform-origin);
+}
+
+.filter-swatch-text {
+  -webkit-text-size-adjust: 100%;
+  font-size: var(--filter-swatch-font-size);
+  line-height: 1;
+  text-size-adjust: 100%;
+}
+
+.filter-swatch {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .centered-popover {

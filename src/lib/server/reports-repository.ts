@@ -43,6 +43,7 @@ type DashboardOptions = {
   line?: string | null;
   lines?: MetroLine[] | null;
   carSeries?: number[] | null;
+  now?: Date;
 };
 
 const globalForReports = globalThis as typeof globalThis & {
@@ -65,7 +66,7 @@ function getMemoryReports() {
 let supabaseClient: SupabaseClient | null = null;
 let supabaseServiceClient: SupabaseClient | null = null;
 
-function getSupabase(options: { serviceRole?: boolean } = {}) {
+export function getSupabase(options: { serviceRole?: boolean } = {}) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -102,7 +103,7 @@ function getSupabase(options: { serviceRole?: boolean } = {}) {
 }
 
 export async function getReportsForDashboard(options: DashboardOptions) {
-  const now = new Date();
+  const now = options.now ?? new Date();
   const { start, end } = getRangeWindow(options.range, now);
   const summerStart = getRangeWindow("summer", now).start;
   const queryStart = summerStart < start ? summerStart : start;

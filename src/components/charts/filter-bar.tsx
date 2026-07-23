@@ -54,9 +54,9 @@ export function FilterBar({
   }
 
   function applyFilters() {
+    setOpen(false);
     startTransition(() => {
       router.push(href(draftLines, draftRange, draftCarSeries));
-      setOpen(false);
     });
   }
 
@@ -138,39 +138,8 @@ export function FilterBar({
           <CenteredPopoverPanel closeLabel={dictionary.common.closeMenu} title={dictionary.explore.filters.title} widthClass="w-[min(calc(100vw-2rem),24rem)]">
 
             <div className="mt-4">
-              <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
-              <button className={allLinesClass(draftLines.length === 0)} onClick={() => setDraftLines([])} type="button">
-                {dictionary.explore.allLines}
-              </button>
-              <div className="mt-2 grid grid-cols-6 gap-2">
-                {METRO_LINES.map((line) => (
-                  <LineSwatch active={draftLines.includes(line)} label={line} line={line} onClick={() => toggleLine(line)} key={line} />
-                ))}
-              </div>
-            </div>
-
-            {availableCarSeries.length > 0 ? (
-              <div className="mt-5">
-                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
-                <button className={allLinesClass(draftCarSeries.length === 0)} onClick={() => setDraftCarSeries([])} type="button">
-                  {dictionary.explore.allSeries}
-                </button>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {availableCarSeries.map((item) => (
-                    <SeriesSwatch
-                      active={draftCarSeries.includes(item.series)}
-                      key={item.series}
-                      label={item.label}
-                      onClick={() => toggleCarSeries(item.series)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className="mt-5">
               <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.range}</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-wrap items-stretch gap-1.5">
                 {TIME_RANGES.map((range) => (
                   <button
                     aria-pressed={draftRange === range}
@@ -184,6 +153,40 @@ export function FilterBar({
                 ))}
               </div>
             </div>
+
+            <div className="mt-5">
+              <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
+              <div className="flex flex-wrap items-stretch gap-1.5">
+                <button className={allLinesClass(draftLines.length === 0)} onClick={() => setDraftLines([])} type="button">
+                  {dictionary.explore.allLines}
+                </button>
+                {METRO_LINES.map((line) => (
+                  <LineSwatch active={draftLines.includes(line)} label={line} line={line} onClick={() => toggleLine(line)} key={line} />
+                ))}
+              </div>
+            </div>
+
+            {availableCarSeries.length > 0 ? (
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
+                <div className="flex flex-wrap items-stretch gap-1.5">
+                  <SeriesSwatch
+                    active={draftCarSeries.length === 0}
+                    ariaLabel={dictionary.explore.allSeries}
+                    label={dictionary.explore.allLines}
+                    onClick={() => setDraftCarSeries([])}
+                  />
+                  {availableCarSeries.map((item) => (
+                    <SeriesSwatch
+                      active={draftCarSeries.includes(item.series)}
+                      key={item.series}
+                      label={item.label}
+                      onClick={() => toggleCarSeries(item.series)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <div className="mt-5 grid grid-cols-[auto_1fr] gap-2">
               <Button disabled={isPending} onClick={clearFilters} type="button" variant="secondary">
@@ -200,14 +203,14 @@ export function FilterBar({
   );
 }
 
-function SeriesSwatch({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+function SeriesSwatch({ active, ariaLabel, label, onClick }: { active: boolean; ariaLabel?: string; label: string; onClick: () => void }) {
   return (
     <button
-      aria-label={label}
+      aria-label={ariaLabel ?? label}
       aria-pressed={active}
       className={cn(
-        "selection-flow flex h-10 items-center justify-center rounded-md border px-2 font-mono text-xs font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-        active ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-foreground hover:bg-surface",
+        "filter-swatch filter-swatch-text selection-flow flex items-center justify-center rounded-md border px-2 py-1 font-mono font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        active ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
       type="button"
@@ -248,7 +251,7 @@ function LineSwatch({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "selection-flow flex h-10 items-center justify-center gap-1 rounded-md border px-1 text-xs font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "filter-swatch filter-swatch-text selection-flow flex items-center justify-center gap-1 rounded-md border px-2 py-1 font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
         active ? "border-transparent" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
@@ -276,15 +279,15 @@ function LineSwatch({
 
 function allLinesClass(selected: boolean) {
   return cn(
-    "flex min-h-10 w-full items-center justify-center rounded-md border px-3 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-    selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
+    "filter-swatch filter-swatch-text flex items-center justify-center rounded-md border px-2 py-1 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    selected ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
   );
 }
 
 function rangeClass(selected: boolean) {
   return cn(
-    "rounded-md border px-3 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
-    selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:text-foreground",
+    "filter-swatch filter-swatch-text rounded-md border px-2 py-1 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    selected ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-border bg-surface-raised text-muted hover:text-foreground",
   );
 }
 
