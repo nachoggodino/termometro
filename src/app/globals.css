@@ -46,7 +46,7 @@
   --space-lg: 16px;
   --space-xl: 24px;
   --space-xxl: 32px;
-  --filter-swatch-font-size: 14px;
+  --filter-swatch-font-size: 15px;
   --duration-fast: 150ms;
   --duration-base: 200ms;
   --duration-drawer: 500ms;
@@ -299,7 +299,7 @@ body {
   text-size-adjust: 100%;
 }
 
-.filter-date-swatch {
+.filter-swatch {
   flex: 0 0 auto;
   white-space: nowrap;
 }
