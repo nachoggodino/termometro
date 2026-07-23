@@ -209,7 +209,7 @@ function SeriesSwatch({ active, ariaLabel, label, onClick }: { active: boolean; 
       aria-label={ariaLabel ?? label}
       aria-pressed={active}
       className={cn(
-        "filter-swatch-text selection-flow flex h-10 items-center justify-center rounded-md border px-0.5 font-mono font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "filter-swatch-text selection-flow flex h-8 items-center justify-center rounded-md border px-0.5 font-mono font-bold tabular-nums transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         active ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
@@ -251,7 +251,7 @@ function LineSwatch({
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "filter-swatch-text selection-flow flex h-10 items-center justify-center gap-1 rounded-md border px-0.5 font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+        "filter-swatch-text selection-flow flex h-8 items-center justify-center gap-1 rounded-md border px-0.5 font-bold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
         active ? "border-transparent" : "border-border bg-surface-raised text-foreground hover:bg-surface",
       )}
       onClick={onClick}
@@ -279,14 +279,14 @@ function LineSwatch({
 
 function allLinesClass(selected: boolean) {
   return cn(
-    "filter-swatch-text flex min-h-10 w-full items-center justify-center rounded-md border px-3 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "filter-swatch-text flex min-h-8 w-full items-center justify-center rounded-md border px-3 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
     selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:bg-surface hover:text-foreground",
   );
 }
 
 function rangeClass(selected: boolean) {
   return cn(
-    "filter-date-swatch filter-swatch-text rounded-md border px-2 py-2 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+    "filter-date-swatch filter-swatch-text rounded-md border px-2 py-1 font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
     selected ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-contrast)]" : "border-border bg-surface-raised text-muted hover:text-foreground",
   );
 }
