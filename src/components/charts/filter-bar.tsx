@@ -2,7 +2,7 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import { ListTree, SlidersHorizontal } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import { TIME_RANGES, type TimeRange } from "@/lib/domain/ranges";
@@ -29,6 +29,15 @@ export function FilterBar({
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
   const [draftRange, setDraftRange] = useState<TimeRange>(selectedRange);
+
+  useEffect(() => {
+    if (!open && !navigationOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, navigationOpen]);
 
   function href(lines: MetroLine[], range = selectedRange) {
     const params = new URLSearchParams();
@@ -160,13 +169,16 @@ export function FilterBar({
 
 const EXPLORE_SECTIONS = [
   { id: "line-evolution", module: "lineEvolution" },
+  { id: "total-reports", module: "totalReports" },
   { id: "report-volume", module: "volume" },
   { id: "line-cars", module: "lineCars" },
+  { id: "car-series", module: "carSeries" },
   { id: "worst-cars", module: "worstCars" },
   { id: "car-explorer", module: "carExplorer" },
   { id: "heat-trend", module: "trend" },
+  { id: "worst-hours", module: "worstHours" },
   { id: "fleet", module: "fleet" },
-  { id: "recent-reports", module: "recent" },
+  { id: "line-details", module: "lineDetails" },
 ] as const;
 
 function LineSwatch({

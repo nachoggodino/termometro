@@ -105,7 +105,7 @@ describe("dashboard data", () => {
   it("keeps latest reports even when they are before the selected range start", () => {
     const data = buildDashboardData([
       report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-06-01T08:30:00Z") }),
-    ], now, undefined, "sevenDays");
+    ], new Date("2026-07-05T14:00:00Z"), undefined, "sevenDays");
 
     expect(data.lineSummaries.find((summary) => summary.line === "L1")?.reports).toBe(0);
     expect(data.recentReports).toHaveLength(1);
@@ -153,12 +153,52 @@ describe("dashboard data", () => {
       report({ id: "1", line: "L1", state: "infierno", createdAt: new Date("2026-07-04T08:30:00Z") }),
       report({ id: "2", line: "L1", state: "calor", createdAt: new Date("2026-07-05T10:45:00Z") }),
       report({ id: "3", line: "L5", state: "calor", createdAt: new Date("2026-07-05T11:15:00Z") }),
-    ], now, undefined, "sevenDays");
+    ], new Date("2026-07-05T14:00:00Z"), undefined, "sevenDays");
 
     expect(data.trend).toHaveLength(7);
     expect(data.trend.reduce((total, point) => total + point.reports, 0)).toBe(3);
     expect(data.lineEvolution.reduce((total, point) => total + (point.L1 ?? 0), 0)).toBe(2);
     expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
+  });
+
+  it("builds total report trend, car series, and worst-hour aggregates", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "fresco", car: null, createdAt: new Date("2026-07-04T08:30:00Z") }),
+      report({ id: "2", line: "L1", state: "calor", car: "R2311", createdAt: new Date("2026-07-05T04:15:00Z") }),
+      report({ id: "3", line: "L5", state: "infierno", car: "M12333", createdAt: new Date("2026-07-05T12:45:00Z") }),
+      report({ id: "4", line: "L5", state: "calor", car: "M12333", createdAt: new Date("2026-07-05T12:59:00Z") }),
+    ], new Date("2026-07-05T14:00:00Z"), undefined, "sevenDays");
+
+    expect(data.totalReportsTrend.reduce((total, point) => total + point.reports, 0)).toBe(4);
+    expect(data.carSeries).toEqual([
+      { series: 2000, label: "2000", reports: 1 },
+      { series: 12000, label: "12000", reports: 2 },
+    ]);
+    expect(data.worstHours[0].label).toBe("5");
+    expect(data.worstHours.at(-1)?.label).toBe("23");
+    expect(data.worstHours.find((point) => point.label === "6")?.reports).toBe(1);
+    expect(data.worstHours.find((point) => point.label === "14")?.reports).toBe(2);
+  });
+
+  it("builds line car report details from all report states", () => {
+    const data = buildDashboardData([
+      report({ id: "1", line: "L1", state: "fresco", car: "M1001" }),
+      report({ id: "2", line: "L1", state: "calor", car: "M1001" }),
+      report({ id: "3", line: "L1", state: "infierno", car: "M1001" }),
+      report({ id: "4", line: "L1", state: "calor", car: "M2002" }),
+      report({ id: "5", line: "L1", state: "calor", car: null }),
+      report({ id: "6", line: "L1", state: "fresco", car: "M3003" }),
+    ], now, undefined, "today");
+
+    const l1Cars = data.lineCarReports.find((item) => item.line === "L1");
+
+    expect(l1Cars?.totalCars).toBe(3);
+    expect(l1Cars?.cars).toEqual([
+      { car: "M1001", reports: 3, frescoReports: 1, heatReports: 2, calorReports: 1, infiernoReports: 1 },
+      { car: "M2002", reports: 1, frescoReports: 0, heatReports: 1, calorReports: 1, infiernoReports: 0 },
+      { car: "M3003", reports: 1, frescoReports: 1, heatReports: 0, calorReports: 0, infiernoReports: 0 },
+    ]);
+    expect(data.lineSummaries.find((summary) => summary.line === "L1")?.carsWithoutAcReported).toBe(2);
   });
 
   it("uses accumulated summer reports for the Termo Indicator trend", () => {

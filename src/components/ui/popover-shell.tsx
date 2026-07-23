@@ -2,7 +2,7 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 
 export function StickyUtilityBar({ children }: { children: ReactNode }) {
   return (
@@ -25,10 +25,13 @@ export function CenteredPopoverPanel({
   widthClass?: string;
   children: ReactNode;
 }) {
+  const titleId = useId();
+
   return (
     <div
+      aria-labelledby={titleId}
       aria-modal="true"
-      className={`centered-popover z-[var(--z-popover)] ${widthClass} rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]`}
+      className={`centered-popover z-[var(--z-popover)] ${widthClass} max-h-[min(38rem,calc(100dvh-10rem))] overflow-y-auto overscroll-contain rounded-lg border border-border bg-surface-raised p-4 shadow-[var(--shadow-popover)]`}
       data-state="open"
       role="dialog"
       style={{
@@ -41,7 +44,7 @@ export function CenteredPopoverPanel({
       }}
     >
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <h2 className="text-base font-semibold" id={titleId}>{title}</h2>
         <Popover.Close
           aria-label={closeLabel}
           className="flex size-8 items-center justify-center rounded-md text-muted transition hover:bg-surface hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

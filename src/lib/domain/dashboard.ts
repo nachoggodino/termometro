@@ -17,7 +17,16 @@ import { APP_TIME_ZONE, getMadridStartOfDay } from "./time";
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
   recentReportCount: 25,
-  worstCarCount: 8,
+  worstCarCollapsedCount: 4,
+  worstCarCount: 15,
+  fleetCollapsedCount: 5,
+} as const;
+
+const DASHBOARD_TIME = {
+  millisecondsPerHour: 3_600_000,
+  hoursPerDay: 24,
+  worstHourStart: 5,
+  worstHourEnd: 23,
 } as const;
 
 export type LineSummary = {
@@ -67,6 +76,36 @@ export type LineEvolutionPoint = {
   label: string;
 } & Partial<Record<MetroLine, number>>;
 
+export type TotalReportsPoint = {
+  label: string;
+  reports: number;
+};
+
+export type CarSeriesSummary = {
+  series: number;
+  label: string;
+  reports: number;
+};
+
+export type HourlyReportSummary = {
+  hour: number;
+  label: string;
+  reports: number;
+};
+
+export type LineCarReportSummary = {
+  line: MetroLine;
+  totalCars: number;
+  cars: Array<{
+    car: string;
+    reports: number;
+    frescoReports: number;
+    heatReports: number;
+    calorReports: number;
+    infiernoReports: number;
+  }>;
+};
+
 export type DashboardData = {
   lineSummaries: LineSummary[];
   worstCars: CarSummary[];
@@ -77,6 +116,10 @@ export type DashboardData = {
   };
   trend: TrendPoint[];
   lineEvolution: LineEvolutionPoint[];
+  totalReportsTrend: TotalReportsPoint[];
+  carSeries: CarSeriesSummary[];
+  worstHours: HourlyReportSummary[];
+  lineCarReports: LineCarReportSummary[];
   recentReports: Report[];
   reportsLastDay: number;
 };
@@ -122,7 +165,7 @@ export function buildDashboardData(
   const carGroups = new Map<string, Report[]>();
   for (const report of visibleReports) {
     if (!report.car) continue;
-    carGroups.set(report.car, [...(carGroups.get(report.car) ?? []), report]);
+    pushGroupedReport(carGroups, report.car, report);
   }
 
   const worstCars = Array.from(carGroups.entries())
@@ -159,7 +202,11 @@ export function buildDashboardData(
   const defaultCar = carExplorerSelections[0] ?? null;
   const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
-  const dayAgo = new Date(now.getTime() - 24 * 3_600_000);
+  const totalReportsTrend = buildTotalReportsTrend(visibleReports, now, range);
+  const carSeries = buildCarSeries(visibleReports);
+  const worstHours = buildWorstHours(visibleReports);
+  const lineCarReports = buildLineCarReports(visibleReports);
+  const dayAgo = new Date(now.getTime() - DASHBOARD_TIME.hoursPerDay * DASHBOARD_TIME.millisecondsPerHour);
   const reportsLastDay = visibleReports.filter((report) => report.createdAt >= dayAgo).length;
 
   return {
@@ -172,6 +219,10 @@ export function buildDashboardData(
     },
     trend,
     lineEvolution,
+    totalReportsTrend,
+    carSeries,
+    worstHours,
+    lineCarReports,
     recentReports: recentReports.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, DASHBOARD_LIMITS.recentReportCount),
     reportsLastDay,
   };
@@ -200,7 +251,7 @@ function buildCarExplorerOptions(reports: Report[]) {
   const carGroups = new Map<string, Report[]>();
   for (const report of reports) {
     if (!report.car) continue;
-    carGroups.set(report.car, [...(carGroups.get(report.car) ?? []), report]);
+    pushGroupedReport(carGroups, report.car, report);
   }
 
   return Array.from(carGroups.entries())
@@ -217,10 +268,31 @@ function getReportedLines(reports: Report[]) {
   return Array.from(new Set(reports.map((report) => report.line))).sort((a, b) => a.localeCompare(b)) as MetroLine[];
 }
 
+function pushGroupedReport(groups: Map<string, Report[]>, key: string, report: Report) {
+  const groupedReports = groups.get(key);
+  if (groupedReports) {
+    groupedReports.push(report);
+    return;
+  }
+  groups.set(key, [report]);
+}
+
 function getCarHeatCounts(reports: Report[]) {
-  const calorReports = reports.filter((report) => report.state === "calor").length;
-  const infiernoReports = reports.filter((report) => report.state === "infierno").length;
+  const { heatReports, calorReports, infiernoReports } = getCarStateCounts(reports);
+  return { heatReports, calorReports, infiernoReports };
+}
+
+function getCarStateCounts(reports: Report[]) {
+  let frescoReports = 0;
+  let calorReports = 0;
+  let infiernoReports = 0;
+  for (const report of reports) {
+    if (report.state === "fresco") frescoReports += 1;
+    if (report.state === "calor") calorReports += 1;
+    if (report.state === "infierno") infiernoReports += 1;
+  }
   return {
+    frescoReports,
     heatReports: calorReports + infiernoReports,
     calorReports,
     infiernoReports,
@@ -267,6 +339,103 @@ function buildLineEvolution(
   });
 }
 
+function buildTotalReportsTrend(reports: Report[], now: Date, range: DashboardRange): TotalReportsPoint[] {
+  return buildDayBuckets(now, range).map((bucket) => ({
+    label: bucket.label,
+    reports: reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
+  }));
+}
+
+function buildCarSeries(reports: Report[]): CarSeriesSummary[] {
+  const seriesCounts = new Map<number, number>();
+  for (const report of reports) {
+    if (!report.car) continue;
+    const series = getCarSeries(report.car);
+    if (!series) continue;
+    seriesCounts.set(series, (seriesCounts.get(series) ?? 0) + 1);
+  }
+
+  return Array.from(seriesCounts.entries())
+    .map(([series, reports]) => ({
+      series,
+      label: String(series),
+      reports,
+    }))
+    .toSorted((a, b) => a.series - b.series);
+}
+
+function buildWorstHours(reports: Report[]): HourlyReportSummary[] {
+  const reportCountsByHour = new Map<number, number>();
+  for (const report of reports) {
+    const hour = getMadridHour(report.createdAt);
+    reportCountsByHour.set(hour, (reportCountsByHour.get(hour) ?? 0) + 1);
+  }
+
+  return Array.from({ length: DASHBOARD_TIME.worstHourEnd - DASHBOARD_TIME.worstHourStart + 1 }, (_, index) => {
+    const hour = index + DASHBOARD_TIME.worstHourStart;
+    return {
+      hour,
+      label: String(hour),
+      reports: reportCountsByHour.get(hour) ?? 0,
+    };
+  });
+}
+
+function buildLineCarReports(reports: Report[]): LineCarReportSummary[] {
+  return METRO_LINES.map((line) => {
+    const cars = new Map<string, Report[]>();
+    for (const report of reports) {
+      if (report.line !== line || !report.car) continue;
+      pushGroupedReport(cars, report.car, report);
+    }
+    const sortedCars = Array.from(cars.entries())
+      .map(([car, carReports]) => ({
+        car,
+        reports: carReports.length,
+        ...getCarStateCounts(carReports),
+      }))
+      .toSorted((a, b) => b.reports - a.reports || a.car.localeCompare(b.car));
+    return {
+      line,
+      totalCars: sortedCars.length,
+      cars: sortedCars,
+    };
+  });
+}
+
+function buildDayBuckets(now: Date, range: DashboardRange) {
+  const rangeWindow = getRangeWindow(range, now);
+  const buckets = [];
+  for (let offset = 0; ; offset += 1) {
+    const bucketStart = getMadridStartOfDay(rangeWindow.start, offset);
+    if (bucketStart > rangeWindow.end) break;
+    const bucketEnd = getMadridStartOfDay(rangeWindow.start, offset + 1);
+    buckets.push({
+      start: bucketStart,
+      end: bucketEnd,
+      label: bucketStart.toLocaleDateString("es-ES", {
+        ...(range === "today" || range === "last24Hours" || range === "sevenDays"
+          ? { weekday: "short" as const }
+          : { day: "2-digit" as const, month: "short" as const }),
+        timeZone: APP_TIME_ZONE,
+      }),
+    });
+  }
+  return buckets;
+}
+
+export function getCarSeries(car: string) {
+  const digits = car.match(/\d+/)?.[0];
+  if (!digits) return null;
+  const code = Number(digits);
+  if (!Number.isFinite(code)) return null;
+  return Math.floor(code / 1000) * 1000;
+}
+
+function getMadridHour(date: Date) {
+  return Number(date.toLocaleTimeString("es-ES", { hour: "2-digit", hourCycle: "h23", timeZone: APP_TIME_ZONE }));
+}
+
 export function getHeatEvolutionScore(
   reports: Array<{ state: HeatState; car: string | null; createdAt: Date }>,
   estimatedCars = 1,
@@ -279,9 +448,9 @@ function buildBuckets(now: Date, range: DashboardRange) {
   const rangeWindow = getRangeWindow(range, now);
   if (range === "today" || range === "last24Hours") {
     const start = rangeWindow.start;
-    return Array.from({ length: 24 }, (_, hour) => {
-      const bucketStart = new Date(start.getTime() + hour * 3_600_000);
-      const bucketEnd = new Date(bucketStart.getTime() + 3_600_000);
+    return Array.from({ length: DASHBOARD_TIME.hoursPerDay }, (_, hour) => {
+      const bucketStart = new Date(start.getTime() + hour * DASHBOARD_TIME.millisecondsPerHour);
+      const bucketEnd = new Date(bucketStart.getTime() + DASHBOARD_TIME.millisecondsPerHour);
       return {
         start: bucketStart,
         end: bucketEnd,

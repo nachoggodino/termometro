@@ -13,10 +13,10 @@ import {
   YAxis,
   type TooltipContentProps,
 } from "recharts";
-import { Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DASHBOARD_LIMITS, type DashboardData } from "@/lib/domain/dashboard";
-import { CHART_TOKENS } from "@/lib/design/tokens";
+import { CHART_TOKENS, SERIES_CHART_COLORS } from "@/lib/design/tokens";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { TimeRange } from "@/lib/domain/ranges";
 import { formatCarCode, normalizeCarCode } from "@/lib/domain/reports";
@@ -25,6 +25,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { formatNumber } from "@/lib/i18n/format";
 import { LineBadge } from "@/components/ui/line-badge";
 import { Button } from "@/components/ui/button";
+import { HeatReportCounts } from "@/components/report/heat-report-counts";
 import { ChartCard } from "./chart-card";
 
 export function DashboardCharts({
@@ -53,6 +54,7 @@ export function DashboardCharts({
   const lineEvolutionLines = selectedLines.length > 0 ? selectedLines : METRO_LINES;
   const heatTrendLines = selectedLines.length > 0 ? selectedLines : data.lineSummaries.map((summary) => summary.line);
   const xAxisInterval = selectedRange === "today" ? 2 : selectedRange === "sevenDays" ? 0 : "preserveStartEnd";
+  const totalReportsXAxisInterval = selectedRange === "today" || selectedRange === "sevenDays" ? 0 : "preserveStartEnd";
 
   return (
     <div className="flex flex-col gap-4">
@@ -81,6 +83,34 @@ export function DashboardCharts({
                   name={line}
                 />
               ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </ChartCard>
+
+      <ChartCard
+        dictionary={dictionary}
+        id="total-reports"
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.totalReports}
+        title={dictionary.explore.modules.totalReports}
+      >
+        <div className={CHART_TOKENS.moduleHeightClass}>
+          <ResponsiveContainer height="100%" width="100%">
+            <LineChart data={data.totalReportsTrend} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="label" interval={totalReportsXAxisInterval} tickLine={false} />
+              <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} />} />
+              <Line
+                animationDuration={CHART_TOKENS.animationDurationMs}
+                dataKey="reports"
+                dot={data.totalReportsTrend.length <= 1}
+                name={dictionary.common.reports}
+                stroke="var(--primary)"
+                strokeWidth={2}
+                type="monotone"
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -136,6 +166,34 @@ export function DashboardCharts({
 
       <ChartCard
         dictionary={dictionary}
+        id="car-series"
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.carSeries}
+        title={dictionary.explore.modules.carSeries}
+      >
+        {data.carSeries.length > 0 ? (
+          <div className={CHART_TOKENS.moduleHeightClass}>
+            <ResponsiveContainer height="100%" width="100%">
+              <BarChart data={data.carSeries} margin={CHART_TOKENS.compactMargin}>
+                <CartesianGrid stroke="var(--border)" vertical={false} />
+                <XAxis axisLine={false} dataKey="label" height={CHART_TOKENS.angledTickHeightPx} interval={0} tick={<AngledXAxisTick />} tickLine={false} />
+                <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+                <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} footer={dictionary.explore.seriesLabel} />} cursor={{ fill: "var(--surface)" }} />
+                <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius}>
+                  {data.carSeries.map((item, index) => (
+                    <Cell fill={SERIES_CHART_COLORS[index % SERIES_CHART_COLORS.length]} key={item.series} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p className="rounded-md bg-surface p-3 text-sm text-muted">{dictionary.explore.carExplorer.empty}</p>
+        )}
+      </ChartCard>
+
+      <ChartCard
+        dictionary={dictionary}
         id="worst-cars"
         rangeLabel={rangeLabel}
         takeaway={dictionary.explore.chartTakeaways.worstCars}
@@ -145,6 +203,8 @@ export function DashboardCharts({
           data={data}
           dictionary={dictionary}
           locale={locale}
+          collapsedCount={DASHBOARD_LIMITS.worstCarCollapsedCount}
+          expandedCount={DASHBOARD_LIMITS.worstCarCount}
           onSelectCar={(car) => {
             setSelectedCar(car);
             window.requestAnimationFrame(() => {
@@ -198,10 +258,30 @@ export function DashboardCharts({
                   type="monotone"
                 />
               ))}
-            </LineChart>
-          </ResponsiveContainer>
+          </LineChart>
+        </ResponsiveContainer>
         </div>
         <LineLegend lines={heatTrendLines} />
+      </ChartCard>
+
+      <ChartCard
+        dictionary={dictionary}
+        id="worst-hours"
+        rangeLabel={rangeLabel}
+        takeaway={dictionary.explore.chartTakeaways.worstHours}
+        title={dictionary.explore.modules.worstHours}
+      >
+        <div className={CHART_TOKENS.moduleHeightClass}>
+          <ResponsiveContainer height="100%" width="100%">
+            <BarChart data={data.worstHours} margin={CHART_TOKENS.compactMargin}>
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis axisLine={false} dataKey="label" height={CHART_TOKENS.hourTickHeightPx} interval={0} tick={<HourTick />} tickLine={false} />
+              <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
+              <Tooltip content={<LocalizedTooltip labelName={dictionary.common.reports} locale={locale} footer={dictionary.explore.hourIntervalLabel} />} cursor={{ fill: "var(--surface)" }} />
+              <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" fill="var(--primary)" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </ChartCard>
     </div>
   );
@@ -303,12 +383,13 @@ function CarExplorer({
               <p className="text-xs font-semibold text-muted">{dictionary.explore.carExplorer.totalReports}</p>
               <div className="mt-1 grid grid-cols-[auto_1fr] items-center justify-end gap-2">
                 <span className="font-mono text-3xl font-semibold leading-none tabular-nums">{formatNumber(activeSelection.reports, locale)}</span>
-                <HeatCountsStack
+                <HeatReportCounts
                   calor={activeSelection.calorReports}
                   calorLabel={dictionary.states.calor.label}
                   infierno={activeSelection.infiernoReports}
                   infiernoLabel={dictionary.states.infierno.label}
                   locale={locale}
+                  orientation="stack"
                 />
               </div>
             </div>
@@ -348,6 +429,44 @@ function CarExplorerChartSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+function AngledXAxisTick({
+  x,
+  y,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}) {
+  if (typeof x !== "number" || typeof y !== "number") return null;
+  return (
+    <g transform={`translate(${x},${y + 10})`}>
+      <text fill="var(--muted)" fontSize={CHART_TOKENS.angledTickFontSizePx} textAnchor="end" transform="rotate(-35)">
+        {payload?.value ?? ""}
+      </text>
+    </g>
+  );
+}
+
+function HourTick({
+  x,
+  y,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string };
+}) {
+  if (typeof x !== "number" || typeof y !== "number") return null;
+  return (
+    <g transform={`translate(${x},${y + 10})`}>
+      <text fill="var(--muted)" fontSize={CHART_TOKENS.hourTickFontSizePx} textAnchor="middle">
+        {payload?.value ?? ""}
+      </text>
+    </g>
   );
 }
 
@@ -399,75 +518,33 @@ function LineLegend({ lines }: { lines: MetroLine[] }) {
   );
 }
 
-function HeatCountsInline({
-  calor,
-  calorLabel,
-  infierno,
-  infiernoLabel,
-  locale,
-}: {
-  calor: number;
-  calorLabel: string;
-  infierno: number;
-  infiernoLabel: string;
-  locale: Locale;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[0.6875rem] font-semibold leading-none">
-      <span className="text-heat-infierno">
-        {formatNumber(infierno, locale)} {infiernoLabel}
-      </span>
-      <span className="text-muted">·</span>
-      <span className="text-heat-calor">
-        {formatNumber(calor, locale)} {calorLabel}
-      </span>
-    </span>
-  );
-}
-
-function HeatCountsStack({
-  calor,
-  calorLabel,
-  infierno,
-  infiernoLabel,
-  locale,
-}: {
-  calor: number;
-  calorLabel: string;
-  infierno: number;
-  infiernoLabel: string;
-  locale: Locale;
-}) {
-  return (
-    <span className="flex max-h-10 flex-col justify-center gap-1 text-left text-[0.6875rem] font-semibold leading-none">
-      <span className="text-heat-infierno">
-        {formatNumber(infierno, locale)} {infiernoLabel}
-      </span>
-      <span className="text-heat-calor">
-        {formatNumber(calor, locale)} {calorLabel}
-      </span>
-    </span>
-  );
-}
-
 function WorstCarsList({
   data,
   dictionary,
   locale,
+  collapsedCount,
+  expandedCount,
   onSelectCar,
 }: {
   data: DashboardData;
   dictionary: Dictionary;
   locale: Locale;
+  collapsedCount: number;
+  expandedCount: number;
   onSelectCar: (car: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (data.worstCars.length === 0) {
     return <p className="rounded-md bg-surface p-3 text-sm text-muted">{dictionary.explore.noRecentReport}</p>;
   }
 
+  const visibleCars = data.worstCars.slice(0, expanded ? expandedCount : collapsedCount);
+  const canToggle = data.worstCars.length > collapsedCount;
+
   return (
     <div className="flex flex-col gap-2">
-      {data.worstCars.map((car) => (
+      {visibleCars.map((car) => (
         <button
           className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border border-border bg-surface p-3 text-left transition duration-200 ease-out hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           data-testid="worst-car-row"
@@ -487,7 +564,7 @@ function WorstCarsList({
             <p className="mt-1 text-xs text-muted">
               {dictionary.common.confidence} {dictionary.common[car.confidence]}
               <span className="mx-1 text-muted">·</span>
-              <HeatCountsInline
+              <HeatReportCounts
                 calor={car.calorReports}
                 calorLabel={dictionary.states.calor.label}
                 infierno={car.infiernoReports}
@@ -502,6 +579,12 @@ function WorstCarsList({
           </div>
         </button>
       ))}
+      {canToggle ? (
+        <Button className="mt-1 min-h-10 py-2" onClick={() => setExpanded((current) => !current)} type="button" variant="secondary">
+          {expanded ? dictionary.explore.showLess : dictionary.explore.showMore}
+          <ChevronDown aria-hidden="true" className={`size-4 transition duration-200 ease-out ${expanded ? "rotate-180" : ""}`} />
+        </Button>
+      ) : null}
     </div>
   );
 }
