@@ -65,7 +65,7 @@ Avoid:
    Use recency, confidence, disagreement, and sample size to communicate uncertainty honestly.
 
 3. Keep reporting fast enough for a crowded train.
-   Default to L1 and Calor, require only the essential fields, make car optional, and avoid dates, comments, accounts, and location prompts.
+   Default to L1 and Calor, require only the essential fields, make car optional, and avoid dates, comments, accounts, and location prompts. When a user submits without a car identifier, confirm the choice and offer a direct return to the car field before sending.
 
 4. Make evidence shareable from mobile.
    Dashboard modules should be screenshot-friendly, and key charts should support share/export cards with title, range, chart, key stat, and attribution.
@@ -127,7 +127,7 @@ V1 dashboard modules:
 - Explore car: select an existing reported car and inspect total reports, reported lines, and report history by day/hour for the active range.
 - Termo indicator trend over time.
 - Distribution by hour from 5 to 23, using one bar per hour and counting reports from `HH:00` through `HH:59`.
-- Fleet coverage using known and estimated car counts, collapsed to the 5 worst lines by default and expandable to all lines.
+- Fleet coverage using known and estimated car counts. A car counts as affected only when its Calor plus Infierno reports minus its Fresco reports is greater than 2 in the active range. The module is collapsed to the 5 worst lines by default and expandable to all lines.
 - Line summary cards with confidence, disagreement, latest report, and score.
 - Line detail modal from summary cards: show reported cars for the active line/range, total distinct reported cars, per-car report totals, and non-zero Fresco/Calor/Infierno counters. Car rows link into the car explorer.
 

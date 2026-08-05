@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { messages as esMessages } from "../../lib/i18n/messages/es";
@@ -94,6 +94,53 @@ describe("report controls", () => {
     expect(toastMock.success).toHaveBeenCalledWith(esMessages.reportForm.success, expect.any(Object));
   });
 
+  it("asks for confirmation before submitting without a car and returns focus to the field", async () => {
+    const user = userEvent.setup();
+    const fetch = vi.fn().mockResolvedValue({
+      json: () => Promise.resolve({ suggestions: ["M1001"] }),
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    render(<ReportForm dictionary={esMessages} locale="es" />);
+
+    expect(screen.queryByText(esMessages.common.optional)).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("submit-report"));
+
+    expect(screen.getByRole("dialog", { name: esMessages.reportForm.missingCar.title })).toBeVisible();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    await user.click(screen.getByRole("button", { name: esMessages.reportForm.missingCar.addCar }));
+    await waitFor(() => expect(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder)).toHaveFocus());
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("submits a null car only after the missing-car confirmation", async () => {
+    const user = userEvent.setup();
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ suggestions: ["M1001"] }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ ok: true, report: { id: "report-1" }, undoToken: "undo-1" }),
+      });
+    vi.stubGlobal("fetch", fetch);
+
+    render(<ReportForm dictionary={esMessages} locale="es" />);
+
+    await user.click(screen.getByTestId("submit-report"));
+    expect(fetch).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole("button", { name: esMessages.reportForm.missingCar.confirm }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/reports",
+      expect.objectContaining({
+        body: JSON.stringify({ line: "L1", state: "calor", car: null }),
+      }),
+    );
+  });
+
   it("shows a submit failure instead of the helper subtitle when the API fails", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
@@ -109,6 +156,7 @@ describe("report controls", () => {
     render(<ReportForm dictionary={esMessages} locale="es" />);
 
     await user.click(screen.getByTestId("submit-report"));
+    await user.click(screen.getByRole("button", { name: esMessages.reportForm.missingCar.confirm }));
 
     expect(toastMock).toHaveBeenCalledWith(esMessages.reportForm.submitFailed);
     expect(toastMock).not.toHaveBeenCalledWith(esMessages.reportForm.subtitle);

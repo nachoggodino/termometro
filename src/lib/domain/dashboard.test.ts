@@ -198,7 +198,22 @@ describe("dashboard data", () => {
       { car: "M2002", reports: 1, frescoReports: 0, heatReports: 1, calorReports: 1, infiernoReports: 0 },
       { car: "M3003", reports: 1, frescoReports: 1, heatReports: 0, calorReports: 0, infiernoReports: 0 },
     ]);
+    expect(data.lineSummaries.find((summary) => summary.line === "L1")?.carsWithoutAcReported).toBe(0);
+  });
+
+  it("counts only cars whose heat reports exceed fresh reports by more than two", () => {
+    const data = buildDashboardData([
+      ...Array.from({ length: 3 }, (_, index) => report({ id: `qualifies-${index}`, line: "L1", state: "calor", car: "M1001" })),
+      ...Array.from({ length: 3 }, (_, index) => report({ id: `boundary-hot-${index}`, line: "L1", state: "infierno", car: "M2002" })),
+      report({ id: "boundary-fresh", line: "L1", state: "fresco", car: "M2002" }),
+      ...Array.from({ length: 5 }, (_, index) => report({ id: `conflicted-hot-${index}`, line: "L1", state: "calor", car: "M3003" })),
+      ...Array.from({ length: 2 }, (_, index) => report({ id: `conflicted-fresh-${index}`, line: "L1", state: "fresco", car: "M3003" })),
+      ...Array.from({ length: 4 }, (_, index) => report({ id: `other-line-hot-${index}`, line: "L5", state: "infierno", car: "M2002" })),
+      ...Array.from({ length: 2 }, (_, index) => report({ id: `hidden-${index}`, line: "L1", state: "infierno", car: "M4004", hiddenAt: now })),
+    ], now, undefined, "today");
+
     expect(data.lineSummaries.find((summary) => summary.line === "L1")?.carsWithoutAcReported).toBe(2);
+    expect(data.lineSummaries.find((summary) => summary.line === "L5")?.carsWithoutAcReported).toBe(1);
   });
 
   it("uses accumulated summer reports for the Termo Indicator trend", () => {
@@ -211,7 +226,7 @@ describe("dashboard data", () => {
 
     const l1Values = data.trend.map((point) => point.L1);
 
-    expect(l1Values).toEqual([0.03, 0.02, 0.02, 0.01, 0.01, 0.01, 0.01]);
+    expect(l1Values).toEqual([0.01, 0.01, 0.01, 0.01, 0.01, 0, 0]);
     expect(monthData.trend.slice(-7).map((point) => point.L1)).toEqual(l1Values);
   });
 
@@ -232,7 +247,7 @@ describe("dashboard data", () => {
     ), 10, now);
 
     expect(noAffectedFleetScore).toBe(0);
-    expect(singleCarScore).toBe(9.96);
+    expect(singleCarScore).toBe(5.22);
     expect(widerFleetSignalScore).toBeGreaterThan(singleCarScore);
     expect(fullFleetScore).toBeGreaterThan(widerFleetSignalScore);
     expect(fullFleetScore).toBeLessThanOrEqual(100);

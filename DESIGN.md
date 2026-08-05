@@ -247,7 +247,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 - **Focus:** Border shifts to Civic Green or active heat color with a 2px outline. No glow unless it is the selected heat state panel.
 - **Placeholder:** Must pass contrast; use Muted Green-Gray, not default browser gray.
 - **Error / Disabled:** Error uses Danger with text explanation. Disabled state reduces contrast only within WCAG limits and never hides labels.
-- **Coche Autocomplete:** Optional field with helper tooltip. Suggestions filter by selected line and rank by recent reports. Accept only loose Metro-style values until the real rule is confirmed.
+- **Coche Autocomplete:** Optional field with helper tooltip. Do not mark it as optional in the visible label. Suggestions filter by selected line and rank by recent reports. Accept only loose Metro-style values until the real rule is confirmed. Submitting without a car opens an accessible confirmation dialog whose primary action returns focus to this field; the secondary action confirms submission without a car.
 
 ### Navigation
 
@@ -276,7 +276,7 @@ Current module styles:
 - Explore car: compact search input for cars with reports in the active range, local skeleton transition on car changes, total reports, reported line badges, and a day/hour history chart.
 - Termo indicator trend: time-series by line identity color with methodology help.
 - Distribution by hour: bars from 5 through 23, labeled with plain hour numbers. Each bar counts reports from that hour's `:00` through `:59`.
-- Fleet coverage: estimated/known caveat visible, with tooltip explanation. Show the 5 worst lines by default, expandable to all lines.
+- Fleet coverage: estimated/known caveat visible, with tooltip explanation. A car counts only when Calor plus Infierno reports minus Fresco reports is greater than 2 in the active range. Show the 5 worst lines by default, expandable to all lines.
 - Line detail cards: compact cards at the end of Explore with confidence, disagreement, latest report, and score. Clicking a card opens a modal titled `Coches reportados`.
 - Line detail modal: scroll-contained overlay with page scroll locked, visible close button, total distinct reported cars for the active line/range, and clickable car rows matching worst-car row style. Rows show total reports and only non-zero Fresco/Calor/Infierno counters, then link to the car explorer for that car.
 - Recent reports: not part of the Explore dashboard module stack. Recent report rows may still be used outside Explore, such as Home snapshots.

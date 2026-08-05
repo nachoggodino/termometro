@@ -19,6 +19,7 @@ describe("i18n configuration", () => {
     expect(esMessages.common.disclaimer).toContain("no afiliado");
     expect(enMessages.common.disclaimer).toContain("not affiliated");
     expect(Object.keys(esMessages.reportForm.submit)).toEqual(Object.keys(enMessages.reportForm.submit));
+    expect(Object.keys(esMessages.reportForm.missingCar)).toEqual(Object.keys(enMessages.reportForm.missingCar));
     expect(Object.keys(esMessages.explore.ranges)).toEqual(Object.keys(enMessages.explore.ranges));
   });
 

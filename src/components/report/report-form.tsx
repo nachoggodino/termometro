@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
@@ -29,6 +29,10 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [pending, startTransition] = useTransition();
   const [submitting, setSubmitting] = useState(false);
+  const carInputRef = useRef<HTMLInputElement>(null);
+  const missingCarDialogRef = useRef<HTMLDialogElement>(null);
+  const missingCarTitleId = useId();
+  const missingCarDescriptionId = useId();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -48,12 +52,21 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   const normalizedCar = useMemo(() => normalizeCarCode(car), [car]);
   const busy = submitting || pending;
 
-  async function submitReport() {
+  function requestSubmission() {
     if (car && !normalizedCar) {
       toast(dictionary.reportForm.carInvalid);
       return;
     }
 
+    if (!normalizedCar) {
+      openDialog(missingCarDialogRef.current);
+      return;
+    }
+
+    void submitReport();
+  }
+
+  async function submitReport() {
     setSubmitting(true);
 
     try {
@@ -99,7 +112,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
 
       <label className="flex flex-col gap-2">
         <span className="flex items-center gap-2 text-sm font-semibold">
-          {dictionary.reportForm.car} · {dictionary.common.optional}
+          {dictionary.reportForm.car}
           <InfoTooltip label={dictionary.reportForm.carHelp}>{dictionary.reportForm.carHelp}</InfoTooltip>
         </span>
         <input
@@ -107,6 +120,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
           list="car-suggestions"
           onChange={(event) => setCar(event.target.value)}
           placeholder={dictionary.reportForm.carPlaceholder}
+          ref={carInputRef}
           suppressHydrationWarning
           value={car}
         />
@@ -127,15 +141,70 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         className="home-report-action report-submit-action relative min-h-12 overflow-hidden"
         data-testid="submit-report"
         disabled={busy || Boolean(car && !normalizedCar)}
-        onClick={submitReport}
+        onClick={requestSubmission}
         style={submitStyle(state)}
         type="button"
       >
         {busy ? <span aria-hidden="true" className="report-button-spinner" /> : null}
         <span>{submitLabel}</span>
       </Button>
+
+      <dialog
+        aria-describedby={missingCarDescriptionId}
+        aria-labelledby={missingCarTitleId}
+        className="fixed left-1/2 top-1/2 z-[var(--z-modal)] max-h-[calc(100dvh-2rem)] w-[min(calc(100vw-2rem),28rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-surface-raised p-0 text-foreground shadow-[var(--shadow-popover)] backdrop:bg-foreground/30"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeDialog(missingCarDialogRef.current);
+        }}
+        ref={missingCarDialogRef}
+      >
+        <div className="p-4 sm:p-5">
+          <h2 className="text-base font-semibold" id={missingCarTitleId}>{dictionary.reportForm.missingCar.title}</h2>
+          <p className="mt-2 text-sm leading-5 text-muted" id={missingCarDescriptionId}>{dictionary.reportForm.missingCar.description}</p>
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              onClick={() => {
+                closeDialog(missingCarDialogRef.current);
+                void submitReport();
+              }}
+              type="button"
+              variant="secondary"
+            >
+              {dictionary.reportForm.missingCar.confirm}
+            </Button>
+            <Button
+              autoFocus
+              onClick={() => {
+                closeDialog(missingCarDialogRef.current);
+                requestAnimationFrame(() => carInputRef.current?.focus());
+              }}
+              type="button"
+            >
+              {dictionary.reportForm.missingCar.addCar}
+            </Button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
+}
+
+function openDialog(dialog: HTMLDialogElement | null) {
+  if (!dialog || dialog.open) return;
+  if (typeof dialog.showModal === "function") {
+    dialog.showModal();
+    return;
+  }
+  dialog.setAttribute("open", "");
+}
+
+function closeDialog(dialog: HTMLDialogElement | null) {
+  if (!dialog?.open) return;
+  if (typeof dialog.close === "function") {
+    dialog.close();
+    return;
+  }
+  dialog.removeAttribute("open");
 }
 
 function getSubmissionErrorMessage(reason: ApiErrorReason, dictionary: Dictionary) {

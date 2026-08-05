@@ -10,8 +10,8 @@ export const HEAT_SCORE: Record<HeatState, number> = {
 
 export const HEAT_INDEX_PARAMETERS = {
   reportHalfLifeDays: 3,
-  reportsFor50Score: 12,
-  fleetPercentFor50Score: 15,
+  reportsFor50Score: 30,
+  fleetPercentFor50Score: 30,
   reportScoreWeight: 0.65,
   fleetScoreWeight: 0.35,
 } as const;

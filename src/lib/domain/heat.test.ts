@@ -36,13 +36,32 @@ describe("heat scoring", () => {
     ], 10, now);
 
     expect(diagnostics).toEqual({
-      heat_index: 19.84,
+      heat_index: 10.8,
       weighted_heat: 86.67,
       effective_reports: 1.5,
-      report_score: 8.3,
+      report_score: 3.41,
       weighted_fleet_percentage: 15,
-      fleet_score: 50,
+      fleet_score: 29.29,
     });
+  });
+
+  it("assigns 50 points at 30 effective reports and 30 percent fleet coverage", () => {
+    const now = new Date("2026-07-05T12:00:00Z");
+    const diagnostics = calculateMetroHeatIndex(
+      Array.from({ length: 30 }, (_, index) => ({
+        heat: 100,
+        timestamp: now,
+        carId: `M${String(index).padStart(4, "0")}`,
+      })),
+      100,
+      now,
+    );
+
+    expect(diagnostics.effective_reports).toBe(30);
+    expect(diagnostics.report_score).toBe(50);
+    expect(diagnostics.weighted_fleet_percentage).toBe(30);
+    expect(diagnostics.fleet_score).toBe(50);
+    expect(diagnostics.heat_index).toBe(50);
   });
 
   it("lets recent low-heat reports reduce the index even as volume increases", () => {

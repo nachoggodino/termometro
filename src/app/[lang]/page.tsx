@@ -66,11 +66,12 @@ async function HomeReports({ dictionary, locale }: { dictionary: Awaited<ReturnT
     <>
       <a
         className="flex min-h-16 items-center gap-3 rounded-md border border-border bg-surface-raised p-3 transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        data-testid="home-report-count-banner"
         href="#home-recent-reports"
       >
-        <span className="font-mono text-5xl font-semibold leading-none tracking-[-0.035em] tabular-nums">{dashboard.reportsLastDay}</span>
-        <span className="min-w-0 flex-1 whitespace-nowrap text-base font-semibold text-muted">{dictionary.home.reportsInWindow}</span>
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-heat-infierno-soft text-heat-infierno">
+        <span className="shrink-0 font-mono text-4xl font-semibold leading-none tracking-[-0.035em] tabular-nums sm:text-5xl" data-testid="home-report-count">{dashboard.reportsLastDay}</span>
+        <span className="min-w-0 flex-1 text-pretty text-sm font-semibold leading-4 text-muted sm:text-base sm:leading-5">{dictionary.home.reportsInWindow}</span>
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-heat-infierno-soft text-heat-infierno" data-testid="home-report-count-icon">
           <ThermometerSun aria-hidden="true" className="size-6" />
         </span>
       </a>

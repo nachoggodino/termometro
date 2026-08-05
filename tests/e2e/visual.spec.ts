@@ -28,8 +28,13 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
   await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-home.png` });
 
   await page.goto("/es/reportar");
-  await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reportar" })).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-reportar.png` });
+  await page.getByTestId("submit-report").click();
+  const missingCarDialog = page.getByRole("dialog", { name: "¿Seguro que quieres enviar un reporte sin número de coche?" });
+  await expect(missingCarDialog).toBeVisible();
+  await page.screenshot({ fullPage: false, path: `/tmp/termo-${project}-missing-car-dialog.png` });
+  await missingCarDialog.getByRole("button", { name: "Añadir coche" }).click();
 
   await page.goto("/es/explorar");
   await expect(page.getByText("Evolución de cada línea")).toBeVisible();
