@@ -60,7 +60,10 @@ describe("Supabase migration contracts", () => {
   });
 
   it("hardens car prefixes and no-car moderation without exposing origin keys", () => {
-    const hardeningMigration = readFileSync(join(root, "supabase/migrations/0008_harden_validation_and_moderation.sql"), "utf8");
+    const hardeningMigration = readFileSync(
+      join(root, "supabase/migrations/20260805085948_harden_validation_and_moderation.sql"),
+      "utf8",
+    );
 
     expect(hardeningMigration).toContain("car ~ '^[MRS][0-9]{4,5}$'");
     expect(hardeningMigration).toContain("code ~ '^[MRS][0-9]{4,5}$'");
