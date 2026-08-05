@@ -5,9 +5,10 @@ describe("report validation", () => {
   it("normalizes loose car codes", () => {
     expect(normalizeCarCode("m1234")).toBe("M1234");
     expect(normalizeCarCode(" R-2401 ")).toBe("R2401");
-    expect(normalizeCarCode("z12345")).toBe("Z12345");
+    expect(normalizeCarCode("s12345")).toBe("S12345");
+    expect(normalizeCarCode("z12345")).toBeNull();
     expect(normalizeCarCode("nonsense")).toBeNull();
-    expect(formatCarCode("z12345")).toBe("Z-12345");
+    expect(formatCarCode("s12345")).toBe("S-12345");
   });
 
   it("parses valid report input", () => {
@@ -33,6 +34,7 @@ describe("report validation", () => {
     expect(parseReportInput({ line: "L1", state: "calor", car: "1234" }).success).toBe(false);
     expect(parseReportInput({ line: "L1", state: "calor", car: "AB1234" }).success).toBe(false);
     expect(parseReportInput({ line: "L1", state: "calor", car: "M123" }).success).toBe(false);
+    expect(parseReportInput({ line: "L1", state: "calor", car: "Z1234" }).success).toBe(false);
   });
 
   it("detects short-window duplicates", () => {

@@ -4,6 +4,7 @@ import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
   isDuplicateCandidate,
+  NO_CAR_ORIGIN_WINDOW_MINUTES,
   RATE_LIMIT_MAX_REPORTS,
   type Report,
   type ReportInput,
@@ -195,6 +196,14 @@ export async function createReportForRequest(
       const rateLimitStart = getRateLimitStart(now);
       const recentReports = memoryReports.filter((report) => report.abuseKey === abuseKey && report.createdAt >= rateLimitStart);
       if (recentReports.length >= RATE_LIMIT_MAX_REPORTS) return { ok: false, reason: "rate_limited" };
+
+      const noCarWindowStart = new Date(now.getTime() - NO_CAR_ORIGIN_WINDOW_MINUTES * 60_000);
+      const hasRecentNoCarReport = memoryReports.some(
+        (report) => !report.car && report.abuseKey === abuseKey && report.createdAt >= noCarWindowStart && !report.hiddenAt,
+      );
+      if (!input.car && hasRecentNoCarReport) {
+        return { ok: false, reason: "duplicate" };
+      }
     }
 
     const recentDuplicate = memoryReports.find((report) => isDuplicateCandidate(input, report, now));

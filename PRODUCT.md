@@ -100,7 +100,7 @@ V1 abuse controls:
 - Open anonymous submission without accounts.
 - Client and server validation.
 - Rate limiting by private abuse key.
-- Soft duplicate suppression in a short window. Reports with a car identifier are suppressed when line, car, and state match. Reports without a car identifier are suppressed only against recent no-car reports on the same line, because they are lower-specificity signals and should not let one rider flood a line.
+- Soft duplicate suppression in a short window. Reports with a car identifier are suppressed when line, car, and state match. Reports without a car identifier are suppressed against recent no-car reports on the same line. An origin may submit at most one no-car report across all lines and states every 30 minutes. These lower-specificity signals should not let one rider flood the data.
 - Friendly duplicate feedback such as "Ya hemos contado este reporte hace un momento."
 - Short undo window after submission, dismissible by the user.
 - Moderation fields in the database, but no admin UI in v1.

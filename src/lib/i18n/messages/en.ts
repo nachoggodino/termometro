@@ -56,8 +56,8 @@ export const messages = {
     line: "Line",
     heatState: "AC state",
     car: "Car",
-    carPlaceholder: "E.g. M1234 or R-5469",
-    carInvalid: "Use one letter and 4 or 5 numbers, for example M1234, or leave this empty",
+    carPlaceholder: "E.g. M1234, R-5469, or S3124",
+    carInvalid: "Use M, R, or S and 4 or 5 numbers, for example M1234, or leave this empty",
     carHelp: "It is usually shown on a plate at the start and end of the car, or on the sides of continuous trains. If you cannot find it, leave this empty",
     missingCar: {
       title: "Are you sure you want to submit a report without a car number?",
