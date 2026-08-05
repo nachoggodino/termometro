@@ -62,9 +62,9 @@ describe("report controls", () => {
 
     render(<ReportForm dictionary={esMessages} locale="es" />);
 
-    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "1234");
+    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "Z1234");
 
-    expect(screen.getByText(/Usa una letra/)).toBeVisible();
+    expect(screen.getByText(/Usa M, R o S/)).toBeVisible();
     expect(screen.getByTestId("submit-report")).toBeDisabled();
   });
 

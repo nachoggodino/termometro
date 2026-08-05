@@ -68,4 +68,20 @@ describe("API routes", () => {
     expect(response.status).toBe(500);
     expect(payload).toEqual({ ok: false, reason: "server_error" });
   });
+
+  it("rejects car identifiers whose prefix is not M, R, or S", async () => {
+    const { POST } = await import("./reports/route");
+
+    const response = await POST(
+      new Request("https://termo.test/api/reports", {
+        method: "POST",
+        body: JSON.stringify({ line: "L1", state: "calor", car: "Z1234" }),
+      }),
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ ok: false, reason: "invalid" });
+    expect(repositoryMock.createReportForRequest).not.toHaveBeenCalled();
+  });
 });

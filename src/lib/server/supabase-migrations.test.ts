@@ -58,4 +58,17 @@ describe("Supabase migration contracts", () => {
     expect(trafficMigration).not.toContain("-line_weights.effective_reports / 12.0");
     expect(trafficMigration).not.toContain("-diagnostics.weighted_fleet_percentage / 15.0");
   });
+
+  it("hardens car prefixes and no-car moderation without exposing origin keys", () => {
+    const hardeningMigration = readFileSync(join(root, "supabase/migrations/0008_harden_validation_and_moderation.sql"), "utf8");
+
+    expect(hardeningMigration).toContain("car ~ '^[MRS][0-9]{4,5}$'");
+    expect(hardeningMigration).toContain("code ~ '^[MRS][0-9]{4,5}$'");
+    expect(hardeningMigration.match(/not valid/g)).toHaveLength(2);
+    expect(hardeningMigration).toContain("reports.abuse_key = input_abuse_key");
+    expect(hardeningMigration).toContain("reports.car is null");
+    expect(hardeningMigration).toContain("input_now - interval '30 minutes'");
+    expect(hardeningMigration).toContain("pg_advisory_xact_lock(hashtext('rate:' || input_abuse_key))");
+    expect(hardeningMigration).not.toContain("grant select (id, line, car, state, created_at, abuse_key");
+  });
 });

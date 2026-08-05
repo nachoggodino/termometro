@@ -12,6 +12,7 @@ export type Report = {
 };
 
 export const DUPLICATE_WINDOW_MINUTES = 12;
+export const NO_CAR_ORIGIN_WINDOW_MINUTES = 30;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
 export const RATE_LIMIT_MAX_REPORTS = 4;
 export const UNDO_WINDOW_SECONDS = 90;
@@ -41,7 +42,7 @@ export const reportInputSchema = z.object({
 
 export type ReportInput = z.infer<typeof reportInputSchema>;
 
-const CAR_CODE_PATTERN = /^[a-z]-?\d{4,5}$/i;
+const CAR_CODE_PATTERN = /^[mrs]-?\d{4,5}$/i;
 
 export function normalizeCarCode(value: string) {
   const trimmed = value.trim().replace(/\s+/g, "");
