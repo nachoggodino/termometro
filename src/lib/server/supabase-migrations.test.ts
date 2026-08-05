@@ -48,4 +48,14 @@ describe("Supabase migration contracts", () => {
     expect(dashboardMigration).not.toContain("abuse_key");
     expect(dashboardMigration).not.toContain("undo_token_hash");
   });
+
+  it("keeps deployed fleet qualification and Termo parameters aligned with domain rules", () => {
+    const trafficMigration = readFileSync(join(root, "supabase/migrations/0007_prepare_for_traffic_spike.sql"), "utf8");
+
+    expect(trafficMigration).toContain("visible_car_counts.calor_reports + visible_car_counts.infierno_reports - visible_car_counts.fresco_reports > 2");
+    expect(trafficMigration).toContain("-line_weights.effective_reports / 30.0");
+    expect(trafficMigration).toContain("-diagnostics.weighted_fleet_percentage / 30.0");
+    expect(trafficMigration).not.toContain("-line_weights.effective_reports / 12.0");
+    expect(trafficMigration).not.toContain("-diagnostics.weighted_fleet_percentage / 15.0");
+  });
 });

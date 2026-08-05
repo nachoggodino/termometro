@@ -20,7 +20,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
 
   await page.goto("/es/reportar");
 
-  await expect(page.getByRole("heading", { name: "Reportar calor" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Reportar" })).toBeVisible();
   await page.getByPlaceholder("Ej. M1234 o R-5469").fill(car);
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
@@ -50,6 +50,48 @@ test("report flow blocks invalid car codes", async ({ page }) => {
   await page.getByPlaceholder("Ej. M1234 o R-5469").fill("1234");
   await expect(page.getByText("Usa una letra y 4 o 5 números")).toBeVisible();
   await expect(page.getByTestId("submit-report")).toBeDisabled();
+});
+
+test("report flow confirms a missing car and can return focus to the car field", async ({ page }) => {
+  await page.route("**/api/reports", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, report: { id: "missing-car-report" }, undoToken: "missing-car-undo" }),
+    });
+  });
+  await page.goto("/es/reportar");
+
+  await page.getByTestId("submit-report").click();
+  const dialog = page.getByRole("dialog", { name: "¿Seguro que quieres enviar un reporte sin número de coche?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Añadir coche" }).click();
+  await expect(page.getByPlaceholder("Ej. M1234 o R-5469")).toBeFocused();
+
+  await page.getByTestId("submit-report").click();
+  await expect(dialog).toBeVisible();
+  const reportRequest = page.waitForRequest((request) => request.url().endsWith("/api/reports") && request.method() === "POST");
+  await dialog.getByRole("button", { name: "Confirmar" }).click();
+
+  expect((await reportRequest).postDataJSON()).toEqual({ line: "L1", state: "calor", car: null });
+});
+
+test("home report counter keeps four digits clear of its icon on a narrow phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/es");
+
+  const count = page.getByTestId("home-report-count");
+  const icon = page.getByTestId("home-report-count-icon");
+  await count.evaluate((element) => { element.textContent = "9999"; });
+  const countBox = await count.boundingBox();
+  const iconBox = await icon.boundingBox();
+
+  expect(countBox).not.toBeNull();
+  expect(iconBox).not.toBeNull();
+  expect(countBox!.x + countBox!.width).toBeLessThan(iconBox!.x);
 });
 
 test("explore filters and theme control render on mobile", async ({ page }) => {

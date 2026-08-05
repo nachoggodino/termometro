@@ -29,6 +29,8 @@ export const DASHBOARD_TIME = {
   worstHourEnd: 23,
 } as const;
 
+export const FLEET_WITHOUT_AC_NET_HEAT_THRESHOLD = 2;
+
 export type LineSummary = {
   line: MetroLine;
   score: number;
@@ -140,7 +142,7 @@ export function buildDashboardData(
     const lineReports = visibleReports.filter((report) => report.line === line);
     const lineIndexReports = usableReports.filter((report) => report.line === line && report.createdAt >= summerStart && report.createdAt <= rangeWindow.end);
     const reportedCars = new Set(lineReports.map((report) => report.car).filter(Boolean));
-    const reportedCarsWithoutAc = new Set(lineReports.filter((report) => report.state !== "fresco").map((report) => report.car).filter(Boolean));
+    const carsWithoutAcReported = countCarsWithoutAcSignal(lineReports);
     const heatIndex = calculateMetroHeatIndex(lineIndexReports, estimatedCarsByLine[line], rangeWindow.end);
     const score = heatIndex.heat_index;
     const latestReportAt =
@@ -157,7 +159,7 @@ export function buildDashboardData(
       disagreement: Math.round((1 - getAgreement(lineReports)) * 100),
       latestReportAt,
       carsReported: reportedCars.size,
-      carsWithoutAcReported: reportedCarsWithoutAc.size,
+      carsWithoutAcReported,
       estimatedCars: estimatedCarsByLine[line],
     };
   }).sort((a, b) => b.score - a.score || b.reports - a.reports);
@@ -297,6 +299,28 @@ function getCarStateCounts(reports: Report[]) {
     calorReports,
     infiernoReports,
   };
+}
+
+export function hasFleetWithoutAcSignal({
+  frescoReports,
+  calorReports,
+  infiernoReports,
+}: {
+  frescoReports: number;
+  calorReports: number;
+  infiernoReports: number;
+}) {
+  return calorReports + infiernoReports - frescoReports > FLEET_WITHOUT_AC_NET_HEAT_THRESHOLD;
+}
+
+function countCarsWithoutAcSignal(reports: Report[]) {
+  const carGroups = new Map<string, Report[]>();
+  for (const report of reports) {
+    if (!report.car) continue;
+    pushGroupedReport(carGroups, report.car, report);
+  }
+
+  return Array.from(carGroups.values()).filter((carReports) => hasFleetWithoutAcSignal(getCarStateCounts(carReports))).length;
 }
 
 function buildTrend(

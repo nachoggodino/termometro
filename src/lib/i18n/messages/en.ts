@@ -59,6 +59,12 @@ export const messages = {
     carPlaceholder: "E.g. M1234 or R-5469",
     carInvalid: "Use one letter and 4 or 5 numbers, for example M1234, or leave this empty",
     carHelp: "It is usually shown on a plate at the start and end of the car, or on the sides of continuous trains. If you cannot find it, leave this empty",
+    missingCar: {
+      title: "Are you sure you want to submit a report without a car number?",
+      description: "Reports with a car number carry more weight in the statistics.",
+      confirm: "Confirm",
+      addCar: "Add car",
+    },
     submit: {
       fresco: "Report fresh air",
       calor: "Report heat",
@@ -172,7 +178,7 @@ export const messages = {
     },
     caveats: {
       confidence: "Confidence, recency, and disagreement qualify each signal",
-      fleet: "Share of cars reported as Hot or Hell over the estimated fleet",
+      fleet: "Share of cars where Hot or Hell reports exceed Fresh reports by more than 2, over the estimated fleet",
     },
   },
   methodology: {
@@ -209,9 +215,9 @@ export const messages = {
       "weighted_heat = sum(report_weight * report_heat) / sum(report_weight)",
       "effective_reports = sum(report_weight)",
       "saturated_score(value, value_50) = 100 * (1 - 2 ^ (-(value / value_50)))",
-      "report_score = saturated_score(effective_reports, 12)",
+      "report_score = saturated_score(effective_reports, 30)",
       "weighted_fleet_coverage = 100 * sum(max_weight_per_reported_car) / estimated_cars_for_line",
-      "fleet_score = saturated_score(weighted_fleet_coverage, 15)",
+      "fleet_score = saturated_score(weighted_fleet_coverage, 30)",
       "termo_indicator = (weighted_heat / 100) * ((0.65 * report_score) + (0.35 * fleet_score))",
     ],
     constants: {

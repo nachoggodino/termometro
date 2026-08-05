@@ -60,6 +60,12 @@ export const messages = {
     carPlaceholder: "Ej. M1234 o R-5469",
     carInvalid: "Usa una letra y 4 o 5 números, por ejemplo M1234, o deja el campo vacío",
     carHelp: "Suele aparecer en una placa al inicio y final del vagón, o en los laterales de los trenes continuos. Si no lo encuentras, déjalo vacío",
+    missingCar: {
+      title: "¿Seguro que quieres enviar un reporte sin número de coche?",
+      description: "Los reportes con número de coche tienen más peso en las estadísticas.",
+      confirm: "Confirmar",
+      addCar: "Añadir coche",
+    },
     submit: {
       fresco: "Reportar fresquito",
       calor: "Reportar calor",
@@ -173,7 +179,7 @@ export const messages = {
     },
     caveats: {
       confidence: "Confianza, recencia y desacuerdo modulan cada señal",
-      fleet: "Porcentaje de coches reportados en Calor o Infierno sobre la flota estimada",
+      fleet: "Porcentaje de coches donde los reportes de Calor o Infierno superan a los de Fresco por más de 2, sobre la flota estimada",
     },
   },
   methodology: {
@@ -210,9 +216,9 @@ export const messages = {
       "calor_ponderado = sum(peso_reporte * calor_reporte) / sum(peso_reporte)",
       "reportes_efectivos = sum(peso_reporte)",
       "puntuacion_saturada(valor, valor_50) = 100 * (1 - 2 ^ (-(valor / valor_50)))",
-      "puntuacion_reportes = puntuacion_saturada(reportes_efectivos, 12)",
+      "puntuacion_reportes = puntuacion_saturada(reportes_efectivos, 30)",
       "cobertura_flota_ponderada = 100 * sum(mayor_peso_por_coche_reportado) / coches_estimados_linea",
-      "puntuacion_flota = puntuacion_saturada(cobertura_flota_ponderada, 15)",
+      "puntuacion_flota = puntuacion_saturada(cobertura_flota_ponderada, 30)",
       "indicador_termo = (calor_ponderado / 100) * ((0.65 * puntuacion_reportes) + (0.35 * puntuacion_flota))",
     ],
     constants: {
