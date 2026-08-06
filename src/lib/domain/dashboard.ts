@@ -113,8 +113,6 @@ export type DashboardData = {
   worstCars: CarSummary[];
   carExplorer: {
     options: CarExplorerOption[];
-    selections: CarExplorerSelection[];
-    defaultCar: CarExplorerSelection | null;
   };
   trend: TrendPoint[];
   lineEvolution: LineEvolutionPoint[];
@@ -198,10 +196,6 @@ export function buildDashboardData(
     }));
 
   const carExplorerOptions = buildCarExplorerOptions(visibleReports);
-  const carExplorerSelections = carExplorerOptions
-    .map((option) => buildCarExplorerSelection(option.car, visibleReports, now, range, carExplorerOptions))
-    .filter((selection): selection is CarExplorerSelection => selection !== null);
-  const defaultCar = carExplorerSelections[0] ?? null;
   const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
   const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
   const totalReportsTrend = buildTotalReportsTrend(visibleReports, now, range);
@@ -216,8 +210,6 @@ export function buildDashboardData(
     worstCars,
     carExplorer: {
       options: carExplorerOptions,
-      selections: carExplorerSelections,
-      defaultCar,
     },
     trend,
     lineEvolution,

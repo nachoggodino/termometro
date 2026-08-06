@@ -13,10 +13,9 @@ export default function ExploreLoading() {
             </div>
           </div>
         </div>
-        <section className="py-6">
-          <div className="h-8 w-36 animate-pulse rounded-sm bg-surface" />
-          <div className="mt-3 h-4 max-w-2xl animate-pulse rounded-sm bg-surface" />
-        </section>
+        <div aria-hidden="true" className="py-6">
+          <div className="h-8" />
+        </div>
         <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
           <div className="flex flex-col gap-4">
             {Array.from({ length: 4 }, (_, index) => (

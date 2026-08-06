@@ -96,9 +96,10 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         },
         duration: FEEDBACK_TOKENS.undoToastDurationMs,
       });
-      const params = new URLSearchParams({ reported: "1" });
+      const params = new URLSearchParams();
       if (normalizedCar) params.set("coche", normalizedCar);
-      startTransition(() => router.push(`/${locale}/explorar?${params.toString()}`));
+      const query = params.toString();
+      startTransition(() => router.push(`/${locale}/explorar${query ? `?${query}` : ""}`));
     } catch {
       toast(dictionary.reportForm.submitFailed);
       setSubmitting(false);

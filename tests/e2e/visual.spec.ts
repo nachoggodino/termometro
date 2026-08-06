@@ -38,6 +38,7 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
 
   await page.goto("/es/explorar");
   await expect(page.getByText("Evolución de cada línea")).toBeVisible();
+  await expect(page.getByTestId("car-explorer-chart")).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-explorar.png` });
 
   await page.goto("/es/metodologia");

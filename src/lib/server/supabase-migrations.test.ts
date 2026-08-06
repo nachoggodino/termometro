@@ -1,8 +1,18 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
+const dashboardRpcV2Names = [
+  "dashboard_bucket_counts_v2",
+  "dashboard_car_summaries_v2",
+  "dashboard_car_histories_v2",
+  "dashboard_car_series_v2",
+  "dashboard_worst_hours_v2",
+  "dashboard_line_car_reports_v2",
+  "dashboard_line_summaries_v2",
+  "dashboard_heat_trend_v2",
+] as const;
 
 describe("Supabase migration contracts", () => {
   it("keeps private report fields out of public column grants", () => {
@@ -60,7 +70,7 @@ describe("Supabase migration contracts", () => {
   });
 
   it("hardens car prefixes and no-car moderation without exposing origin keys", () => {
-    const hardeningMigration = readFileSync(join(root, "supabase/migrations/0008_harden_validation_and_moderation.sql"), "utf8");
+    const hardeningMigration = readFileSync(join(root, "supabase/migrations/20260805085948_harden_validation_and_moderation.sql"), "utf8");
 
     expect(hardeningMigration).toContain("car ~ '^[MRS][0-9]{4,5}$'");
     expect(hardeningMigration).toContain("code ~ '^[MRS][0-9]{4,5}$'");
@@ -70,5 +80,48 @@ describe("Supabase migration contracts", () => {
     expect(hardeningMigration).toContain("input_now - interval '30 minutes'");
     expect(hardeningMigration).toContain("pg_advisory_xact_lock(hashtext('rate:' || input_abuse_key))");
     expect(hardeningMigration).not.toContain("grant select (id, line, car, state, created_at, abuse_key");
+  });
+
+  it("adds the optimized dashboard path without removing the current production path", () => {
+    const expansion = readFileSync(join(root, "supabase/migrations/20260806001521_expand_dashboard_database_cpu.sql"), "utf8");
+    const backfill = readFileSync(join(root, "supabase/migrations/20260806093759_backfill_dashboard_database_cpu.sql"), "utf8");
+
+    expect(expansion).toContain("create table private.dashboard_report_hourly");
+    expect(expansion).toContain("create trigger sync_dashboard_report_hourly");
+    expect(expansion).toContain("input_car_series integer[] default null");
+    expect(expansion).not.toContain("alter table public.reports");
+    expect(expansion).toContain("cars.calor_reports + cars.infierno_reports - cars.fresco_reports > 2");
+    expect(expansion).toContain("-line_weights.effective_reports / 30.0");
+    expect(expansion).toContain("-diagnostics.weighted_fleet_percentage / 30.0");
+    expect(backfill).toContain("insert into private.dashboard_report_hourly");
+    expect(backfill).toContain("on conflict (hour_start, line, car_key, state) do nothing");
+    expect(backfill).toContain("values ('dashboard_v2_backfill')");
+    for (const name of dashboardRpcV2Names) {
+      expect(expansion).toContain(`create function public.${name}`);
+      expect(expansion).toContain(`grant execute on function public.${name}`);
+    }
+    expect(expansion).toContain("grant execute on function public.dashboard_home_snapshot");
+    expect(expansion).not.toContain("drop function public.dashboard_");
+    expect(expansion).not.toContain("revoke select on public.reports");
+    expect(expansion).not.toContain('drop policy if exists "Public reports are readable"');
+  });
+
+  it("keeps destructive cleanup deferred and guarded", () => {
+    const cleanup = readFileSync(join(root, "supabase/deferred-migrations/cleanup_dashboard_database_cpu.sql"), "utf8");
+
+    expect(readdirSync(join(root, "supabase/migrations")).some((file) => file.includes("cleanup_dashboard_database_cpu"))).toBe(false);
+    expect(cleanup).toContain("Dashboard V2 expansion is incomplete; cleanup aborted");
+    expect(cleanup).toContain("private.dashboard_migration_state");
+    expect(cleanup).toContain("drop function public.dashboard_line_summaries");
+    expect(cleanup).toContain("revoke select (id, line, car, state, created_at, hidden_at) on public.reports");
+    expect(cleanup).toContain('drop policy if exists "Public reports are readable"');
+  });
+
+  it("calls only the versioned optimized dashboard RPCs", () => {
+    const dashboardModules = readFileSync(join(root, "src/lib/server/dashboard-modules.ts"), "utf8");
+
+    for (const name of dashboardRpcV2Names) {
+      expect(dashboardModules).toContain(`rpc("${name}"`);
+    }
   });
 });

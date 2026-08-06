@@ -19,7 +19,6 @@ Copy `.env.example` to `.env.local` when wiring Supabase:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 NEXT_PUBLIC_SITE_URL=https://termodemadrid.es
 SUPABASE_SERVICE_ROLE_KEY=
 TERMO_ABUSE_SECRET=
@@ -38,7 +37,7 @@ supabase/migrations/*.sql
 supabase/seed.sql
 ```
 
-Car codes are stored normalized as one uppercase letter plus 4 or 5 digits, for example `M1234`. The UI may display them as `M-1234`.
+Dashboard and car-inventory reads run only on the server with the service-role key. Car codes are stored normalized as one uppercase letter plus 4 or 5 digits, for example `M1234`. The UI may display them as `M-1234`.
 
 ## Verification
 

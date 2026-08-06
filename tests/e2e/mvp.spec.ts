@@ -11,7 +11,7 @@ test("home exposes the two primary actions and switches language", async ({ page
   await page.getByTestId("lang-en").click();
   await expect(page).toHaveURL(/\/en$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  await expect(page.getByTestId("home-report")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Report Tell us how the AC is now" })).toBeVisible();
 });
 
 test("report flow submits and lands on filtered dashboard", async ({ page }, testInfo) => {
@@ -25,7 +25,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
 
-  await expect(page).toHaveURL(new RegExp(`/es/explorar\\?reported=1&coche=${car}`));
+  await expect(page).toHaveURL(new RegExp(`/es/explorar\\?coche=${car}`));
   await expect(page.getByText("Evolución de cada línea")).toBeVisible();
   await expect(page.getByText("Peores coches")).toBeVisible();
   await expect(page.getByText("Explorar coche")).toBeVisible();
@@ -82,10 +82,14 @@ test("report flow confirms a missing car and can return focus to the car field",
 test("home report counter keeps four digits clear of its icon on a narrow phone", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto("/es");
+  await page.waitForLoadState("networkidle");
 
-  const count = page.getByTestId("home-report-count");
-  const icon = page.getByTestId("home-report-count-icon");
+  const count = page.getByTestId("home-report-count").filter({ visible: true });
+  const icon = page.getByTestId("home-report-count-icon").filter({ visible: true });
+  await expect(count).toBeVisible();
+  await expect(icon).toBeVisible();
   await count.evaluate((element) => { element.textContent = "9999"; });
+  await expect(count).toHaveText("9999");
   const countBox = await count.boundingBox();
   const iconBox = await icon.boundingBox();
 
@@ -124,4 +128,15 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await expect(page.getByTestId("theme-toggle")).toBeVisible();
   await page.getByTestId("theme-toggle").getByRole("button", { name: "Oscuro" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
+});
+
+test("explore lazily loads one car history and one line detail", async ({ page }) => {
+  await page.goto("/es/explorar");
+
+  await expect(page.getByTestId("car-explorer-chart")).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  await page.getByTestId("line-detail-card").first().click();
+  const dialog = page.getByRole("dialog", { name: "Coches reportados" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByTestId("line-detail-car").first()).toBeVisible();
 });

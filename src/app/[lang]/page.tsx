@@ -4,14 +4,13 @@ import { Clock3, Flame, ThermometerSun } from "lucide-react";
 import { RecentReportRow } from "@/components/report/recent-report-row";
 import { ExploreActionIcon, ReportActionIcon } from "@/components/ui/action-icons";
 import { Button } from "@/components/ui/button";
-import { getDashboardDataForPage } from "@/lib/server/page-data";
+import { getCachedHomeSnapshot } from "@/lib/server/dashboard-cache";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { LINE_COLORS, type MetroLine } from "@/lib/domain/lines";
 import type { Report } from "@/lib/domain/reports";
 import { notFound } from "next/navigation";
-
-export const dynamic = "force-dynamic";
+import { connection } from "next/server";
 
 export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;
@@ -58,7 +57,8 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 }
 
 async function HomeReports({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getDictionary>>; locale: "es" | "en" }) {
-  const dashboard = await getDashboardDataForPage({ range: "last24Hours" });
+  await connection();
+  const dashboard = await getCachedHomeSnapshot();
   const recentReports = dashboard.recentReports;
   const topRecentLines = getTopRecentLines(recentReports);
 
