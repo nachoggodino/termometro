@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { buildDashboardData, getCarSeries } from "@/lib/domain/dashboard";
+import { buildCarExplorerSelection, buildDashboardData, DASHBOARD_LIMITS, DASHBOARD_TIME, getCarSeries } from "@/lib/domain/dashboard";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
@@ -47,6 +47,22 @@ type DashboardOptions = {
   now?: Date;
 };
 
+export type HomeSnapshot = {
+  reportsLastDay: number;
+  recentReports: Report[];
+};
+
+type HomeSnapshotRow = {
+  reports_last_day: number;
+  recent_reports: Array<{
+    id: string;
+    line: MetroLine;
+    car: string | null;
+    state: ReportInput["state"];
+    created_at: string;
+  }> | null;
+};
+
 const globalForReports = globalThis as typeof globalThis & {
   termoReports?: MemoryReport[];
 };
@@ -64,12 +80,11 @@ function getMemoryReports() {
   return globalForReports.termoReports;
 }
 
-let supabaseClient: SupabaseClient | null = null;
 let supabaseServiceClient: SupabaseClient | null = null;
 
-export function getSupabase(options: { serviceRole?: boolean } = {}) {
+export function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = options.serviceRole ? process.env.SUPABASE_SERVICE_ROLE_KEY : process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (shouldRequirePersistentStore() && !process.env.TERMO_ABUSE_SECRET) {
     throw new Error("TERMO_ABUSE_SECRET is required in this environment.");
@@ -79,91 +94,33 @@ export function getSupabase(options: { serviceRole?: boolean } = {}) {
     if (shouldRequirePersistentStore()) {
       const missing = [
         !url ? "NEXT_PUBLIC_SUPABASE_URL" : null,
-        !key ? (options.serviceRole ? "SUPABASE_SERVICE_ROLE_KEY" : "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") : null,
+        !key ? "SUPABASE_SERVICE_ROLE_KEY" : null,
       ].filter(Boolean);
       throw new Error(`Supabase is required in this environment. Missing: ${missing.join(", ")}`);
     }
     return null;
   }
 
-  if (options.serviceRole) {
-    if (!supabaseServiceClient) {
-      supabaseServiceClient = createClient(url, key, {
-        auth: { persistSession: false },
-      });
-    }
-    return supabaseServiceClient;
-  }
-
-  if (!supabaseClient) {
-    supabaseClient = createClient(url, key, {
+  if (!supabaseServiceClient) {
+    supabaseServiceClient = createClient(url, key, {
       auth: { persistSession: false },
     });
   }
-  return supabaseClient;
+  return supabaseServiceClient;
 }
 
-export async function getReportsForDashboard(options: DashboardOptions) {
+export function getMemoryDashboard(options: DashboardOptions) {
   const now = options.now ?? new Date();
   const { start, end } = getRangeWindow(options.range, now);
   const summerStart = getRangeWindow("summer", now).start;
   const queryStart = summerStart < start ? summerStart : start;
   const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
   const selectedCarSeries = normalizeCarSeries(options.carSeries);
-  const supabase = getSupabase();
-
-  if (!supabase) {
-    const reports = getMemoryReports().filter((report) => {
-      return report.createdAt >= queryStart && report.createdAt <= end && (!selectedLines || selectedLines.includes(report.line));
-    }).filter((report) => matchesCarSeries(report, selectedCarSeries));
-    return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
-  }
-
-  let query = supabase
-    .from("reports")
-    .select("id,line,car,state,created_at,hidden_at")
-    .gte("created_at", queryStart.toISOString())
-    .lte("created_at", end.toISOString())
-    .is("hidden_at", null)
-    .order("created_at", { ascending: false });
-
-  if (selectedLines) {
-    query = query.in("line", selectedLines);
-  }
-
-  const [reportsResult, fleetResult] = await Promise.all([
-    query,
-    supabase.from("line_fleet_estimates").select("line,estimated_total_cars"),
-  ]);
-
-  const { data, error } = reportsResult;
-  if (error) throw error;
-
-  const { data: fleetData, error: fleetError } = fleetResult;
-  if (fleetError) throw fleetError;
-
-  const fleetEstimates = { ...ESTIMATED_TOTAL_CARS };
-  for (const row of fleetData ?? []) {
-    if (isMetroLine(row.line)) {
-      fleetEstimates[row.line] = row.estimated_total_cars;
-    }
-  }
-
-  const reports = (data ?? []).map((row) => ({
-      id: row.id,
-      line: row.line,
-      car: row.car,
-      state: row.state,
-      createdAt: new Date(row.created_at),
-      hiddenAt: row.hidden_at ? new Date(row.hidden_at) : null,
-    })).filter((report) => matchesCarSeries(report, selectedCarSeries));
-
-  return buildDashboardData(
-    reports,
-    now,
-    fleetEstimates as Record<MetroLine, number>,
-    options.range,
-  );
+  const reports = getMemoryReports()
+    .filter((report) => report.createdAt >= queryStart && report.createdAt <= end)
+    .filter((report) => !selectedLines || selectedLines.includes(report.line))
+    .filter((report) => matchesCarSeries(report, selectedCarSeries));
+  return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
 }
 
 function normalizeCarSeries(series: number[] | null | undefined) {
@@ -178,6 +135,58 @@ function matchesCarSeries(report: Report, selectedCarSeries: Set<number> | null)
   return series !== null && selectedCarSeries.has(series);
 }
 
+export function getMemoryCarDetail(options: DashboardOptions & { car: string }) {
+  const now = options.now ?? new Date();
+  const window = getRangeWindow(options.range, now);
+  const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
+  const selectedCarSeries = normalizeCarSeries(options.carSeries);
+  const reports = getMemoryReports().filter((report) =>
+    !report.hiddenAt &&
+    report.createdAt >= window.start &&
+    report.createdAt <= window.end &&
+    (!selectedLines || selectedLines.includes(report.line)) &&
+    matchesCarSeries(report, selectedCarSeries),
+  );
+  return buildCarExplorerSelection(options.car, reports, now, options.range);
+}
+
+export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
+  const start = new Date(now.getTime() - DASHBOARD_TIME.hoursPerDay * DASHBOARD_TIME.millisecondsPerHour);
+  const supabase = getSupabase();
+
+  if (!supabase) {
+    const recentReports = getMemoryReports()
+      .filter((report) => !report.hiddenAt && report.createdAt >= start && report.createdAt <= now)
+      .toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return {
+      reportsLastDay: recentReports.length,
+      recentReports: recentReports.slice(0, DASHBOARD_LIMITS.recentReportCount),
+    };
+  }
+
+  const { data, error } = await supabase
+    .rpc("dashboard_home_snapshot", {
+      input_start: start.toISOString(),
+      input_end: now.toISOString(),
+      input_limit: DASHBOARD_LIMITS.recentReportCount,
+    })
+    .single();
+  if (error) throw error;
+
+  const row = data as HomeSnapshotRow;
+  return {
+    reportsLastDay: row.reports_last_day,
+    recentReports: (row.recent_reports ?? []).map((report) => ({
+      id: report.id,
+      line: report.line,
+      car: report.car,
+      state: report.state,
+      createdAt: new Date(report.created_at),
+      hiddenAt: null,
+    })),
+  };
+}
+
 export async function createReportForRequest(
   input: ReportInput,
   fingerprint: RequestFingerprint | Request | null,
@@ -188,7 +197,7 @@ export async function createReportForRequest(
   const undoToken = createUndoToken();
   const undoTokenHash = hashUndoToken(undoToken);
   const undoExpiresAt = getUndoExpiresAt(now);
-  const supabase = getSupabase({ serviceRole: true });
+  const supabase = getSupabase();
 
   if (!supabase) {
     const memoryReports = getMemoryReports();
@@ -265,7 +274,7 @@ export async function createReportForRequest(
 }
 
 export async function undoReport(id: string, undoToken: string, now = new Date()) {
-  const supabase = getSupabase({ serviceRole: true });
+  const supabase = getSupabase();
   if (!supabase) {
     const reports = getMemoryReports();
     const index = reports.findIndex((report) => report.id === id);

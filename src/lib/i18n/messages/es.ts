@@ -151,6 +151,8 @@ export const messages = {
       title: "Coches reportados",
       totalCars: "Coches reportados en el periodo",
       empty: "En este periodo no hay coches reportados en esta línea",
+      loading: "Cargando coches reportados",
+      loadError: "No se han podido cargar los coches. Inténtalo de nuevo.",
     },
     carsReportedLabel: "coches reportados",
     fleetAdjustedScoreLabel: "Indicador Termo",
@@ -165,6 +167,7 @@ export const messages = {
       empty: "No hay coches con reportes en este rango",
       totalReports: "Reportes",
       reportedLines: "Líneas",
+      loadError: "No se ha podido cargar el historial. Inténtalo de nuevo.",
     },
     chartTakeaways: {
       trend: "El indicador combina calor, reportes efectivos y cobertura de flota con decaimiento temporal",

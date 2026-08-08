@@ -1,14 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { SOCIAL_IMAGE_TOKENS } from "@/lib/design/tokens";
-import { DEFAULT_LOCALE, isLocale } from "@/lib/i18n/config";
+import { isLocale } from "@/lib/i18n/config";
 import { messages as enMessages } from "@/lib/i18n/messages/en";
 import { messages as esMessages } from "@/lib/i18n/messages/es";
 
 export async function GET(request: NextRequest) {
   const requestedLocale = request.nextUrl.searchParams.get("lang") ?? undefined;
-  const locale = isLocale(requestedLocale) ? requestedLocale : DEFAULT_LOCALE;
+  const queryKeys = [...request.nextUrl.searchParams.keys()];
+  if (!isLocale(requestedLocale) || queryKeys.length !== 1 || queryKeys[0] !== "lang") {
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+  const locale = requestedLocale;
   const dictionary = locale === "en" ? enMessages : esMessages;
   const origin = request.nextUrl.origin;
 

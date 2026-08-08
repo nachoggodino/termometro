@@ -13,6 +13,7 @@ import { formatCarCode } from "@/lib/domain/reports";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatNumber, formatRelativeReportAge } from "@/lib/i18n/format";
+import type { TimeRange } from "@/lib/domain/ranges";
 
 type FleetSummary = LineSummary & {
   fleetWithoutAcPercentage: number;
@@ -99,22 +100,54 @@ function FleetCoverageSection({
 }
 
 export function LineDetailCards({
-  data,
   cards,
   dictionary,
   selectedLines,
   locale,
+  range,
+  carSeries,
 }: {
-  data: Pick<DashboardData, "lineSummaries" | "lineCarReports">;
-  cards?: LineSummary[];
+  cards: LineSummary[];
   dictionary: Dictionary;
   selectedLines: MetroLine[];
   locale: Locale;
+  range: TimeRange;
+  carSeries: number[];
 }) {
   const [activeLine, setActiveLine] = useState<MetroLine | null>(null);
-  const visibleSummaries = cards ?? data.lineSummaries.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
+  const [activeCars, setActiveCars] = useState<LineCarReportSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const carSeriesKey = carSeries.join(",");
+  const visibleSummaries = cards.filter((summary) => (selectedLines.length > 0 ? selectedLines.includes(summary.line) : summary.reports > 0));
   const reportSummaryCards = visibleSummaries.toSorted((a, b) => b.reports - a.reports || b.score - a.score);
-  const activeCars = activeLine ? data.lineCarReports.find((item) => item.line === activeLine) ?? null : null;
+
+  useEffect(() => {
+    if (!activeLine) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ linea: activeLine, rango: range });
+    if (carSeriesKey) params.set("serie", carSeriesKey);
+    fetch(`/api/dashboard/line?${params.toString()}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("line_detail_failed");
+        const payload = await response.json() as { summary: LineCarReportSummary };
+        setActiveCars(payload.summary);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setHasError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false);
+      });
+    return () => controller.abort();
+  }, [activeLine, carSeriesKey, range]);
+
+  function openLine(line: MetroLine) {
+    setActiveCars(null);
+    setIsLoading(true);
+    setHasError(false);
+    setActiveLine(line);
+  }
 
   return (
     <section className="scroll-mt-[13rem] pt-4" id="line-details">
@@ -128,10 +161,10 @@ export function LineDetailCards({
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
-                setActiveLine(summary.line);
+                openLine(summary.line);
               }
             }}
-            onClick={() => setActiveLine(summary.line)}
+            onClick={() => openLine(summary.line)}
             role="button"
             tabIndex={0}
           >
@@ -170,10 +203,12 @@ export function LineDetailCards({
         ))}
       </div>
 
-      {activeCars ? (
+      {activeLine ? (
         <LineCarsModal
           dictionary={dictionary}
-          line={activeCars.line}
+          hasError={hasError}
+          isLoading={isLoading}
+          line={activeLine}
           locale={locale}
           onClose={() => setActiveLine(null)}
           summary={activeCars}
@@ -189,12 +224,16 @@ function LineCarsModal({
   locale,
   onClose,
   summary,
+  isLoading,
+  hasError,
 }: {
   dictionary: Dictionary;
   line: MetroLine;
   locale: Locale;
   onClose: () => void;
-  summary: LineCarReportSummary;
+  summary: LineCarReportSummary | null;
+  isLoading: boolean;
+  hasError: boolean;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -218,6 +257,7 @@ function LineCarsModal({
   return (
     <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center overflow-hidden bg-foreground/30 px-4 py-6" onClick={onClose}>
       <section
+        aria-labelledby="line-cars-modal-title"
         aria-modal="true"
         className="max-h-[min(42rem,calc(100dvh-3rem))] w-[min(calc(100vw-2rem),28rem)] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-[var(--shadow-popover)]"
         onClick={(event) => event.stopPropagation()}
@@ -227,11 +267,11 @@ function LineCarsModal({
           <div>
             <div className="flex items-center gap-2">
               <LineBadge line={line} />
-              <h2 className="text-base font-semibold">{dictionary.explore.lineDetails.title}</h2>
+              <h2 className="text-base font-semibold" id="line-cars-modal-title">{dictionary.explore.lineDetails.title}</h2>
             </div>
             <p className="mt-2 text-sm text-muted">
               {dictionary.explore.lineDetails.totalCars}:{" "}
-              <span className="font-mono font-semibold text-foreground">{formatNumber(summary.totalCars, locale)}</span>
+              <span className="font-mono font-semibold text-foreground">{summary ? formatNumber(summary.totalCars, locale) : "—"}</span>
             </p>
           </div>
           <button
@@ -244,11 +284,18 @@ function LineCarsModal({
           </button>
         </div>
         <div className="max-h-[min(30rem,calc(100dvh-12rem))] overflow-y-auto overscroll-contain p-4">
-          {summary.cars.length > 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col gap-2" aria-label={dictionary.explore.lineDetails.loading} data-testid="line-detail-loading">
+              {Array.from({ length: 4 }, (_, index) => <div className="h-16 animate-pulse rounded-md bg-surface" key={index} />)}
+            </div>
+          ) : hasError ? (
+            <p className="rounded-md bg-surface p-3 text-sm text-danger">{dictionary.explore.lineDetails.loadError}</p>
+          ) : summary && summary.cars.length > 0 ? (
             <div className="flex flex-col gap-2">
               {summary.cars.map((car) => (
                 <button
                   className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border border-border bg-surface p-3 text-left transition duration-200 ease-out hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  data-testid="line-detail-car"
                   key={car.car}
                   onClick={() => openCarExplorer(car.car)}
                   type="button"

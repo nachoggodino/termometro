@@ -150,6 +150,8 @@ export const messages = {
       title: "Reported cars",
       totalCars: "Cars reported in the period",
       empty: "No reported cars in this line for this period",
+      loading: "Loading reported cars",
+      loadError: "The cars could not be loaded. Please try again.",
     },
     carsReportedLabel: "reported cars",
     fleetAdjustedScoreLabel: "Termo Indicator",
@@ -164,6 +166,7 @@ export const messages = {
       empty: "No cars have reports in this range",
       totalReports: "Reports",
       reportedLines: "Lines",
+      loadError: "The history could not be loaded. Please try again.",
     },
     chartTakeaways: {
       trend: "The indicator combines heat, effective reports, and fleet coverage with time decay",

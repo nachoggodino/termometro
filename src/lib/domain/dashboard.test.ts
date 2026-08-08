@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildDashboardData, getHeatEvolutionScore } from "./dashboard";
+import { buildCarExplorerSelection, buildDashboardData, getHeatEvolutionScore } from "./dashboard";
 import { METRO_LINES, type MetroLine } from "./lines";
 import type { Report } from "./reports";
 
@@ -27,7 +27,7 @@ describe("dashboard data", () => {
     expect(data.recentReports).toHaveLength(3);
   });
 
-  it("builds the car explorer default from the most reported car in the selected range", () => {
+  it("keeps car explorer options sparse and ordered for the selected range", () => {
     const data = buildDashboardData([
       report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-07-05T08:30:00Z") }),
       report({ id: "2", line: "L5", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T10:45:00Z") }),
@@ -35,24 +35,20 @@ describe("dashboard data", () => {
       report({ id: "4", line: "L1", state: "calor", car: "M1001", createdAt: new Date("2026-06-01T11:00:00Z") }),
     ], now, undefined, "today");
 
-    expect(data.carExplorer.defaultCar?.car).toBe("M1001");
-    expect(data.carExplorer.defaultCar?.reports).toBe(2);
-    expect(data.carExplorer.defaultCar?.lines).toEqual(["L1", "L5"]);
-    expect(data.carExplorer.defaultCar?.history).toHaveLength(24);
-    expect(data.carExplorer.defaultCar?.history.reduce((total, point) => total + point.reports, 0)).toBe(2);
     expect(data.carExplorer.options.map((option) => option.car)).toEqual(["M1001", "M2002"]);
   });
 
   it("keeps worst car totals aligned with car explorer totals", () => {
-    const data = buildDashboardData([
+    const reports = [
       report({ id: "1", line: "L1", state: "infierno", car: "M1001", createdAt: new Date("2026-07-05T08:30:00Z") }),
       report({ id: "2", line: "L5", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T10:45:00Z") }),
       report({ id: "3", line: "L1", state: "fresco", car: "M1001", createdAt: new Date("2026-07-05T11:15:00Z") }),
       report({ id: "4", line: "L2", state: "infierno", car: "M2002", createdAt: new Date("2026-07-05T11:30:00Z") }),
-    ], now, undefined, "today");
+    ];
+    const data = buildDashboardData(reports, now, undefined, "today");
 
     const worstCar = data.worstCars.find((car) => car.car === "M1001");
-    const explorerCar = data.carExplorer.selections.find((car) => car.car === "M1001");
+    const explorerCar = buildCarExplorerSelection("M1001", reports, now, "today", data.carExplorer.options);
 
     expect(worstCar?.reports).toBe(2);
     expect(worstCar?.totalReports).toBe(3);

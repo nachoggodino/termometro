@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createReportForRequest } from "@/lib/server/reports-repository";
+import { readBoundedJson } from "@/lib/server/request-json";
 import { parseReportInput } from "@/lib/domain/reports";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const parsed = parseReportInput(body);
+  const body = await readBoundedJson(request);
+  if (!body.ok) return NextResponse.json({ ok: false, reason: "invalid" }, { status: body.status });
+  const parsed = parseReportInput(body.value);
   if (!parsed.success) {
     return NextResponse.json({ ok: false, reason: "invalid" }, { status: 400 });
   }
@@ -17,6 +20,8 @@ export async function POST(request: Request) {
     const status = result.reason === "duplicate" ? 409 : result.reason === "rate_limited" ? 429 : result.reason === "server_error" ? 500 : 400;
     return NextResponse.json(result, { status });
   }
+
+  revalidateTag("reports", "max");
 
   return NextResponse.json({
     ok: true,

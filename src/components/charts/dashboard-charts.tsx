@@ -14,8 +14,8 @@ import {
   type TooltipContentProps,
 } from "recharts";
 import { ChevronDown, Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import { DASHBOARD_LIMITS, type DashboardData } from "@/lib/domain/dashboard";
+import { useEffect, useMemo, useState } from "react";
+import { DASHBOARD_LIMITS, type CarExplorerOption, type CarExplorerSelection, type CarSummary, type DashboardData } from "@/lib/domain/dashboard";
 import { CHART_TOKENS, SERIES_CHART_COLORS } from "@/lib/design/tokens";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { TimeRange } from "@/lib/domain/ranges";
@@ -248,12 +248,51 @@ export function WorstCarsExplorerChartCards({
   rangeLabel,
   selectedRange,
   initialCar,
+  lines,
+  carSeries,
 }: Omit<ChartModuleBaseProps, "selectedLines"> & {
-  data: Pick<DashboardData, "worstCars" | "carExplorer">;
+  data: { worstCars: CarSummary[]; carExplorer: { options: CarExplorerOption[] } };
   initialCar?: string | null;
+  lines: MetroLine[];
+  carSeries: number[];
 }) {
-  const initialSelectionCar: string | null = initialCar && data.carExplorer.selections.some((selection) => selection.car === initialCar) ? initialCar : data.carExplorer.defaultCar?.car ?? null;
+  const initialSelectionCar = initialCar ?? data.carExplorer.options[0]?.car ?? null;
   const [selectedCar, setSelectedCar] = useState(initialSelectionCar);
+  const [activeSelection, setActiveSelection] = useState<CarExplorerSelection | null>(null);
+  const [isChartPending, setIsChartPending] = useState(Boolean(initialSelectionCar));
+  const [loadError, setLoadError] = useState(false);
+  const [requestVersion, setRequestVersion] = useState(0);
+  const linesKey = lines.join(",");
+  const carSeriesKey = carSeries.join(",");
+
+  useEffect(() => {
+    if (!selectedCar) return;
+    const controller = new AbortController();
+    const params = new URLSearchParams({ coche: selectedCar, rango: selectedRange });
+    if (linesKey) params.set("linea", linesKey);
+    if (carSeriesKey) params.set("serie", carSeriesKey);
+    fetch(`/api/dashboard/car?${params.toString()}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("car_detail_failed");
+        const payload = await response.json() as { selection: CarExplorerSelection | null };
+        setActiveSelection(payload.selection);
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) setLoadError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsChartPending(false);
+      });
+    return () => controller.abort();
+  }, [carSeriesKey, linesKey, requestVersion, selectedCar, selectedRange]);
+
+  function selectCar(car: string) {
+    setActiveSelection(null);
+    setIsChartPending(true);
+    setLoadError(false);
+    setSelectedCar(car);
+    setRequestVersion((version) => version + 1);
+  }
 
   return (
     <>
@@ -271,7 +310,7 @@ export function WorstCarsExplorerChartCards({
           collapsedCount={DASHBOARD_LIMITS.worstCarCollapsedCount}
           expandedCount={DASHBOARD_LIMITS.worstCarCount}
           onSelectCar={(car) => {
-            setSelectedCar(car);
+            selectCar(car);
             window.requestAnimationFrame(() => {
               document.getElementById("car-explorer")?.scrollIntoView({ behavior: "smooth", block: "start" });
             });
@@ -291,7 +330,10 @@ export function WorstCarsExplorerChartCards({
           key={`${selectedRange}-${selectedCar ?? "none"}-${data.carExplorer.options.length}`}
           locale={locale}
           selectedCar={selectedCar}
-          onSelectCar={setSelectedCar}
+          activeSelection={activeSelection}
+          isChartPending={isChartPending}
+          loadError={loadError}
+          onSelectCar={selectCar}
           selectedRange={selectedRange}
         />
       </ChartCard>
@@ -386,22 +428,25 @@ function CarExplorer({
   selectedCar,
   onSelectCar,
   selectedRange,
+  activeSelection,
+  isChartPending,
+  loadError,
 }: {
-  data: Pick<DashboardData, "carExplorer">;
+  data: { carExplorer: { options: CarExplorerOption[] } };
   dictionary: Dictionary;
   locale: Locale;
   selectedCar: string | null;
   onSelectCar: (car: string) => void;
   selectedRange: TimeRange;
+  activeSelection: CarExplorerSelection | null;
+  isChartPending: boolean;
+  loadError: boolean;
 }) {
-  const defaultCar = data.carExplorer.defaultCar;
-  const activeCar = data.carExplorer.selections.some((selection) => selection.car === selectedCar) ? selectedCar : defaultCar?.car ?? null;
+  const activeCar = selectedCar ?? data.carExplorer.options[0]?.car ?? null;
   const [draftCar, setDraftCar] = useState(activeCar ? formatCarCode(activeCar) : "");
-  const [isChartPending, setIsChartPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const options = data.carExplorer.options;
-  const optionCars = useMemo(() => new Set(options.map((option) => option.car)), [options]);
-  const activeSelection = data.carExplorer.selections.find((selection) => selection.car === activeCar) ?? defaultCar;
+  const optionCars = useMemo(() => new Set([...options.map((option) => option.car), ...(activeCar ? [activeCar] : [])]), [activeCar, options]);
 
   function submitSelection() {
     const normalized = normalizeCarCode(draftCar);
@@ -412,14 +457,10 @@ function CarExplorer({
     setDraftCar(formatCarCode(normalized));
     setError(null);
     if (normalized === activeCar) return;
-    setIsChartPending(true);
-    window.setTimeout(() => {
-      onSelectCar(normalized);
-      setIsChartPending(false);
-    }, 180);
+    onSelectCar(normalized);
   }
 
-  if (!defaultCar) {
+  if (!activeCar) {
     return <p className="rounded-md bg-surface p-3 text-sm text-muted">{dictionary.explore.carExplorer.empty}</p>;
   }
 
@@ -459,8 +500,9 @@ function CarExplorer({
         </Button>
       </div>
       {error ? <p className="mt-2 text-[0.6875rem] font-semibold leading-4 text-danger">{error}</p> : null}
+      {loadError ? <p className="mt-2 rounded-md bg-surface p-3 text-sm text-danger">{dictionary.explore.carExplorer.loadError}</p> : null}
 
-      {activeSelection ? (
+      {isChartPending ? <CarExplorerChartSkeleton /> : activeSelection ? (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-md border border-border bg-surface p-3">
@@ -486,10 +528,7 @@ function CarExplorer({
               </div>
             </div>
           </div>
-          {isChartPending ? (
-            <CarExplorerChartSkeleton />
-          ) : (
-            <div className={`${CHART_TOKENS.moduleHeightClass} mt-4`}>
+          <div className={`${CHART_TOKENS.moduleHeightClass} mt-4`} data-testid="car-explorer-chart">
               <ResponsiveContainer height="100%" width="100%">
                 <BarChart data={activeSelection.history} margin={CHART_TOKENS.compactMargin}>
                   <CartesianGrid stroke="var(--border)" vertical={false} />
@@ -499,8 +538,7 @@ function CarExplorer({
                   <Bar animationDuration={CHART_TOKENS.animationDurationMs} dataKey="reports" fill="var(--accent)" name={dictionary.common.reports} radius={CHART_TOKENS.barRadius} />
                 </BarChart>
               </ResponsiveContainer>
-            </div>
-          )}
+          </div>
         </>
       ) : null}
     </div>
@@ -509,7 +547,7 @@ function CarExplorer({
 
 function CarExplorerChartSkeleton() {
   return (
-    <div className={`${CHART_TOKENS.moduleHeightClass} mt-4 rounded-md bg-surface p-3`}>
+    <div className={`${CHART_TOKENS.moduleHeightClass} mt-4 rounded-md bg-surface p-3`} data-testid="car-explorer-loading">
       <div className="flex h-full items-end gap-2">
         {Array.from({ length: 12 }, (_, index) => (
           <span
