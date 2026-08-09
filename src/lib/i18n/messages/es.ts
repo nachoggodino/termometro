@@ -57,8 +57,9 @@ export const messages = {
     line: "Línea",
     heatState: "Estado del aire acondicionado",
     car: "Coche",
-    carPlaceholder: "Ej. M1234, R-5469 o S3124",
-    carInvalid: "Usa M, R o S y 4 o 5 números, por ejemplo M1234, o deja el campo vacío",
+    carPlaceholder: "Ej. M2434, R-5469 o S3124",
+    carInvalid: "Usa M, R o S y 4 o 5 números, por ejemplo M2434, o deja el campo vacío",
+    carRetiredSeries: "La serie 1000 ya no está en circulación",
     carHelp: "Suele aparecer en una placa al inicio y final del vagón, o en los laterales de los trenes continuos. Si no lo encuentras, déjalo vacío",
     missingCar: {
       title: "¿Seguro que quieres enviar un reporte sin número de coche?",

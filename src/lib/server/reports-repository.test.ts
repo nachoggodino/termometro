@@ -69,6 +69,14 @@ describe("reports repository runtime safeguards", () => {
     expect(identifiedCar.ok).toBe(true);
   });
 
+  it("rejects retired series 1000 even when called below the API validation layer", async () => {
+    vi.stubEnv("TERMO_ALLOW_MEMORY_STORE", "1");
+
+    await expect(
+      createReportForRequest({ line: "L1", state: "calor", car: "M1234" }, null, new Date("2026-08-09T12:00:00Z")),
+    ).resolves.toEqual({ ok: false, reason: "retired_series" });
+  });
+
   it("limits request fingerprints to four reports in ten minutes", async () => {
     vi.stubEnv("TERMO_ALLOW_MEMORY_STORE", "1");
     vi.stubEnv("TERMO_ABUSE_SECRET", "test-abuse-secret");
@@ -77,10 +85,10 @@ describe("reports repository runtime safeguards", () => {
 
     const reports = await Promise.all(
       Array.from({ length: RATE_LIMIT_MAX_REPORTS }, (_, index) =>
-        createReportForRequest({ line: "L1", state: "calor", car: `M100${index}` }, fingerprint, now),
+        createReportForRequest({ line: "L1", state: "calor", car: `M200${index}` }, fingerprint, now),
       ),
     );
-    const limited = await createReportForRequest({ line: "L1", state: "calor", car: "M1009" }, fingerprint, now);
+    const limited = await createReportForRequest({ line: "L1", state: "calor", car: "M2009" }, fingerprint, now);
 
     expect(reports.every((report) => report.ok)).toBe(true);
     expect(limited).toEqual({ ok: false, reason: "rate_limited" });

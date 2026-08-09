@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { formatCarCode, isDuplicateCandidate, normalizeCarCode, parseReportInput } from "./reports";
+import {
+  formatCarCode,
+  isDuplicateCandidate,
+  isRetiredCarCode,
+  normalizeCarCode,
+  parseReportInput,
+  RETIRED_CAR_SERIES_REASON,
+} from "./reports";
 
 describe("report validation", () => {
   it("normalizes loose car codes", () => {
@@ -12,11 +19,26 @@ describe("report validation", () => {
   });
 
   it("parses valid report input", () => {
-    const parsed = parseReportInput({ line: "L1", state: "calor", car: "m1001" });
+    const parsed = parseReportInput({ line: "L1", state: "calor", car: "m2001" });
     expect(parsed.success).toBe(true);
     if (parsed.success) {
-      expect(parsed.data.car).toBe("M1001");
+      expect(parsed.data.car).toBe("M2001");
     }
+  });
+
+  it("rejects retired series 1000 car codes", () => {
+    for (const car of ["M1000", "R-1255", "S1999"]) {
+      const parsed = parseReportInput({ line: "L1", state: "calor", car });
+      expect(parsed.success).toBe(false);
+      if (!parsed.success) {
+        expect(parsed.error.issues.some((issue) => issue.message === RETIRED_CAR_SERIES_REASON)).toBe(true);
+      }
+      expect(isRetiredCarCode(car)).toBe(true);
+    }
+
+    expect(isRetiredCarCode("M2000")).toBe(false);
+    expect(parseReportInput({ line: "L1", state: "calor", car: "M2000" }).success).toBe(true);
+    expect(parseReportInput({ line: "L1", state: "calor", car: "M4000" }).success).toBe(true);
   });
 
   it("accepts omitted or null optional car input", () => {
@@ -41,8 +63,8 @@ describe("report validation", () => {
     const now = new Date("2026-07-05T12:00:00Z");
     expect(
       isDuplicateCandidate(
-        { line: "L1", state: "calor", car: "M1001" },
-        { id: "1", line: "L1", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T11:55:00Z") },
+        { line: "L1", state: "calor", car: "M2001" },
+        { id: "1", line: "L1", state: "calor", car: "M2001", createdAt: new Date("2026-07-05T11:55:00Z") },
         now,
       ),
     ).toBe(true);
@@ -74,8 +96,8 @@ describe("report validation", () => {
     const now = new Date("2026-07-05T12:00:00Z");
     expect(
       isDuplicateCandidate(
-        { line: "L1", state: "calor", car: "M1001" },
-        { id: "1", line: "L1", state: "calor", car: "M1001", createdAt: new Date("2026-07-05T11:30:00Z") },
+        { line: "L1", state: "calor", car: "M2001" },
+        { id: "1", line: "L1", state: "calor", car: "M2001", createdAt: new Date("2026-07-05T11:30:00Z") },
         now,
       ),
     ).toBe(false);

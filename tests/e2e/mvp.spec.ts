@@ -21,7 +21,7 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await page.goto("/es/reportar");
 
   await expect(page.getByRole("heading", { name: "Reportar" })).toBeVisible();
-  await page.getByPlaceholder("Ej. M1234, R-5469 o S3124").fill(car);
+  await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill(car);
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
 
@@ -47,9 +47,21 @@ function getUniqueTestCar(projectName: string) {
 test("report flow blocks invalid car codes", async ({ page }) => {
   await page.goto("/es/reportar");
 
-  await page.getByPlaceholder("Ej. M1234, R-5469 o S3124").fill("Z1234");
+  await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill("Z1234");
   await expect(page.getByText("Usa M, R o S y 4 o 5 números")).toBeVisible();
   await expect(page.getByTestId("submit-report")).toBeDisabled();
+});
+
+test("report flow blocks retired series 1000", async ({ page }, testInfo) => {
+  await page.goto("/es/reportar");
+
+  await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill("M1234");
+  await expect(page.getByText("La serie 1000 ya no está en circulación")).toBeVisible();
+  await expect(page.getByTestId("submit-report")).toBeDisabled();
+  await page.screenshot({
+    fullPage: true,
+    path: `/tmp/termo-${testInfo.project.name}-retired-series.png`,
+  });
 });
 
 test("report flow confirms a missing car and can return focus to the car field", async ({ page }) => {
@@ -69,7 +81,7 @@ test("report flow confirms a missing car and can return focus to the car field",
   const dialog = page.getByRole("dialog", { name: "¿Seguro que quieres enviar un reporte sin número de coche?" });
   await expect(dialog).toBeVisible();
   await dialog.getByRole("button", { name: "Añadir coche" }).click();
-  await expect(page.getByPlaceholder("Ej. M1234, R-5469 o S3124")).toBeFocused();
+  await expect(page.getByPlaceholder("Ej. M2434, R-5469 o S3124")).toBeFocused();
 
   await page.getByTestId("submit-report").click();
   await expect(dialog).toBeVisible();
