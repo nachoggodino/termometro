@@ -22,6 +22,16 @@ begin
 end;
 $$;
 
+alter function public.dashboard_bucket_counts_v2(timestamptz, timestamptz, integer, text[], integer[]) set search_path = '';
+alter function public.dashboard_car_summaries_v2(timestamptz, timestamptz, text[], integer[], text) set search_path = '';
+alter function public.dashboard_car_histories_v2(timestamptz, timestamptz, integer, text[], integer[], text) set search_path = '';
+alter function public.dashboard_car_series_v2(timestamptz, timestamptz, text[], integer[]) set search_path = '';
+alter function public.dashboard_worst_hours_v2(timestamptz, timestamptz, text[], integer[]) set search_path = '';
+alter function public.dashboard_line_car_reports_v2(timestamptz, timestamptz, text[], integer[]) set search_path = '';
+alter function public.dashboard_line_summaries_v2(timestamptz, timestamptz, timestamptz, text[], integer[], timestamptz) set search_path = '';
+alter function public.dashboard_heat_trend_v2(timestamptz, timestamptz, timestamptz, integer, text[], integer[], timestamptz) set search_path = '';
+alter function public.dashboard_home_snapshot(timestamptz, timestamptz, integer) set search_path = '';
+
 drop function public.dashboard_line_summaries(timestamptz, timestamptz, timestamptz, text[], timestamptz);
 drop function public.dashboard_bucket_counts(timestamptz, timestamptz, integer, text[]);
 drop function public.dashboard_car_summaries(timestamptz, timestamptz, text[]);
