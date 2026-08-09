@@ -16,6 +16,8 @@ export const NO_CAR_ORIGIN_WINDOW_MINUTES = 30;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
 export const RATE_LIMIT_MAX_REPORTS = 4;
 export const UNDO_WINDOW_SECONDS = 90;
+export const RETIRED_CAR_SERIES = 1000;
+export const RETIRED_CAR_SERIES_REASON = "retired_series";
 
 export const reportInputSchema = z.object({
   line: z.string().refine(isMetroLine),
@@ -36,6 +38,14 @@ export const reportInputSchema = z.object({
         return z.NEVER;
       }
 
+      if (isRetiredCarCode(normalized)) {
+        context.addIssue({
+          code: "custom",
+          message: RETIRED_CAR_SERIES_REASON,
+        });
+        return z.NEVER;
+      }
+
       return normalized;
     }),
 });
@@ -50,6 +60,13 @@ export function normalizeCarCode(value: string) {
   const normalized = trimmed.toUpperCase().replace("-", "");
   if (!CAR_CODE_PATTERN.test(normalized)) return null;
   return normalized;
+}
+
+export function isRetiredCarCode(value: string) {
+  const normalized = normalizeCarCode(value);
+  if (!normalized) return false;
+  const numericCode = Number.parseInt(normalized.slice(1), 10);
+  return Math.floor(numericCode / 1000) * 1000 === RETIRED_CAR_SERIES;
 }
 
 export function formatCarCode(value: string) {

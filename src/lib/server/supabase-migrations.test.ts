@@ -82,6 +82,24 @@ describe("Supabase migration contracts", () => {
     expect(hardeningMigration).not.toContain("grant select (id, line, car, state, created_at, abuse_key");
   });
 
+  it("blocks retired series 1000 in inventory, reports, and the creation RPC", () => {
+    const retiredSeriesMigration = readFileSync(
+      join(root, "supabase/migrations/20260809212720_block_series_1000_reports.sql"),
+      "utf8",
+    );
+
+    expect(retiredSeriesMigration).toContain("reports_car_series_1000_retired_check");
+    expect(retiredSeriesMigration).toContain("cars_active_series_1000_retired_check");
+    expect(retiredSeriesMigration).toContain("between 1000 and 1999");
+    expect(retiredSeriesMigration).toContain("'retired_series'::text");
+    expect(retiredSeriesMigration).toContain("hidden_at is not null");
+    expect(retiredSeriesMigration).toContain("not active");
+    expect(retiredSeriesMigration).toContain("grant execute on function public.create_report");
+    expect(retiredSeriesMigration.indexOf("'retired_series'::text")).toBeLessThan(
+      retiredSeriesMigration.indexOf("insert into public.reports"),
+    );
+  });
+
   it("adds the optimized dashboard path without removing the current production path", () => {
     const expansion = readFileSync(join(root, "supabase/migrations/20260806001521_expand_dashboard_database_cpu.sql"), "utf8");
     const backfill = readFileSync(join(root, "supabase/migrations/20260806093759_backfill_dashboard_database_cpu.sql"), "utf8");
@@ -106,12 +124,13 @@ describe("Supabase migration contracts", () => {
     expect(expansion).not.toContain('drop policy if exists "Public reports are readable"');
   });
 
-  it("keeps destructive cleanup deferred and guarded", () => {
-    const cleanup = readFileSync(join(root, "supabase/deferred-migrations/cleanup_dashboard_database_cpu.sql"), "utf8");
+  it("applies the guarded cleanup after the compatibility window", () => {
+    const cleanup = readFileSync(join(root, "supabase/migrations/20260809213453_cleanup_dashboard_database_cpu.sql"), "utf8");
 
-    expect(readdirSync(join(root, "supabase/migrations")).some((file) => file.includes("cleanup_dashboard_database_cpu"))).toBe(false);
+    expect(readdirSync(join(root, "supabase/migrations")).some((file) => file.includes("cleanup_dashboard_database_cpu"))).toBe(true);
     expect(cleanup).toContain("Dashboard V2 expansion is incomplete; cleanup aborted");
     expect(cleanup).toContain("private.dashboard_migration_state");
+    expect(cleanup.match(/set search_path = ''/g)).toHaveLength(9);
     expect(cleanup).toContain("drop function public.dashboard_line_summaries");
     expect(cleanup).toContain("revoke select (id, line, car, state, created_at, hidden_at) on public.reports");
     expect(cleanup).toContain('drop policy if exists "Public reports are readable"');

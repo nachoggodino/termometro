@@ -29,7 +29,7 @@ describe("report controls", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
-        json: () => Promise.resolve({ suggestions: ["M1001"] }),
+        json: () => Promise.resolve({ suggestions: ["M2001"] }),
       }),
     );
   });
@@ -68,12 +68,23 @@ describe("report controls", () => {
     expect(screen.getByTestId("submit-report")).toBeDisabled();
   });
 
+  it("blocks retired series 1000 with the dedicated message", async () => {
+    const user = userEvent.setup();
+
+    render(<ReportForm dictionary={esMessages} locale="es" />);
+
+    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "M1234");
+
+    expect(screen.getByText("La serie 1000 ya no está en circulación")).toBeVisible();
+    expect(screen.getByTestId("submit-report")).toBeDisabled();
+  });
+
   it("submits normalized car codes", async () => {
     const user = userEvent.setup();
     const fetch = vi
       .fn()
       .mockResolvedValueOnce({
-        json: () => Promise.resolve({ suggestions: ["M1001"] }),
+        json: () => Promise.resolve({ suggestions: ["M2001"] }),
       })
       .mockResolvedValueOnce({
         json: () => Promise.resolve({ ok: true, report: { id: "report-1" }, undoToken: "undo-1" }),
@@ -82,13 +93,13 @@ describe("report controls", () => {
 
     render(<ReportForm dictionary={esMessages} locale="es" />);
 
-    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "m-1234");
+    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "m-2234");
     await user.click(screen.getByTestId("submit-report"));
 
     expect(fetch).toHaveBeenLastCalledWith(
       "/api/reports",
       expect.objectContaining({
-        body: JSON.stringify({ line: "L1", state: "calor", car: "M1234" }),
+        body: JSON.stringify({ line: "L1", state: "calor", car: "M2234" }),
       }),
     );
     expect(toastMock.success).toHaveBeenCalledWith(esMessages.reportForm.success, expect.any(Object));
@@ -97,7 +108,7 @@ describe("report controls", () => {
   it("asks for confirmation before submitting without a car and returns focus to the field", async () => {
     const user = userEvent.setup();
     const fetch = vi.fn().mockResolvedValue({
-      json: () => Promise.resolve({ suggestions: ["M1001"] }),
+      json: () => Promise.resolve({ suggestions: ["M2001"] }),
     });
     vi.stubGlobal("fetch", fetch);
 
@@ -119,7 +130,7 @@ describe("report controls", () => {
     const fetch = vi
       .fn()
       .mockResolvedValueOnce({
-        json: () => Promise.resolve({ suggestions: ["M1001"] }),
+        json: () => Promise.resolve({ suggestions: ["M2001"] }),
       })
       .mockResolvedValueOnce({
         json: () => Promise.resolve({ ok: true, report: { id: "report-1" }, undoToken: "undo-1" }),
@@ -148,7 +159,7 @@ describe("report controls", () => {
       vi
         .fn()
         .mockResolvedValueOnce({
-          json: () => Promise.resolve({ suggestions: ["M1001"] }),
+          json: () => Promise.resolve({ suggestions: ["M2001"] }),
         })
         .mockRejectedValueOnce(new Error("network failed")),
     );

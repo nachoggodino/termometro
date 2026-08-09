@@ -4,6 +4,7 @@ import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
   DUPLICATE_WINDOW_MINUTES,
   isDuplicateCandidate,
+  isRetiredCarCode,
   NO_CAR_ORIGIN_WINDOW_MINUTES,
   RATE_LIMIT_MAX_REPORTS,
   type Report,
@@ -26,7 +27,7 @@ import { seedReports } from "./seed-data";
 
 type CreateResult =
   | { ok: true; report: Report; undoToken: string }
-  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" };
+  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" | "retired_series" };
 
 type CreateReportRpcRow = {
   ok: boolean;
@@ -192,6 +193,10 @@ export async function createReportForRequest(
   fingerprint: RequestFingerprint | Request | null,
   now = new Date(),
 ): Promise<CreateResult> {
+  if (input.car && isRetiredCarCode(input.car)) {
+    return { ok: false, reason: "retired_series" };
+  }
+
   const requestFingerprint = fingerprint instanceof Request ? getRequestFingerprint(fingerprint) : fingerprint;
   const abuseKey = requestFingerprint ? createAbuseKey(requestFingerprint) : null;
   const undoToken = createUndoToken();
@@ -252,7 +257,7 @@ export async function createReportForRequest(
   if (error) throw error;
   const data = rpcData as CreateReportRpcRow;
   if (!data.ok) {
-    return { ok: false, reason: data.reason as "duplicate" | "rate_limited" };
+    return { ok: false, reason: data.reason as "duplicate" | "invalid" | "rate_limited" | "retired_series" };
   }
 
   if (!data.id || !data.line || !data.state || !data.created_at) {

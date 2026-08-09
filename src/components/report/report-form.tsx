@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { FEEDBACK_TOKENS } from "@/lib/design/tokens";
-import { formatCarCode, normalizeCarCode } from "@/lib/domain/reports";
+import { formatCarCode, isRetiredCarCode, normalizeCarCode } from "@/lib/domain/reports";
 import type { HeatState } from "@/lib/domain/heat";
 import type { MetroLine } from "@/lib/domain/lines";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
@@ -15,7 +15,7 @@ import type { Locale } from "@/lib/i18n/config";
 import { HeatSelector } from "./heat-selector";
 import { LinePicker } from "./line-picker";
 
-type ApiErrorReason = "duplicate" | "invalid" | "rate_limited" | "server_error";
+type ApiErrorReason = "duplicate" | "invalid" | "rate_limited" | "retired_series" | "server_error";
 
 type ApiResponse =
   | { ok: true; report: { id: string }; undoToken: string }
@@ -50,11 +50,19 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
 
   const submitLabel = dictionary.reportForm.submit[state];
   const normalizedCar = useMemo(() => normalizeCarCode(car), [car]);
+  const retiredCarSeries = Boolean(normalizedCar && isRetiredCarCode(normalizedCar));
+  const carError = car
+    ? !normalizedCar
+      ? dictionary.reportForm.carInvalid
+      : retiredCarSeries
+        ? dictionary.reportForm.carRetiredSeries
+        : null
+    : null;
   const busy = submitting || pending;
 
   function requestSubmission() {
-    if (car && !normalizedCar) {
-      toast(dictionary.reportForm.carInvalid);
+    if (carError) {
+      toast(carError);
       return;
     }
 
@@ -130,7 +138,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
             <option key={suggestion} value={formatCarCode(suggestion)} />
           ))}
         </datalist>
-        {car && !normalizedCar ? <span className="text-sm text-danger">{dictionary.reportForm.carInvalid}</span> : null}
+        {carError ? <span className="text-sm text-danger">{carError}</span> : null}
       </label>
 
       <p className="flex items-start gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[0.6875rem] leading-4 text-muted/85">
@@ -141,7 +149,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       <Button
         className="home-report-action report-submit-action relative min-h-12 overflow-hidden"
         data-testid="submit-report"
-        disabled={busy || Boolean(car && !normalizedCar)}
+        disabled={busy || Boolean(carError)}
         onClick={requestSubmission}
         style={submitStyle(state)}
         type="button"
@@ -211,6 +219,7 @@ function closeDialog(dialog: HTMLDialogElement | null) {
 function getSubmissionErrorMessage(reason: ApiErrorReason, dictionary: Dictionary) {
   if (reason === "duplicate") return dictionary.reportForm.duplicate;
   if (reason === "rate_limited") return dictionary.reportForm.rateLimited;
+  if (reason === "retired_series") return dictionary.reportForm.carRetiredSeries;
   if (reason === "invalid") return dictionary.reportForm.invalid;
   return dictionary.reportForm.submitFailed;
 }

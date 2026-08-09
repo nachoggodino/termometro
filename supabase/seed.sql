@@ -17,8 +17,8 @@ on conflict (line) do update set
   updated_at = now();
 
 insert into public.cars (code, line, verified, source) values
-  ('M1001', 'L1', false, 'development seed'),
-  ('M1004', 'L1', false, 'development seed'),
+  ('M2001', 'L1', false, 'development seed'),
+  ('M2004', 'L1', false, 'development seed'),
   ('R2401', 'L1', false, 'development seed'),
   ('M5002', 'L5', false, 'development seed'),
   ('R5300', 'L5', false, 'development seed'),
