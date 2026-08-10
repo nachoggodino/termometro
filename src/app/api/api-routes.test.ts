@@ -122,7 +122,7 @@ describe("API routes", () => {
     const response = await GET(new Request("https://termo.test/api/dashboard/car?coche=M-1234&rango=month&linea=L5,L5&serie=2000"));
 
     expect(response.status).toBe(200);
-    expect(dashboardMock.getCachedCarDetail).toHaveBeenCalledWith("month", "L5", "2000", "M1234");
+    expect(dashboardMock.getCachedCarDetail).toHaveBeenCalledWith("month", "L5", "2000", "M1234", "es");
   });
 
   it("rejects invalid line detail requests before querying", async () => {

@@ -2,19 +2,23 @@ import { NextResponse } from "next/server";
 import { parseDashboardRange, parseSelectedCarSeries, parseSelectedLines } from "@/lib/domain/dashboard-query";
 import { normalizeCarCode } from "@/lib/domain/reports";
 import { getCachedCarDetail, normalizeDashboardCacheKey } from "@/lib/server/dashboard-cache";
-
+import { isLocale } from "@/lib/i18n/config";
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const car = normalizeCarCode(params.get("coche") ?? "");
   if (!car) return NextResponse.json({ selection: null, reason: "invalid" }, { status: 400 });
-
+  
+  const lang = params.get("lang") ?? "es";
+  if (!isLocale(lang)) {
+    return NextResponse.json({ selection: null, reason: "invalid_locale" }, { status: 400 });
+  }
   const key = normalizeDashboardCacheKey({
     range: parseDashboardRange(params.get("rango")),
     lines: parseSelectedLines(params.get("linea")),
     carSeries: parseSelectedCarSeries(params.get("serie")),
   });
   try {
-    const selection = await getCachedCarDetail(key.rangeKey, key.linesKey, key.carSeriesKey, car);
+    const selection = await getCachedCarDetail(key.rangeKey, key.linesKey, key.carSeriesKey, car, lang);
     return NextResponse.json({ selection }, { status: selection ? 200 : 404 });
   } catch (error) {
     console.error("Failed to load car dashboard detail", error);

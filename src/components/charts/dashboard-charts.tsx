@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { HeatReportCounts } from "@/components/report/heat-report-counts";
 import { ChartCard } from "./chart-card";
 
+
 type ChartModuleBaseProps = {
   dictionary: Dictionary;
   locale: Locale;
@@ -268,7 +269,7 @@ export function WorstCarsExplorerChartCards({
   useEffect(() => {
     if (!selectedCar) return;
     const controller = new AbortController();
-    const params = new URLSearchParams({ coche: selectedCar, rango: selectedRange });
+    const params = new URLSearchParams({ coche: selectedCar, rango: selectedRange, lang: locale });
     if (linesKey) params.set("linea", linesKey);
     if (carSeriesKey) params.set("serie", carSeriesKey);
     fetch(`/api/dashboard/car?${params.toString()}`, { signal: controller.signal })
@@ -284,7 +285,7 @@ export function WorstCarsExplorerChartCards({
         if (!controller.signal.aborted) setIsChartPending(false);
       });
     return () => controller.abort();
-  }, [carSeriesKey, linesKey, requestVersion, selectedCar, selectedRange]);
+  }, [carSeriesKey, linesKey, locale, requestVersion, selectedCar, selectedRange]);
 
   function selectCar(car: string) {
     setActiveSelection(null);

@@ -19,11 +19,13 @@ import { getAgreement, getConfidence, getHeatTone, type Confidence, type HeatInd
 import { isMetroLine, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import { getMemoryCarDetail, getMemoryDashboard, getSupabase } from "./reports-repository";
+import type { Locale } from "@/lib/i18n/config";
 
 export type DashboardModuleSearch = {
   range: DashboardRange;
   lines: MetroLine[];
   carSeries?: number[];
+  locale?: Locale;
 };
 
 export type LineEvolutionModuleData = Pick<DashboardData, "lineEvolution">;
@@ -104,13 +106,13 @@ type LineCarReportRow = {
 export async function getLineEvolutionModule(search: DashboardModuleSearch, now = new Date()): Promise<LineEvolutionModuleData> {
   const rows = await getBucketCountRows(search, now, "chart");
   if (!rows) return { lineEvolution: (await getFallbackDashboard(search, now)).lineEvolution };
-  return { lineEvolution: buildLineEvolutionFromRows(rows, now, search.range) };
+  return { lineEvolution: buildLineEvolutionFromRows(rows, now, search.range, search.locale ?? "es") };
 }
 
 export async function getTotalReportsModule(search: DashboardModuleSearch, now = new Date()): Promise<TotalReportsModuleData> {
   const rows = await getBucketCountRows(search, now, "day");
   if (!rows) return { totalReportsTrend: (await getFallbackDashboard(search, now)).totalReportsTrend };
-  return { totalReportsTrend: buildTotalReportsFromRows(rows, now, search.range) };
+  return { totalReportsTrend: buildTotalReportsFromRows(rows, now, search.range, search.locale ?? "es") };
 }
 
 export async function getLineSummariesModule(search: DashboardModuleSearch, now = new Date()): Promise<LineSummariesModuleData> {
@@ -208,7 +210,7 @@ export async function getLineDetailsModule(search: DashboardModuleSearch, now = 
 }
 
 const getFallbackDashboard = cache(async function getFallbackDashboard(search: DashboardModuleSearch, now: Date) {
-  return getMemoryDashboard({ range: search.range, lines: search.lines.length ? search.lines : null, carSeries: search.carSeries, now });
+  return getMemoryDashboard({ range: search.range, lines: search.lines.length ? search.lines : null, carSeries: search.carSeries, now, locale: search.locale ?? "es" });
 });
 
 const getBucketCountRows = cache(async function getBucketCountRows(search: DashboardModuleSearch, now: Date, bucketKind: "chart" | "day") {
@@ -305,7 +307,7 @@ async function getSqlHeatTrend(search: DashboardModuleSearch, now: Date) {
     heatCounts.set(bucketKey, lineCounts);
   }
   const reportCounts = buildBucketLineCountMap(bucketRows);
-  return buildDashboardBuckets(now, search.range).map((bucket): TrendPoint => {
+  return buildDashboardBuckets(now, search.range, search.locale ?? "es").map((bucket): TrendPoint => {
     const point: TrendPoint = {
       label: bucket.label,
       reports: sumLineCounts(reportCounts.get(bucket.start.getTime())),
@@ -319,9 +321,9 @@ async function getSqlHeatTrend(search: DashboardModuleSearch, now: Date) {
 
 export async function getCarDetailModule(search: DashboardModuleSearch, car: string, now = new Date()): Promise<CarExplorerSelection | null> {
   const supabase = getSupabase();
-  const buckets = buildDashboardBuckets(now, search.range);
+  const buckets = buildDashboardBuckets(now, search.range, search.locale ?? "es");
   if (!supabase) {
-    return getMemoryCarDetail({ range: search.range, lines: search.lines, carSeries: search.carSeries, car, now });
+    return getMemoryCarDetail({ range: search.range, lines: search.lines, carSeries: search.carSeries, car, now, locale: search.locale ?? "es" });
   }
   const window = getRangeWindow(search.range, now);
   const [summaryResult, historyResult] = await Promise.all([
@@ -359,9 +361,9 @@ export async function getCarDetailModule(search: DashboardModuleSearch, car: str
   };
 }
 
-function buildLineEvolutionFromRows(rows: BucketCountRow[], now: Date, range: DashboardRange): LineEvolutionPoint[] {
+function buildLineEvolutionFromRows(rows: BucketCountRow[], now: Date, range: DashboardRange, locale: Locale): LineEvolutionPoint[] {
   const counts = buildBucketLineCountMap(rows);
-  return buildDashboardBuckets(now, range).map((bucket) => {
+  return buildDashboardBuckets(now, range, locale).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };
     for (const line of METRO_LINES) {
       point[line] = counts.get(bucket.start.getTime())?.get(line) ?? 0;
@@ -370,9 +372,9 @@ function buildLineEvolutionFromRows(rows: BucketCountRow[], now: Date, range: Da
   });
 }
 
-function buildTotalReportsFromRows(rows: BucketCountRow[], now: Date, range: DashboardRange): TotalReportsPoint[] {
+function buildTotalReportsFromRows(rows: BucketCountRow[], now: Date, range: DashboardRange, locale: Locale): TotalReportsPoint[] {
   const counts = buildBucketLineCountMap(rows);
-  return buildDashboardDayBuckets(now, range).map((bucket) => ({
+  return buildDashboardDayBuckets(now, range, locale).map((bucket) => ({
     label: bucket.label,
     reports: sumLineCounts(counts.get(bucket.start.getTime())),
   }));
