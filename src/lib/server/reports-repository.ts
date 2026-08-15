@@ -1,13 +1,15 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { buildCarExplorerSelection, buildDashboardData, DASHBOARD_LIMITS, DASHBOARD_TIME, getCarSeries } from "@/lib/domain/dashboard";
+import { getCarSeries, isCarAllowedOnLine } from "@/lib/domain/cars";
+import { buildCarExplorerSelection, buildDashboardData, DASHBOARD_LIMITS, DASHBOARD_TIME } from "@/lib/domain/dashboard";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
+  CAR_NOT_ON_LINE_REASON,
   DUPLICATE_WINDOW_MINUTES,
   isDuplicateCandidate,
-  isRetiredCarCode,
   NO_CAR_ORIGIN_WINDOW_MINUTES,
   RATE_LIMIT_MAX_REPORTS,
   type Report,
+  type ReportCreateFailureReason,
   type ReportInput,
 } from "@/lib/domain/reports";
 import { ESTIMATED_TOTAL_CARS } from "@/lib/domain/fleet-estimates";
@@ -27,7 +29,7 @@ import { seedReports } from "./seed-data";
 
 type CreateResult =
   | { ok: true; report: Report; undoToken: string }
-  | { ok: false; reason: "duplicate" | "invalid" | "rate_limited" | "retired_series" };
+  | { ok: false; reason: ReportCreateFailureReason };
 
 type CreateReportRpcRow = {
   ok: boolean;
@@ -193,8 +195,8 @@ export async function createReportForRequest(
   fingerprint: RequestFingerprint | Request | null,
   now = new Date(),
 ): Promise<CreateResult> {
-  if (input.car && isRetiredCarCode(input.car)) {
-    return { ok: false, reason: "retired_series" };
+  if (input.car && !isCarAllowedOnLine(input.car, input.line)) {
+    return { ok: false, reason: CAR_NOT_ON_LINE_REASON };
   }
 
   const requestFingerprint = fingerprint instanceof Request ? getRequestFingerprint(fingerprint) : fingerprint;
@@ -257,7 +259,7 @@ export async function createReportForRequest(
   if (error) throw error;
   const data = rpcData as CreateReportRpcRow;
   if (!data.ok) {
-    return { ok: false, reason: data.reason as "duplicate" | "invalid" | "rate_limited" | "retired_series" };
+    return { ok: false, reason: data.reason as ReportCreateFailureReason };
   }
 
   if (!data.id || !data.line || !data.state || !data.created_at) {

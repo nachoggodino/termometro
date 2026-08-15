@@ -98,20 +98,20 @@ describe("API routes", () => {
     expect(repositoryMock.createReportForRequest).not.toHaveBeenCalled();
   });
 
-  it("rejects retired series 1000 before reaching the repository", async () => {
+  it("rejects cars that do not exist on the selected line before reaching the repository", async () => {
     const { POST } = await import("./reports/route");
 
     const response = await POST(
       new Request("https://termo.test/api/reports", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ line: "L1", state: "calor", car: "M1234" }),
+        body: JSON.stringify({ line: "L1", state: "calor", car: "M3000" }),
       }),
     );
     const payload = await response.json();
 
     expect(response.status).toBe(400);
-    expect(payload).toEqual({ ok: false, reason: "retired_series" });
+    expect(payload).toEqual({ ok: false, reason: "car_not_on_line" });
     expect(repositoryMock.createReportForRequest).not.toHaveBeenCalled();
   });
 

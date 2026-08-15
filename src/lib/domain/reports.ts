@@ -1,6 +1,9 @@
 import { z } from "zod";
+import { isCarAllowedOnLine, normalizeCarCode } from "./cars";
 import { isHeatState, type HeatState } from "./heat";
 import { isMetroLine, type MetroLine } from "./lines";
+
+export { formatCarCode, normalizeCarCode } from "./cars";
 
 export type Report = {
   id: string;
@@ -16,64 +19,48 @@ export const NO_CAR_ORIGIN_WINDOW_MINUTES = 30;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
 export const RATE_LIMIT_MAX_REPORTS = 4;
 export const UNDO_WINDOW_SECONDS = 90;
-export const RETIRED_CAR_SERIES = 1000;
-export const RETIRED_CAR_SERIES_REASON = "retired_series";
+export const CAR_NOT_ON_LINE_REASON = "car_not_on_line";
 
-export const reportInputSchema = z.object({
-  line: z.string().refine(isMetroLine),
-  state: z.string().refine(isHeatState),
-  car: z
-    .union([z.string().trim().max(12), z.null()])
-    .optional()
-    .transform((value, context) => {
-      const raw = value ?? "";
-      if (!raw.trim()) return null;
+export type ReportCreateFailureReason = "duplicate" | "invalid" | "rate_limited" | typeof CAR_NOT_ON_LINE_REASON;
 
-      const normalized = normalizeCarCode(raw);
-      if (!normalized) {
-        context.addIssue({
-          code: "custom",
-          message: "Invalid car code",
-        });
-        return z.NEVER;
-      }
+export const reportInputSchema = z
+  .object({
+    line: z.string().refine(isMetroLine),
+    state: z.string().refine(isHeatState),
+    car: z
+      .union([z.string().trim().max(12), z.null()])
+      .optional()
+      .transform((value, context) => {
+        const raw = value ?? "";
+        if (!raw.trim()) return null;
 
-      if (isRetiredCarCode(normalized)) {
-        context.addIssue({
-          code: "custom",
-          message: RETIRED_CAR_SERIES_REASON,
-        });
-        return z.NEVER;
-      }
+        const normalized = normalizeCarCode(raw);
+        if (!normalized) {
+          context.addIssue({
+            code: "custom",
+            message: "Invalid car code",
+          });
+          return z.NEVER;
+        }
 
-      return normalized;
-    }),
-});
+        return normalized;
+      }),
+  })
+  .superRefine((input, context) => {
+    if (input.car && !isCarAllowedOnLine(input.car, input.line)) {
+      context.addIssue({
+        code: "custom",
+        message: CAR_NOT_ON_LINE_REASON,
+        path: ["car"],
+      });
+    }
+  });
+
+export function getReportInputErrorReason(error: z.ZodError): ReportCreateFailureReason {
+  return error.issues.some((issue) => issue.message === CAR_NOT_ON_LINE_REASON) ? CAR_NOT_ON_LINE_REASON : "invalid";
+}
 
 export type ReportInput = z.infer<typeof reportInputSchema>;
-
-const CAR_CODE_PATTERN = /^[mrs]-?\d{4,5}$/i;
-
-export function normalizeCarCode(value: string) {
-  const trimmed = value.trim().replace(/\s+/g, "");
-  if (!trimmed) return null;
-  const normalized = trimmed.toUpperCase().replace("-", "");
-  if (!CAR_CODE_PATTERN.test(normalized)) return null;
-  return normalized;
-}
-
-export function isRetiredCarCode(value: string) {
-  const normalized = normalizeCarCode(value);
-  if (!normalized) return false;
-  const numericCode = Number.parseInt(normalized.slice(1), 10);
-  return Math.floor(numericCode / 1000) * 1000 === RETIRED_CAR_SERIES;
-}
-
-export function formatCarCode(value: string) {
-  const normalized = normalizeCarCode(value);
-  if (!normalized) return value;
-  return `${normalized[0]}-${normalized.slice(1)}`;
-}
 
 export function parseReportInput(input: unknown) {
   return reportInputSchema.safeParse(input);

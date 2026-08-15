@@ -4,7 +4,7 @@ import type { Report } from "@/lib/domain/reports";
 
 const now = new Date();
 
-const hotCars = ["M2001", "M2004", "R2401", "M2732", "R4110"];
+const hotCars = ["M2001", "M2004", "R2401", "M2732", "R2410"];
 const l5Cars = ["M5002", "R5300", "M5120", "R5444"];
 const normalCars = ["M2201", "R3304", "M6012", "M8066", "R9010", "M2204"];
 

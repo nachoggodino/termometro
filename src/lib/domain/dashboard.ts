@@ -1,3 +1,4 @@
+import { getCarSeries } from "./cars";
 import {
   calculateMetroHeatIndex,
   getAgreement,
@@ -438,14 +439,6 @@ export function buildDashboardDayBuckets(now: Date, range: DashboardRange) {
     });
   }
   return buckets;
-}
-
-export function getCarSeries(car: string) {
-  const digits = car.match(/\d+/)?.[0];
-  if (!digits) return null;
-  const code = Number(digits);
-  if (!Number.isFinite(code)) return null;
-  return Math.floor(code / 1000) * 1000;
 }
 
 function getMadridHour(date: Date) {
