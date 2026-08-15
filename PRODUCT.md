@@ -99,7 +99,7 @@ V1 abuse controls:
 - Server timestamp only; no backdating field.
 - Open anonymous submission without accounts.
 - Client and server validation.
-- Reject car identifiers in the retired 1000 series while continuing to accept otherwise valid loose Metro-style identifiers until broader fleet rules are confirmed.
+- Reject car identifiers outside series 2000 through 11000. On L1, accept only series 2000; reports without a car identifier remain allowed.
 - Rate limiting by private abuse key.
 - Soft duplicate suppression in a short window. Reports with a car identifier are suppressed when line, car, and state match. Reports without a car identifier are suppressed against recent no-car reports on the same line. An origin may submit at most one no-car report across all lines and states every 30 minutes. These lower-specificity signals should not let one rider flood the data.
 - Friendly duplicate feedback such as "Ya hemos contado este reporte hace un momento."

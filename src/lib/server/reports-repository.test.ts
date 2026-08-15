@@ -69,12 +69,18 @@ describe("reports repository runtime safeguards", () => {
     expect(identifiedCar.ok).toBe(true);
   });
 
-  it("rejects retired series 1000 even when called below the API validation layer", async () => {
+  it("rejects non-existing car and line combinations below the API validation layer", async () => {
     vi.stubEnv("TERMO_ALLOW_MEMORY_STORE", "1");
 
     await expect(
       createReportForRequest({ line: "L1", state: "calor", car: "M1234" }, null, new Date("2026-08-09T12:00:00Z")),
-    ).resolves.toEqual({ ok: false, reason: "retired_series" });
+    ).resolves.toEqual({ ok: false, reason: "car_not_on_line" });
+    await expect(
+      createReportForRequest({ line: "L1", state: "calor", car: "M3000" }, null, new Date("2026-08-09T12:00:00Z")),
+    ).resolves.toEqual({ ok: false, reason: "car_not_on_line" });
+    await expect(
+      createReportForRequest({ line: "L2", state: "calor", car: "M12000" }, null, new Date("2026-08-09T12:00:00Z")),
+    ).resolves.toEqual({ ok: false, reason: "car_not_on_line" });
   });
 
   it("limits request fingerprints to four reports in ten minutes", async () => {

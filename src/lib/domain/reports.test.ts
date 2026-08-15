@@ -1,23 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatCarCode,
+  CAR_NOT_ON_LINE_REASON,
   isDuplicateCandidate,
-  isRetiredCarCode,
-  normalizeCarCode,
   parseReportInput,
-  RETIRED_CAR_SERIES_REASON,
 } from "./reports";
 
 describe("report validation", () => {
-  it("normalizes loose car codes", () => {
-    expect(normalizeCarCode("m1234")).toBe("M1234");
-    expect(normalizeCarCode(" R-2401 ")).toBe("R2401");
-    expect(normalizeCarCode("s12345")).toBe("S12345");
-    expect(normalizeCarCode("z12345")).toBeNull();
-    expect(normalizeCarCode("nonsense")).toBeNull();
-    expect(formatCarCode("s12345")).toBe("S-12345");
-  });
-
   it("parses valid report input", () => {
     const parsed = parseReportInput({ line: "L1", state: "calor", car: "m2001" });
     expect(parsed.success).toBe(true);
@@ -26,19 +14,29 @@ describe("report validation", () => {
     }
   });
 
-  it("rejects retired series 1000 car codes", () => {
-    for (const car of ["M1000", "R-1255", "S1999"]) {
-      const parsed = parseReportInput({ line: "L1", state: "calor", car });
+  it("rejects cars outside existing series and cars that do not exist on L1", () => {
+    for (const [line, car] of [
+      ["L2", "M1000"],
+      ["L2", "R-1999"],
+      ["L2", "S12000"],
+      ["L1", "M3000"],
+      ["L1", "S11999"],
+    ] as const) {
+      const parsed = parseReportInput({ line, state: "calor", car });
       expect(parsed.success).toBe(false);
       if (!parsed.success) {
-        expect(parsed.error.issues.some((issue) => issue.message === RETIRED_CAR_SERIES_REASON)).toBe(true);
+        expect(parsed.error.issues.some((issue) => issue.message === CAR_NOT_ON_LINE_REASON)).toBe(true);
       }
-      expect(isRetiredCarCode(car)).toBe(true);
     }
+  });
 
-    expect(isRetiredCarCode("M2000")).toBe(false);
+  it("accepts the boundary series that exist on each line", () => {
     expect(parseReportInput({ line: "L1", state: "calor", car: "M2000" }).success).toBe(true);
-    expect(parseReportInput({ line: "L1", state: "calor", car: "M4000" }).success).toBe(true);
+    expect(parseReportInput({ line: "L1", state: "calor", car: "M2999" }).success).toBe(true);
+    expect(parseReportInput({ line: "L2", state: "calor", car: "M2000" }).success).toBe(true);
+    expect(parseReportInput({ line: "L2", state: "calor", car: "M3000" }).success).toBe(true);
+    expect(parseReportInput({ line: "L12", state: "calor", car: "M11000" }).success).toBe(true);
+    expect(parseReportInput({ line: "L12", state: "calor", car: "M11999" }).success).toBe(true);
   });
 
   it("accepts omitted or null optional car input", () => {

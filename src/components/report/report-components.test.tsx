@@ -68,15 +68,23 @@ describe("report controls", () => {
     expect(screen.getByTestId("submit-report")).toBeDisabled();
   });
 
-  it("blocks retired series 1000 with the dedicated message", async () => {
+  it("blocks cars that do not exist on the selected line and revalidates on line changes", async () => {
     const user = userEvent.setup();
 
     render(<ReportForm dictionary={esMessages} locale="es" />);
 
-    await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "M1234");
+    const carInput = screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder);
+    await user.type(carInput, "M3000");
 
-    expect(screen.getByText("La serie 1000 ya no está en circulación")).toBeVisible();
+    expect(screen.getByText("Este coche no existe en esa línea")).toBeVisible();
+    expect(carInput).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByTestId("submit-report")).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "L2" }));
+
+    expect(screen.queryByText("Este coche no existe en esa línea")).not.toBeInTheDocument();
+    expect(carInput).toHaveAttribute("aria-invalid", "false");
+    expect(screen.getByTestId("submit-report")).toBeEnabled();
   });
 
   it("submits normalized car codes", async () => {

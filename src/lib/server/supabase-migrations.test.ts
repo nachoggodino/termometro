@@ -100,6 +100,31 @@ describe("Supabase migration contracts", () => {
     );
   });
 
+  it("supersedes the retired-series rule with validated line-aware fleet constraints", () => {
+    const carSeriesMigration = readFileSync(
+      join(root, "supabase/migrations/20260815093424_enforce_existing_car_series_by_line.sql"),
+      "utf8",
+    );
+
+    expect(carSeriesMigration).toContain("drop constraint if exists reports_car_series_1000_retired_check");
+    expect(carSeriesMigration).toContain("drop constraint if exists cars_active_series_1000_retired_check");
+    expect(carSeriesMigration).toContain("reports_car_line_series_check");
+    expect(carSeriesMigration).toContain("cars_active_line_series_check");
+    expect(carSeriesMigration).toContain("between 2000 and 11999");
+    expect(carSeriesMigration).toContain("line <> 'L1'");
+    expect(carSeriesMigration).toContain("input_line = 'L1'");
+    expect(carSeriesMigration).toContain("between 2000 and 2999");
+    expect(carSeriesMigration).toContain("input_car !~ '^[MRS][0-9]{4,5}$'");
+    expect(carSeriesMigration).toContain("validate constraint reports_car_line_series_check");
+    expect(carSeriesMigration).toContain("validate constraint cars_active_line_series_check");
+    expect(carSeriesMigration).toContain("'car_not_on_line'::text");
+    expect(carSeriesMigration).toContain("hidden_reason = 'invalid_car_for_line_migration'");
+    expect(carSeriesMigration).toContain("grant execute on function public.create_report");
+    expect(carSeriesMigration.indexOf("'car_not_on_line'::text")).toBeLessThan(
+      carSeriesMigration.indexOf("insert into public.reports"),
+    );
+  });
+
   it("adds the optimized dashboard path without removing the current production path", () => {
     const expansion = readFileSync(join(root, "supabase/migrations/20260806001521_expand_dashboard_database_cpu.sql"), "utf8");
     const backfill = readFileSync(join(root, "supabase/migrations/20260806093759_backfill_dashboard_database_cpu.sql"), "utf8");

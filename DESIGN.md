@@ -247,7 +247,7 @@ The system is flat by default. Depth comes from tonal layering, borders, spacing
 - **Focus:** Border shifts to Civic Green or active heat color with a 2px outline. No glow unless it is the selected heat state panel.
 - **Placeholder:** Must pass contrast; use Muted Green-Gray, not default browser gray.
 - **Error / Disabled:** Error uses Danger with text explanation. Disabled state reduces contrast only within WCAG limits and never hides labels.
-- **Coche Autocomplete:** Optional field with helper tooltip. Do not mark it as optional in the visible label. Suggestions filter by selected line and rank by recent reports. Accept loose Metro-style values, but reject the retired 1000 series; do not infer broader fleet restrictions until they are confirmed. Submitting without a car opens an accessible confirmation dialog whose primary action returns focus to this field; the secondary action confirms submission without a car.
+- **Coche Autocomplete:** Optional field with helper tooltip. Do not mark it as optional in the visible label. Suggestions filter by selected line and rank by recent reports. Accept loose Metro-style values only when their series exists on the selected line: series 2000 through 11000 generally, and only series 2000 on L1. Invalid line/car combinations use the localized message `Este coche no existe en esa línea`. Submitting without a car opens an accessible confirmation dialog whose primary action returns focus to this field; the secondary action confirms submission without a car.
 
 ### Navigation
 

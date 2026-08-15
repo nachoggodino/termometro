@@ -39,8 +39,8 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
 function getUniqueTestCar(projectName: string) {
   const runId = Number(process.env.GITHUB_RUN_ID ?? Date.now());
   const runAttempt = Number(process.env.GITHUB_RUN_ATTEMPT ?? 0);
-  const projectOffset = projectName === "mobile" ? 10_000 : 20_000;
-  const numericCode = 10_000 + ((runId + runAttempt * 997 + projectOffset) % 90_000);
+  const projectOffset = projectName === "mobile" ? 0 : 500;
+  const numericCode = 2_000 + ((runId + runAttempt * 997 + projectOffset) % 1_000);
   return `M${numericCode}`;
 }
 
@@ -52,15 +52,24 @@ test("report flow blocks invalid car codes", async ({ page }) => {
   await expect(page.getByTestId("submit-report")).toBeDisabled();
 });
 
-test("report flow blocks retired series 1000", async ({ page }, testInfo) => {
+test("report flow blocks cars that do not exist on the selected line", async ({ page }, testInfo) => {
   await page.goto("/es/reportar");
 
-  await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill("M1234");
-  await expect(page.getByText("La serie 1000 ya no está en circulación")).toBeVisible();
+  const carInput = page.getByPlaceholder("Ej. M2434, R-5469 o S3124");
+  await carInput.fill("M3000");
+  await expect(page.getByText("Este coche no existe en esa línea")).toBeVisible();
+  await expect(page.getByTestId("submit-report")).toBeDisabled();
+
+  await page.getByRole("button", { name: "L2", exact: true }).click();
+  await expect(page.getByText("Este coche no existe en esa línea")).not.toBeVisible();
+  await expect(page.getByTestId("submit-report")).toBeEnabled();
+
+  await carInput.fill("M12000");
+  await expect(page.getByText("Este coche no existe en esa línea")).toBeVisible();
   await expect(page.getByTestId("submit-report")).toBeDisabled();
   await page.screenshot({
     fullPage: true,
-    path: `/tmp/termo-${testInfo.project.name}-retired-series.png`,
+    path: `/tmp/termo-${testInfo.project.name}-non-existing-car.png`,
   });
 });
 
@@ -127,10 +136,10 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   expect(box!.y - (filtersButtonBox!.y + filtersButtonBox!.height)).toBeLessThanOrEqual(80);
   await page.getByRole("button", { name: "L5", exact: true }).click();
   await page.getByRole("button", { name: "L1", exact: true }).click();
-  await page.getByRole("button", { name: "1000", exact: true }).click();
+  await page.getByRole("button", { name: "2000", exact: true }).click();
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
   await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
-  await expect(page).toHaveURL(/serie=1000/);
+  await expect(page).toHaveURL(/serie=2000/);
   await expect(page).not.toHaveURL(/rango=/);
 
   await page.getByTestId("worst-car-row").first().click();

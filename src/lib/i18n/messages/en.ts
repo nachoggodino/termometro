@@ -58,7 +58,7 @@ export const messages = {
     car: "Car",
     carPlaceholder: "E.g. M2434, R-5469, or S3124",
     carInvalid: "Use M, R, or S and 4 or 5 numbers, for example M2434, or leave this empty",
-    carRetiredSeries: "Series 1000 is no longer in service",
+    carNotOnLine: "This car does not exist on that line",
     carHelp: "It is usually shown on a plate at the start and end of the car, or on the sides of continuous trains. If you cannot find it, leave this empty",
     missingCar: {
       title: "Are you sure you want to submit a report without a car number?",
