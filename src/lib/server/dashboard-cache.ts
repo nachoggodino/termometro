@@ -16,6 +16,7 @@ import {
   type DashboardModuleSearch,
 } from "./dashboard-modules";
 import { getHomeSnapshot } from "./reports-repository";
+import type { Locale } from "@/lib/i18n/config";
 
 const REPORTS_CACHE_TAG = "reports";
 
@@ -26,12 +27,13 @@ export async function getCachedHomeSnapshot() {
   return getHomeSnapshot();
 }
 
-export async function getCachedExplorePageData(rangeKey: string, linesKey: string, carSeriesKey: string) {
+export async function getCachedExplorePageData(rangeKey: string, linesKey: string, carSeriesKey: string, locale: Locale) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(REPORTS_CACHE_TAG);
 
   const search = parseSearch(rangeKey, linesKey, carSeriesKey);
+  search.locale = locale;
   const baseSearch = { range: search.range, lines: search.lines };
   const now = new Date();
   const availableSeriesPromise = getCarSeriesModule(baseSearch, now);
@@ -59,11 +61,13 @@ export async function getCachedExplorePageData(rangeKey: string, linesKey: strin
   };
 }
 
-export async function getCachedCarDetail(rangeKey: string, linesKey: string, carSeriesKey: string, car: string) {
+export async function getCachedCarDetail(rangeKey: string, linesKey: string, carSeriesKey: string, car: string, locale: Locale) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(REPORTS_CACHE_TAG);
-  return getCarDetailModule(parseSearch(rangeKey, linesKey, carSeriesKey), car);
+  const search = parseSearch(rangeKey, linesKey, carSeriesKey)
+  search.locale = locale;
+  return getCarDetailModule(search, car);
 }
 
 export async function getCachedLineDetail(rangeKey: string, line: MetroLine, carSeriesKey: string) {

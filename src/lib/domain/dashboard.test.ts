@@ -157,6 +157,19 @@ describe("dashboard data", () => {
     expect(data.lineEvolution.reduce((total, point) => total + (point.L5 ?? 0), 0)).toBe(1);
   });
 
+  it("localizes dashboard date labels with the selected locale", () => {
+    const augustNow = new Date("2026-08-15T12:00:00Z");
+    const englishData = buildDashboardData([], augustNow, undefined, "month", "en");
+    const spanishData = buildDashboardData([], augustNow, undefined, "month", "es");
+
+    expect(englishData.trend.at(-1)?.label).toContain("Aug");
+    expect(englishData.lineEvolution.at(-1)?.label).toContain("Aug");
+    expect(englishData.totalReportsTrend.at(-1)?.label).toContain("Aug");
+    expect(spanishData.trend.at(-1)?.label).toContain("ago");
+    expect(spanishData.lineEvolution.at(-1)?.label).toContain("ago");
+    expect(spanishData.totalReportsTrend.at(-1)?.label).toContain("ago");
+  });
+
   it("builds total report trend, car series, and worst-hour aggregates", () => {
     const data = buildDashboardData([
       report({ id: "1", line: "L1", state: "fresco", car: null, createdAt: new Date("2026-07-04T08:30:00Z") }),

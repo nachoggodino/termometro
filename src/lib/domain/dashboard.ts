@@ -14,6 +14,8 @@ import { METRO_LINES, type MetroLine } from "./lines";
 import { getRangeWindow, type DashboardRange } from "./ranges";
 import type { Report } from "./reports";
 import { APP_TIME_ZONE, getMadridStartOfDay } from "./time";
+import type { Locale } from "@/lib/i18n/config";
+import { getIntlLocale } from "@/lib/i18n/format";
 
 export const DASHBOARD_LIMITS = {
   topLineCount: 6,
@@ -130,6 +132,7 @@ export function buildDashboardData(
   now = new Date(),
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
   range: DashboardRange = "sevenDays",
+  locale: Locale = "es",
 ): DashboardData {
   const rangeWindow = getRangeWindow(range, now);
   const usableReports = reports.filter((report) => !report.hiddenAt);
@@ -197,9 +200,9 @@ export function buildDashboardData(
     }));
 
   const carExplorerOptions = buildCarExplorerOptions(visibleReports);
-  const trend = buildTrend(usableReports, now, range, estimatedCarsByLine);
-  const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries);
-  const totalReportsTrend = buildTotalReportsTrend(visibleReports, now, range);
+  const trend = buildTrend(usableReports, now, range, estimatedCarsByLine, locale);
+  const lineEvolution = buildLineEvolution(visibleReports, now, range, lineSummaries, locale);
+  const totalReportsTrend = buildTotalReportsTrend(visibleReports, now, range, locale);
   const carSeries = buildCarSeries(visibleReports);
   const worstHours = buildWorstHours(visibleReports);
   const lineCarReports = buildLineCarReports(visibleReports);
@@ -229,13 +232,14 @@ export function buildCarExplorerSelection(
   now: Date,
   range: DashboardRange,
   options = buildCarExplorerOptions(reports),
+  locale: Locale = "es"
 ): CarExplorerSelection | null {
   const option = options.find((item) => item.car === car);
   if (!option) return null;
   const carReports = reports.filter((report) => report.car === car);
   return {
     ...option,
-    history: buildDashboardBuckets(now, range).map((bucket) => ({
+    history: buildDashboardBuckets(now, range, locale).map((bucket) => ({
       label: bucket.label,
       reports: carReports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
     })),
@@ -321,9 +325,10 @@ function buildTrend(
   now: Date,
   range: DashboardRange,
   estimatedCarsByLine: Record<MetroLine, number> = ESTIMATED_TOTAL_CARS,
+  locale: Locale = "es",
 ): TrendPoint[] {
   const summerStart = getRangeWindow("summer", now).start;
-  return buildDashboardBuckets(now, range).map((bucket) => {
+  return buildDashboardBuckets(now, range, locale).map((bucket) => {
     const bucketReports = reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end);
     const accumulatedReports = reports.filter((report) => report.createdAt >= summerStart && report.createdAt < bucket.end);
     const point: TrendPoint = {
@@ -344,10 +349,11 @@ function buildLineEvolution(
   now: Date,
   range: DashboardRange,
   lineSummaries: LineSummary[],
+  locale: Locale = "es",
 ): LineEvolutionPoint[] {
   const lines = lineSummaries.map((summary) => summary.line);
 
-  return buildDashboardBuckets(now, range).map((bucket) => {
+  return buildDashboardBuckets(now, range, locale).map((bucket) => {
     const point: LineEvolutionPoint = { label: bucket.label };
     for (const line of lines) {
       point[line] = reports.filter((report) => report.line === line && report.createdAt >= bucket.start && report.createdAt < bucket.end).length;
@@ -356,8 +362,8 @@ function buildLineEvolution(
   });
 }
 
-function buildTotalReportsTrend(reports: Report[], now: Date, range: DashboardRange): TotalReportsPoint[] {
-  return buildDashboardDayBuckets(now, range).map((bucket) => ({
+function buildTotalReportsTrend(reports: Report[], now: Date, range: DashboardRange, locale: Locale = "es"): TotalReportsPoint[] {
+  return buildDashboardDayBuckets(now, range, locale).map((bucket) => ({
     label: bucket.label,
     reports: reports.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
   }));
@@ -420,7 +426,7 @@ function buildLineCarReports(reports: Report[]): LineCarReportSummary[] {
   });
 }
 
-export function buildDashboardDayBuckets(now: Date, range: DashboardRange) {
+export function buildDashboardDayBuckets(now: Date, range: DashboardRange, locale: Locale = "es") {
   const rangeWindow = getRangeWindow(range, now);
   const buckets = [];
   for (let offset = 0; ; offset += 1) {
@@ -430,7 +436,7 @@ export function buildDashboardDayBuckets(now: Date, range: DashboardRange) {
     buckets.push({
       start: bucketStart,
       end: bucketEnd,
-      label: bucketStart.toLocaleDateString("es-ES", {
+      label: bucketStart.toLocaleDateString(getIntlLocale(locale), {
         ...(range === "today" || range === "last24Hours" || range === "sevenDays"
           ? { weekday: "short" as const }
           : { day: "2-digit" as const, month: "short" as const }),
@@ -453,7 +459,7 @@ export function getHeatEvolutionScore(
   return calculateMetroHeatIndex(reports, estimatedCars, now).heat_index;
 }
 
-export function buildDashboardBuckets(now: Date, range: DashboardRange) {
+export function buildDashboardBuckets(now: Date, range: DashboardRange, locale: Locale = "es") {
   const rangeWindow = getRangeWindow(range, now);
   if (range === "today" || range === "last24Hours") {
     const start = rangeWindow.start;
@@ -463,7 +469,7 @@ export function buildDashboardBuckets(now: Date, range: DashboardRange) {
       return {
         start: bucketStart,
         end: bucketEnd,
-        label: bucketStart.toLocaleTimeString("es-ES", { hour: "2-digit", timeZone: APP_TIME_ZONE }),
+        label: bucketStart.toLocaleTimeString(getIntlLocale(locale), { hour: "2-digit", timeZone: APP_TIME_ZONE }),
       };
     });
   }
@@ -476,7 +482,7 @@ export function buildDashboardBuckets(now: Date, range: DashboardRange) {
     buckets.push({
       start: bucketStart,
       end: bucketEnd,
-      label: bucketStart.toLocaleDateString("es-ES", {
+      label: bucketStart.toLocaleDateString(getIntlLocale(locale), {
         ...(range === "sevenDays" ? { weekday: "short" as const } : { day: "2-digit" as const, month: "short" as const }),
         timeZone: APP_TIME_ZONE,
       }),

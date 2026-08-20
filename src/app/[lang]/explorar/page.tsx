@@ -54,7 +54,7 @@ async function ExploreContent({
   const selectedCar = search.coche ? normalizeCarCode(search.coche) : null;
   const rangeLabel = dictionary.explore.ranges[selectedRange];
   const cacheKey = normalizeDashboardCacheKey({ range: selectedRange, lines: selectedLines, carSeries: selectedCarSeries });
-  const data = await getCachedExplorePageData(cacheKey.rangeKey, cacheKey.linesKey, cacheKey.carSeriesKey);
+  const data = await getCachedExplorePageData(cacheKey.rangeKey, cacheKey.linesKey, cacheKey.carSeriesKey, lang);
 
   return (
     <main className="min-h-dvh">

@@ -122,7 +122,28 @@ describe("API routes", () => {
     const response = await GET(new Request("https://termo.test/api/dashboard/car?coche=M-1234&rango=month&linea=L5,L5&serie=2000"));
 
     expect(response.status).toBe(200);
-    expect(dashboardMock.getCachedCarDetail).toHaveBeenCalledWith("month", "L5", "2000", "M1234");
+    expect(dashboardMock.getCachedCarDetail).toHaveBeenCalledWith("month", "L5", "2000", "M1234", "es");
+  });
+
+  it("passes a valid English locale to car detail loading", async () => {
+    dashboardMock.getCachedCarDetail.mockResolvedValue({ car: "M1234", history: [] });
+    const { GET } = await import("./dashboard/car/route");
+
+    const response = await GET(new Request("https://termo.test/api/dashboard/car?coche=M1234&rango=month&lang=en"));
+
+    expect(response.status).toBe(200);
+    expect(dashboardMock.getCachedCarDetail).toHaveBeenCalledWith("month", "", "", "M1234", "en");
+  });
+
+  it("rejects invalid car detail locales before querying", async () => {
+    const { GET } = await import("./dashboard/car/route");
+
+    const response = await GET(new Request("https://termo.test/api/dashboard/car?coche=M1234&lang=fr"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload).toEqual({ selection: null, reason: "invalid_locale" });
+    expect(dashboardMock.getCachedCarDetail).not.toHaveBeenCalled();
   });
 
   it("rejects invalid line detail requests before querying", async () => {

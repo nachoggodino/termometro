@@ -26,6 +26,7 @@ import {
   type RequestFingerprint,
 } from "./report-security";
 import { seedReports } from "./seed-data";
+import type { Locale } from "@/lib/i18n/config";
 
 type CreateResult =
   | { ok: true; report: Report; undoToken: string }
@@ -48,6 +49,7 @@ type DashboardOptions = {
   lines?: MetroLine[] | null;
   carSeries?: number[] | null;
   now?: Date;
+  locale?: Locale;
 };
 
 export type HomeSnapshot = {
@@ -123,7 +125,7 @@ export function getMemoryDashboard(options: DashboardOptions) {
     .filter((report) => report.createdAt >= queryStart && report.createdAt <= end)
     .filter((report) => !selectedLines || selectedLines.includes(report.line))
     .filter((report) => matchesCarSeries(report, selectedCarSeries));
-  return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range);
+  return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range, options.locale ?? "es");
 }
 
 function normalizeCarSeries(series: number[] | null | undefined) {
@@ -150,7 +152,7 @@ export function getMemoryCarDetail(options: DashboardOptions & { car: string }) 
     (!selectedLines || selectedLines.includes(report.line)) &&
     matchesCarSeries(report, selectedCarSeries),
   );
-  return buildCarExplorerSelection(options.car, reports, now, options.range);
+  return buildCarExplorerSelection(options.car, reports, now, options.range, undefined, options.locale ?? "es");
 }
 
 export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
