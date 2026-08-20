@@ -103,7 +103,15 @@ export function getReportInputErrorReason(error: z.ZodError): ReportCreateFailur
   return "invalid";
 }
 
-export type ReportInput = z.infer<typeof reportInputSchema>;
+type ParsedReportInput = z.infer<typeof reportInputSchema>;
+
+export type ReportInput = Omit<
+  ParsedReportInput,
+  "locationKind" | "stationId"
+> & {
+  locationKind?: ReportLocationKind;
+  stationId?: string | null;
+};
 
 export function parseReportInput(input: unknown) {
   return reportInputSchema.safeParse(input);

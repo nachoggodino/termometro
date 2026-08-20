@@ -238,8 +238,11 @@ export async function createReportForRequest(
   fingerprint: RequestFingerprint | Request | null,
   now = new Date(),
 ): Promise<CreateResult> {
-  if (input.locationKind === "platform") {
-    if (!input.stationId || !isStationOnLine(input.stationId, input.line)) {
+  const locationKind = input.locationKind ?? "car";
+  const stationId = input.stationId ?? null;
+
+  if (locationKind === "platform") {
+    if (!stationId || !isStationOnLine(stationId, input.line)) {
       return { ok: false, reason: STATION_NOT_ON_LINE_REASON };
     }
   } else if (input.car && !isCarAllowedOnLine(input.car, input.line)) {
@@ -269,7 +272,7 @@ export async function createReportForRequest(
           report.createdAt >= noCarWindowStart &&
           !report.hiddenAt,
       );
-      if (input.locationKind === "car" && !input.car && hasRecentNoCarReport) {
+      if (locationKind === "car" && !input.car && hasRecentNoCarReport) {
         return { ok: false, reason: "duplicate" };
       }
     }
@@ -280,9 +283,9 @@ export async function createReportForRequest(
     const report: MemoryReport = {
       id: crypto.randomUUID(),
       line: input.line,
-      car: input.locationKind === "car" ? input.car ?? null : null,
-      locationKind: input.locationKind,
-      stationId: input.locationKind === "platform" ? input.stationId : null,
+      car: locationKind === "car" ? input.car ?? null : null,
+      locationKind,
+      stationId: locationKind === "platform" ? stationId : null,
       state: input.state,
       createdAt: now,
       hiddenAt: null,
@@ -298,9 +301,9 @@ export async function createReportForRequest(
   const { data: rpcData, error } = await supabase
     .rpc("create_report_v2", {
       input_line: input.line,
-      input_car: input.locationKind === "car" ? input.car : null,
-      input_location_kind: input.locationKind,
-      input_station_id: input.locationKind === "platform" ? input.stationId : null,
+      input_car: locationKind === "car" ? input.car : null,
+      input_location_kind: locationKind,
+      input_station_id: locationKind === "platform" ? stationId : null,
       input_state: input.state,
       input_abuse_key: abuseKey,
       input_undo_token_hash: undoTokenHash,

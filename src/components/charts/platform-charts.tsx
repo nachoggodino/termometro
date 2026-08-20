@@ -147,7 +147,7 @@ function PlatformTooltip({
   label,
   labelName,
   locale,
-}: TooltipContentProps<number, string> & { labelName: string; locale: Locale }) {
+}: Partial<TooltipContentProps<number, string>> & { labelName: string; locale: Locale }) {
   if (!active || !payload?.length) return null;
   const value = Number(payload[0]?.value ?? 0);
   return (
