@@ -186,7 +186,7 @@ export async function getWorstHoursModule(search: DashboardModuleSearch, now = n
   const supabase = getSupabase();
   if (!supabase) return { worstHours: (await getFallbackDashboard(search, now)).worstHours };
   const window = getRangeWindow(search.range, now);
-  const { data, error } = await supabase.rpc("dashboard_worst_hours_v2", {
+  const { data, error } = await supabase.rpc("dashboard_worst_hours_v3", {
     input_start: window.start.toISOString(),
     input_end: window.end.toISOString(),
     input_lines: selectedLinesArg(search.lines),
@@ -218,7 +218,7 @@ const getBucketCountRows = cache(async function getBucketCountRows(search: Dashb
   if (!supabase) return null;
   const window = getRangeWindow(search.range, now);
   const bucketSeconds = getBucketSeconds(search.range, bucketKind);
-  const { data, error } = await supabase.rpc("dashboard_bucket_counts_v2", {
+  const { data, error } = await supabase.rpc("dashboard_bucket_counts_v3", {
     input_start: window.start.toISOString(),
     input_end: window.end.toISOString(),
     input_bucket_seconds: bucketSeconds,

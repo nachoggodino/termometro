@@ -209,7 +209,7 @@ export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
   }
 
   const { data, error } = await supabase
-    .rpc("dashboard_home_snapshot", {
+    .rpc("dashboard_home_snapshot_v2", {
       input_start: start.toISOString(),
       input_end: now.toISOString(),
       input_limit: DASHBOARD_LIMITS.recentReportCount,
