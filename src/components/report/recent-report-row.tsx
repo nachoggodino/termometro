@@ -1,8 +1,10 @@
 import { LINE_COLORS } from "@/lib/domain/lines";
-import { formatCarCode, type Report } from "@/lib/domain/reports";
+import { formatCarCode, getReportLocationKind, type Report } from "@/lib/domain/reports";
+import { getStationName } from "@/lib/domain/stations";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatReportDateTime } from "@/lib/i18n/format";
+import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import { HeatStateBadge } from "./heat-state-badge";
 
 export function RecentReportRow({
@@ -14,6 +16,13 @@ export function RecentReportRow({
   locale: Locale;
   report: Report;
 }) {
+  const locationLabel =
+    getReportLocationKind(report) === "platform"
+      ? getStationName(report.line, report.stationId) ?? getPlatformMessages(locale).explore.platform
+      : report.car
+        ? formatCarCode(report.car)
+        : dictionary.explore.noCar;
+
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 py-3">
       <span
@@ -25,7 +34,7 @@ export function RecentReportRow({
       >
         {report.line}
       </span>
-      <p className="min-w-0 truncate font-mono text-sm font-semibold">{report.car ? formatCarCode(report.car) : dictionary.explore.noCar}</p>
+      <p className="min-w-0 truncate font-mono text-sm font-semibold">{locationLabel}</p>
       <HeatStateBadge dictionary={dictionary} state={report.state} />
       <time className="whitespace-nowrap font-mono text-xs text-muted">{formatReportDateTime(report.createdAt, locale)}</time>
     </div>

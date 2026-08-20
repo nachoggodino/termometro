@@ -11,6 +11,7 @@ import {
 } from "@/components/charts/dashboard-charts";
 import { ExploreFleetPanel, LineDetailCards } from "@/components/charts/explore-detail-panels";
 import { FilterBar } from "@/components/charts/filter-bar";
+import { PlatformLineHeatChartCard, WorstPlatformsChartCard } from "@/components/charts/platform-charts";
 import { ExploreActionIcon } from "@/components/ui/action-icons";
 import { getCachedExplorePageData, normalizeDashboardCacheKey } from "@/lib/server/dashboard-cache";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -80,7 +81,9 @@ async function ExploreContent({
             <LineEvolutionChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} selectedRange={selectedRange} />
             <TotalReportsChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} selectedRange={selectedRange} />
             <ReportVolumeChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} />
-            <LineCarsChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} />
+            <WorstPlatformsChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} />
+            <PlatformLineHeatChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} />
+            <LineCarsChartCard data={{ lineSummaries: data.carLineSummaries }} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} />
             <CarSeriesChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} />
             <WorstCarsExplorerChartCards
               carSeries={selectedCarSeries}
@@ -96,10 +99,10 @@ async function ExploreContent({
             <WorstHoursChartCard data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} />
           </div>
 
-          <ExploreFleetPanel data={data} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} />
+          <ExploreFleetPanel data={{ lineSummaries: data.carLineSummaries }} dictionary={dictionary} locale={lang} rangeLabel={rangeLabel} selectedLines={selectedLines} />
         </div>
 
-        <LineDetailCards carSeries={selectedCarSeries} cards={data.lineSummaries} dictionary={dictionary} locale={lang} range={selectedRange} selectedLines={selectedLines} />
+        <LineDetailCards carSeries={selectedCarSeries} cards={data.carLineSummaries} dictionary={dictionary} locale={lang} range={selectedRange} selectedLines={selectedLines} />
       </div>
     </main>
   );
