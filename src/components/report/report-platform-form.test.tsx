@@ -2,8 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { messages as esMessages } from "@/lib/i18n/messages/es";
+import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import { ReportForm } from "./report-form";
 
+const dictionary = { ...esMessages, platform: getPlatformMessages("es") };
 const push = vi.fn();
 const toastMock = vi.hoisted(() =>
   Object.assign(vi.fn(), {
@@ -38,7 +40,7 @@ describe("platform report form", () => {
       });
     vi.stubGlobal("fetch", fetch);
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     await user.click(screen.getByRole("radio", { name: "Andén" }));
     const stationInput = screen.getByRole("combobox");

@@ -2,10 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { messages as esMessages } from "../../lib/i18n/messages/es";
+import { getPlatformMessages } from "../../lib/i18n/platform-messages";
 import { HeatSelector } from "./heat-selector";
 import { LinePicker } from "./line-picker";
 import { ReportForm } from "./report-form";
 
+const dictionary = { ...esMessages, platform: getPlatformMessages("es") };
 const push = vi.fn();
 const toastMock = vi.hoisted(() =>
   Object.assign(vi.fn(), {
@@ -49,7 +51,7 @@ describe("report controls", () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
 
-    render(<HeatSelector dictionary={esMessages} label={esMessages.reportForm.heatState} onChange={onChange} value="calor" />);
+    render(<HeatSelector dictionary={dictionary} label={esMessages.reportForm.heatState} onChange={onChange} value="calor" />);
 
     expect(screen.getByRole("button", { name: "Calor" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByText(esMessages.states.calor.description)).toBeVisible();
@@ -60,7 +62,7 @@ describe("report controls", () => {
   it("disables report submission for invalid car codes", async () => {
     const user = userEvent.setup();
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "Z1234");
 
@@ -71,7 +73,7 @@ describe("report controls", () => {
   it("blocks cars that do not exist on the selected line and revalidates on line changes", async () => {
     const user = userEvent.setup();
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     const carInput = screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder);
     await user.type(carInput, "M3000");
@@ -99,7 +101,7 @@ describe("report controls", () => {
       });
     vi.stubGlobal("fetch", fetch);
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     await user.type(screen.getByPlaceholderText(esMessages.reportForm.carPlaceholder), "m-2234");
     await user.click(screen.getByTestId("submit-report"));
@@ -120,7 +122,7 @@ describe("report controls", () => {
     });
     vi.stubGlobal("fetch", fetch);
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     expect(screen.queryByText(esMessages.common.optional)).not.toBeInTheDocument();
     await user.click(screen.getByTestId("submit-report"));
@@ -145,7 +147,7 @@ describe("report controls", () => {
       });
     vi.stubGlobal("fetch", fetch);
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     await user.click(screen.getByTestId("submit-report"));
     expect(fetch).toHaveBeenCalledTimes(1);
@@ -172,7 +174,7 @@ describe("report controls", () => {
         .mockRejectedValueOnce(new Error("network failed")),
     );
 
-    render(<ReportForm dictionary={esMessages} locale="es" />);
+    render(<ReportForm dictionary={dictionary} locale="es" />);
 
     await user.click(screen.getByTestId("submit-report"));
     await user.click(screen.getByRole("button", { name: esMessages.reportForm.missingCar.confirm }));
