@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
 
+const DEFAULT_EXPLORE_RANGE: TimeRange = "month";
+
 export function FilterBar({
   availableCarSeries,
   children,
@@ -62,7 +64,7 @@ export function FilterBar({
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
     if (nextLocationKind === "car" && carSeries.length > 0) params.set("serie", carSeries.join(","));
-    if (range !== "summer") params.set("rango", range);
+    if (range !== DEFAULT_EXPLORE_RANGE) params.set("rango", range);
     if (nextLocationKind === "platform") params.set("tipo", "anden");
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
@@ -101,7 +103,7 @@ export function FilterBar({
   function clearFilters() {
     setDraftLines([]);
     setDraftCarSeries([]);
-    setDraftRange("summer");
+    setDraftRange(DEFAULT_EXPLORE_RANGE);
   }
 
   function toggleLine(line: MetroLine) {
@@ -373,7 +375,7 @@ function LocationModeButton({
       aria-pressed={active}
       className={cn(
         "selection-flow flex min-h-10 items-center justify-center gap-2 bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:relative focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
-        active ? "bg-[var(--accent)] text-[var(--accent-contrast)]" : "text-muted hover:bg-surface hover:text-foreground",
+        active ? "bg-[var(--accent)] text-white" : "text-muted hover:bg-surface hover:text-foreground",
       )}
       onClick={onClick}
       type="button"

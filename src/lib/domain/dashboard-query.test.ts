@@ -8,8 +8,8 @@ describe("dashboard query parsing", () => {
     expect(parseSelectedCarSeries("3000,1000,3000,3500,100000,-1,nope")).toEqual([3000, 1000]);
   });
 
-  it("uses the summer range for invalid public filters", () => {
-    expect(parseDashboardRange("last24Hours")).toBe("summer");
+  it("uses the month range for invalid public filters", () => {
+    expect(parseDashboardRange("last24Hours")).toBe("month");
   });
 
   it("bounds the number of cacheable car-series filters", () => {

@@ -27,6 +27,7 @@ export function InfoTooltip({ label, children }: { label: string; children: Reac
           className={cn(
             "z-50 max-w-64 rounded-md border border-border bg-surface-raised px-3 py-2 text-sm leading-5 text-foreground shadow-[var(--shadow-popover)]",
           )}
+          collisionPadding={16}
           onEscapeKeyDown={() => setOpen(false)}
           onPointerDownOutside={() => setOpen(false)}
           sideOffset={6}

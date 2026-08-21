@@ -4,7 +4,7 @@ import { isTimeRange, type TimeRange } from "./ranges";
 const MAX_CAR_SERIES = 99_000;
 const MAX_SELECTED_CAR_SERIES = 20;
 
-export function parseDashboardRange(value: string | null | undefined, fallback: TimeRange = "summer") {
+export function parseDashboardRange(value: string | null | undefined, fallback: TimeRange = "month") {
   return isTimeRange(value) ? value : fallback;
 }
 

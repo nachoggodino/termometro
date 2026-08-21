@@ -2,7 +2,7 @@ export default function ExploreLoading() {
   return (
     <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
       <div className="mx-auto max-w-5xl px-4 pb-4">
-        <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-4">
+        <div className="sticky top-[72px] z-[var(--z-sticky)] -mx-4 px-4 py-4">
           <div className="rounded-lg border border-border bg-[var(--drawer-surface)] px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
             <div className="flex flex-col gap-2.5">
               <div className="h-10 animate-pulse rounded-md bg-surface" />
