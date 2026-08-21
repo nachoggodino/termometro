@@ -38,10 +38,13 @@ describe("platform reports migration", () => {
     expect(migration).toContain("grant execute on function public.create_report(text, text, public.heat_state");
   });
 
-  it("keeps abuse fingerprints private, bounded and resistant to User-Agent rotation", () => {
+  it("keeps abuse fingerprints private, bounded, undo-aware and resistant to User-Agent rotation", () => {
     expect(migration).toContain("create table if not exists private.report_abuse_events");
+    expect(migration).toContain("report_id uuid not null references public.reports(id) on delete cascade");
     expect(migration).toContain("input_network_abuse_key text");
     expect(migration).toContain("input_network_rate_limit_max integer");
+    expect(migration).toContain("events.report_id");
+    expect(migration).toContain("source_report.hidden_at is null");
     expect(migration).toContain("created_at < input_now - interval '30 minutes'");
     expect(migration).toContain("set abuse_key = null");
   });

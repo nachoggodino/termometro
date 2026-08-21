@@ -79,6 +79,7 @@ grant execute on function public.dashboard_platform_history_v1(timestamptz, time
   to service_role;
 
 -- Abuse fingerprints are kept only in this private, self-pruning event table.
+-- Each event links to its report so undo can preserve legacy duplicate semantics.
 -- The origin key preserves the existing IP+UA limit; the network key adds a
 -- higher IP-only ceiling so rotating User-Agent values cannot create infinite quota.
 create table if not exists private.report_abuse_events (
@@ -102,9 +103,9 @@ create index if not exists report_abuse_events_network_created_idx
 create index if not exists report_abuse_events_created_idx
   on private.report_abuse_events (created_at);
 
--- Historical hashes no longer need to remain attached to report rows once they
--- are outside the longest abuse-control window. Recent v2 hashes are retained
--- temporarily so a rolling deployment preserves the existing quota.
+-- Historical hashes no longer need to remain attached to report rows once
+-- they are outside the longest abuse-control window. Keeping the last 30 minutes
+-- preserves compatibility with an old application during a DB-first rollout.
 update public.reports
 set abuse_key = null
 where abuse_key is not null
@@ -204,25 +205,18 @@ begin
   delete from private.report_abuse_events
   where created_at < input_now - interval '30 minutes';
 
-  update public.reports
-  set abuse_key = null
-  where abuse_key is not null
-    and created_at < input_now - interval '30 minutes';
-
+  -- Count both new private events and legacy report-row hashes so a DB/app rolling
+  -- deployment cannot reset a user's current quota.
   if input_origin_abuse_key is not null and (
-    (
-      select pg_catalog.count(*)
-      from private.report_abuse_events events
-      where events.origin_key = input_origin_abuse_key
-        and events.created_at >= input_rate_limit_start
-    )
+    (select pg_catalog.count(*)
+     from private.report_abuse_events events
+     where events.origin_key = input_origin_abuse_key
+       and events.created_at >= input_rate_limit_start)
     +
-    (
-      select pg_catalog.count(*)
-      from public.reports reports
-      where reports.abuse_key = input_origin_abuse_key
-        and reports.created_at >= input_rate_limit_start
-    )
+    (select pg_catalog.count(*)
+     from public.reports legacy
+     where legacy.abuse_key = input_origin_abuse_key
+       and legacy.created_at >= input_rate_limit_start)
   ) >= input_rate_limit_max then
     return query select false, 'rate_limited'::text, null::uuid, null::text, null::text, null::text, null::text, null::public.heat_state, null::timestamptz, null::timestamptz;
     return;
@@ -244,22 +238,22 @@ begin
       exists (
         select 1
         from private.report_abuse_events events
-        join public.reports reports on reports.id = events.report_id
+        join public.reports source_report on source_report.id = events.report_id
         where events.origin_key = input_origin_abuse_key
           and events.location_kind = 'car'
           and not events.has_car
           and events.created_at >= input_now - interval '30 minutes'
-          and reports.hidden_at is null
+          and source_report.hidden_at is null
         limit 1
       )
       or exists (
         select 1
-        from public.reports reports
-        where reports.abuse_key = input_origin_abuse_key
-          and reports.location_kind = 'car'
-          and reports.car is null
-          and reports.created_at >= input_now - interval '30 minutes'
-          and reports.hidden_at is null
+        from public.reports legacy
+        where legacy.abuse_key = input_origin_abuse_key
+          and legacy.location_kind = 'car'
+          and legacy.car is null
+          and legacy.created_at >= input_now - interval '30 minutes'
+          and legacy.hidden_at is null
         limit 1
       )
     ) then
@@ -361,6 +355,13 @@ begin
       input_location_kind = 'car' and input_car is not null
     );
   end if;
+
+  -- Old app instances may still have written hashes while this database version
+  -- was already live. Prune only values outside the longest compatibility window.
+  update public.reports
+  set abuse_key = null
+  where abuse_key is not null
+    and created_at < input_now - interval '30 minutes';
 
   return query
   select
