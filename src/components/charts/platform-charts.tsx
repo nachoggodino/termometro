@@ -135,6 +135,7 @@ export function WorstPlatformsExplorerChartCards({
           data={data}
           dictionary={dictionary}
           isChartPending={isChartPending}
+          key={selectedPlatform ? `${selectedPlatform.line}:${selectedPlatform.stationId}` : "none"}
           loadError={loadError}
           locale={locale}
           onSelectPlatform={selectPlatform}
@@ -367,10 +368,6 @@ function PlatformExplorer({
   );
   const [draft, setDraft] = useState(selected ? `${selected.stationName} · ${selected.line}` : "");
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (selected) setDraft(`${selected.stationName} · ${selected.line}`);
-  }, [selected]);
 
   function submitSelection() {
     const match = labels.find((option) => option.label.toLocaleLowerCase(locale) === draft.trim().toLocaleLowerCase(locale));
