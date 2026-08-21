@@ -1,8 +1,10 @@
-import type { DashboardRange } from "@/lib/domain/ranges";
-import { getRangeWindow } from "@/lib/domain/ranges";
+import { buildDashboardBuckets, type TrendPoint } from "@/lib/domain/dashboard";
+import type { Confidence, HeatState } from "@/lib/domain/heat";
+import type { Locale } from "@/lib/i18n/config";
+import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import { getReportLocationKind, type Report } from "@/lib/domain/reports";
 import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
-import { getStationName } from "@/lib/domain/stations";
+import { getStationById, getStationName } from "@/lib/domain/stations";
 import { getMemoryReportsSnapshot, getSupabase } from "./reports-repository";
 
 export type PlatformSummary = {
@@ -14,7 +16,12 @@ export type PlatformSummary = {
   calorReports: number;
   infiernoReports: number;
   heatReports: number;
+  confidence: Confidence;
   latestReportAt: Date | null;
+};
+
+export type PlatformExplorerSelection = Omit<PlatformSummary, "latestReportAt"> & {
+  history: TrendPoint[];
 };
 
 export type PlatformLineSummary = {
@@ -42,6 +49,11 @@ type PlatformSummaryRow = {
   latest_report_at: string | null;
 };
 
+type PlatformHistoryRow = {
+  state: HeatState;
+  created_at: string;
+};
+
 export async function getPlatformDashboard(
   search: { range: DashboardRange; lines: MetroLine[] },
   now = new Date(),
@@ -59,22 +71,89 @@ export async function getPlatformDashboard(
 
   const platformSummaries = ((data ?? []) as PlatformSummaryRow[])
     .filter((row) => isMetroLine(row.line))
-    .map((row): PlatformSummary => ({
-      line: row.line as MetroLine,
-      stationId: row.station_id,
-      stationName: row.station_name,
-      reports: row.reports,
-      frescoReports: row.fresco_reports,
-      calorReports: row.calor_reports,
-      infiernoReports: row.infierno_reports,
-      heatReports: row.calor_reports + row.infierno_reports,
-      latestReportAt: row.latest_report_at ? new Date(row.latest_report_at) : null,
-    }))
+    .map((row): PlatformSummary => {
+      const heatReports = row.calor_reports + row.infierno_reports;
+      return {
+        line: row.line as MetroLine,
+        stationId: row.station_id,
+        stationName: row.station_name,
+        reports: row.reports,
+        frescoReports: row.fresco_reports,
+        calorReports: row.calor_reports,
+        infiernoReports: row.infierno_reports,
+        heatReports,
+        confidence: confidenceFromCounts(row.reports, row.fresco_reports, heatReports),
+        latestReportAt: row.latest_report_at ? new Date(row.latest_report_at) : null,
+      };
+    })
     .toSorted(comparePlatforms);
 
   return {
     platformSummaries,
     platformLineSummaries: buildPlatformLineSummaries(platformSummaries),
+  };
+}
+
+export async function getPlatformDetail(
+  range: DashboardRange,
+  line: MetroLine,
+  stationId: string,
+  locale: Locale,
+  now = new Date(),
+): Promise<PlatformExplorerSelection | null> {
+  const station = getStationById(line, stationId);
+  if (!station) return null;
+
+  const window = getRangeWindow(range, now);
+  const supabase = getSupabase();
+  let rows: Array<{ state: HeatState; createdAt: Date }>;
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("reports")
+      .select("state,created_at")
+      .eq("location_kind", "platform")
+      .eq("line", line)
+      .eq("station_id", stationId)
+      .is("hidden_at", null)
+      .gte("created_at", window.start.toISOString())
+      .lt("created_at", window.end.toISOString())
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    rows = ((data ?? []) as PlatformHistoryRow[]).map((row) => ({
+      state: row.state,
+      createdAt: new Date(row.created_at),
+    }));
+  } else {
+    rows = getMemoryReportsSnapshot()
+      .filter(
+        (report) =>
+          !report.hiddenAt &&
+          getReportLocationKind(report) === "platform" &&
+          report.line === line &&
+          report.stationId === stationId &&
+          report.createdAt >= window.start &&
+          report.createdAt < window.end,
+      )
+      .map((report) => ({ state: report.state, createdAt: report.createdAt }));
+  }
+
+  if (rows.length === 0) return null;
+  const counts = countStates(rows);
+  const heatReports = counts.calorReports + counts.infiernoReports;
+
+  return {
+    line,
+    stationId,
+    stationName: station.name,
+    reports: rows.length,
+    ...counts,
+    heatReports,
+    confidence: confidenceFromCounts(rows.length, counts.frescoReports, heatReports),
+    history: buildDashboardBuckets(now, range, locale).map((bucket) => ({
+      label: bucket.label,
+      reports: rows.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
+    })),
   };
 }
 
@@ -105,18 +184,16 @@ function buildMemoryPlatformDashboard(
     .map((group): PlatformSummary => {
       const first = group[0];
       const stationId = first.stationId!;
-      const frescoReports = group.filter((report) => report.state === "fresco").length;
-      const calorReports = group.filter((report) => report.state === "calor").length;
-      const infiernoReports = group.filter((report) => report.state === "infierno").length;
+      const counts = countStates(group);
+      const heatReports = counts.calorReports + counts.infiernoReports;
       return {
         line: first.line,
         stationId,
         stationName: getStationName(first.line, stationId) ?? stationId,
         reports: group.length,
-        frescoReports,
-        calorReports,
-        infiernoReports,
-        heatReports: calorReports + infiernoReports,
+        ...counts,
+        heatReports,
+        confidence: confidenceFromCounts(group.length, counts.frescoReports, heatReports),
         latestReportAt: group.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.createdAt ?? null,
       };
     })
@@ -126,6 +203,26 @@ function buildMemoryPlatformDashboard(
     platformSummaries,
     platformLineSummaries: buildPlatformLineSummaries(platformSummaries),
   };
+}
+
+function countStates(reports: Array<{ state: HeatState }>) {
+  let frescoReports = 0;
+  let calorReports = 0;
+  let infiernoReports = 0;
+  for (const report of reports) {
+    if (report.state === "fresco") frescoReports += 1;
+    if (report.state === "calor") calorReports += 1;
+    if (report.state === "infierno") infiernoReports += 1;
+  }
+  return { frescoReports, calorReports, infiernoReports };
+}
+
+function confidenceFromCounts(totalReports: number, frescoReports: number, heatReports: number): Confidence {
+  if (totalReports < 3) return "low";
+  const agreement = Math.max(frescoReports, heatReports) / totalReports;
+  if (totalReports >= 10 && agreement >= 0.7) return "high";
+  if (totalReports >= 5 && agreement >= 0.55) return "medium";
+  return "low";
 }
 
 function buildPlatformLineSummaries(platforms: PlatformSummary[]) {

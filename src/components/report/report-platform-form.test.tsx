@@ -26,7 +26,7 @@ describe("platform report form", () => {
     toastMock.success.mockReset();
   });
 
-  it("submits a canonical line/station platform report and redirects to that line", async () => {
+  it("submits a canonical line/station platform report and redirects to that platform explorer", async () => {
     const user = userEvent.setup();
     const fetch = vi
       .fn()
@@ -58,6 +58,6 @@ describe("platform report form", () => {
         }),
       }),
     );
-    expect(push).toHaveBeenCalledWith("/es/explorar?linea=L1");
+    expect(push).toHaveBeenCalledWith("/es/explorar?linea=L1&tipo=anden&anden=sol");
   });
 });

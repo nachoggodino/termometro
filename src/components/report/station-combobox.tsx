@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, MapPin } from "lucide-react";
+import { Building2, Check } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import type { MetroLine } from "@/lib/domain/lines";
 import {
@@ -62,7 +62,7 @@ export function StationCombobox({
         <InfoTooltip label={help}>{help}</InfoTooltip>
       </span>
       <div className="relative">
-        <MapPin
+        <Building2
           aria-hidden="true"
           className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
         />

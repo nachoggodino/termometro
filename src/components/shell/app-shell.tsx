@@ -25,6 +25,11 @@ export function AppShell({
       <AppHeader dictionary={dictionary} locale={locale} pathname={localPathname} />
       {children}
       <CreatorCredit dictionary={dictionary} />
+      <style>{`
+        main article > div:has(> h1) {
+          display: none;
+        }
+      `}</style>
     </>
   );
 }

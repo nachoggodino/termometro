@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TriangleAlert } from "lucide-react";
+import { TrainFront, TriangleAlert } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -154,8 +154,13 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       });
 
       const params = new URLSearchParams();
-      if (locationKind === "platform") params.set("linea", line);
-      else if (normalizedCar) params.set("coche", normalizedCar);
+      if (locationKind === "platform") {
+        params.set("linea", line);
+        params.set("tipo", "anden");
+        if (stationId) params.set("anden", stationId);
+      } else if (normalizedCar) {
+        params.set("coche", normalizedCar);
+      }
       const query = params.toString();
       startTransition(() => router.push(`/${locale}/explorar${query ? `?${query}` : ""}`));
     } catch {
@@ -167,7 +172,6 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   return (
     <div className="flex flex-col gap-5">
       <LinePicker label={dictionary.reportForm.line} onChange={handleLineChange} value={line} />
-      <HeatSelector dictionary={dictionary} label={dictionary.reportForm.heatState} onChange={setState} value={state} />
 
       <ReportLocationToggle
         carLabel={platformMessages.reportForm.carMode}
@@ -177,23 +181,31 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
         value={locationKind}
       />
 
+      <HeatSelector dictionary={dictionary} label={dictionary.reportForm.heatState} onChange={setState} value={state} />
+
       {locationKind === "car" ? (
         <label className="flex flex-col gap-2">
           <span className="flex items-center gap-2 text-sm font-semibold">
             {dictionary.reportForm.car}
             <InfoTooltip label={dictionary.reportForm.carHelp}>{dictionary.reportForm.carHelp}</InfoTooltip>
           </span>
-          <input
-            aria-describedby={carError ? carErrorId : undefined}
-            aria-invalid={Boolean(carError)}
-            className="min-h-11 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none transition focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
-            list="car-suggestions"
-            onChange={(event) => setCar(event.target.value)}
-            placeholder={dictionary.reportForm.carPlaceholder}
-            ref={carInputRef}
-            suppressHydrationWarning
-            value={car}
-          />
+          <div className="relative">
+            <TrainFront
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
+            />
+            <input
+              aria-describedby={carError ? carErrorId : undefined}
+              aria-invalid={Boolean(carError)}
+              className="min-h-11 w-full rounded-md border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none transition focus:border-primary focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary"
+              list="car-suggestions"
+              onChange={(event) => setCar(event.target.value)}
+              placeholder={dictionary.reportForm.carPlaceholder}
+              ref={carInputRef}
+              suppressHydrationWarning
+              value={car}
+            />
+          </div>
           <datalist id="car-suggestions">
             {suggestions.map((suggestion) => (
               <option key={suggestion} value={formatCarCode(suggestion)} />
