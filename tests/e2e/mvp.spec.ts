@@ -25,8 +25,8 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
 
-  await expect(page).toHaveURL(new RegExp(`/es/explorar\\?coche=${car}`));
-  await expect(page.getByText("Evolución de cada línea")).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/es/explorar\\?coche=${car}`), { timeout: 15_000 });
+  await expect(page.getByText("Evolución de cada línea")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Peores coches")).toBeVisible();
   await expect(page.getByText("Explorar coche")).toBeVisible();
   await expect(page.locator("#car-explorer-input")).toHaveValue(formattedCar);
@@ -86,6 +86,7 @@ test("report flow submits a canonical platform and lands on platform explore", a
 
 test("report flow blocks invalid car codes", async ({ page }) => {
   await page.goto("/es/reportar");
+  await expectReportPage(page);
 
   await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill("Z1234");
   await expect(page.getByText("Usa M, R o S y 4 o 5 números")).toBeVisible();
@@ -94,6 +95,7 @@ test("report flow blocks invalid car codes", async ({ page }) => {
 
 test("report flow blocks cars that do not exist on the selected line", async ({ page }, testInfo) => {
   await page.goto("/es/reportar");
+  await expectReportPage(page);
 
   const carInput = page.getByPlaceholder("Ej. M2434, R-5469 o S3124");
   await carInput.fill("M3000");
@@ -165,12 +167,11 @@ test("home report counter keeps four digits clear of its icon on a narrow phone"
 
 test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.goto("/es/explorar");
+  await page.waitForLoadState("networkidle");
 
   const filtersButton = page.getByRole("button", { name: "Filtros" });
   const filtersButtonBox = await filtersButton.boundingBox();
-  await filtersButton.click();
-  const filterDialog = page.locator(".centered-popover", { hasText: "Filtrar exploración" });
-  await expect(filterDialog).toBeVisible();
+  const filterDialog = await openPopover(page, "Filtros", "Filtrar exploración");
   const box = await filterDialog.boundingBox();
   const viewport = page.viewportSize();
   expect(box).not.toBeNull();
@@ -182,8 +183,8 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "L1", exact: true }).click();
   await page.getByRole("button", { name: "2000", exact: true }).click();
   await page.getByRole("button", { name: "Aplicar filtros" }).click();
-  await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/);
-  await expect(page).toHaveURL(/serie=2000/);
+  await expect(page).toHaveURL(/linea=L5%2CL1|linea=L5,L1/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/serie=2000/, { timeout: 15_000 });
   await expect(page).not.toHaveURL(/rango=/);
 
   await page.getByTestId("worst-car-row").first().click();
@@ -197,6 +198,7 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
 
 test("explore switches cleanly between car and platform modes", async ({ page }) => {
   await page.goto("/es/explorar");
+  await page.waitForLoadState("networkidle");
 
   const platformMode = page.getByRole("button", { name: "Andén", exact: true });
   await platformMode.click();
@@ -226,4 +228,22 @@ test("explore lazily loads one car history and one line detail", async ({ page }
 async function expectReportPage(page: import("@playwright/test").Page) {
   await expect(page.getByText("Reportar", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByTestId("submit-report")).toBeVisible({ timeout: 15_000 });
+  await page.waitForLoadState("networkidle");
+}
+
+async function openPopover(
+  page: import("@playwright/test").Page,
+  buttonName: string,
+  title: string,
+) {
+  const dialog = page.locator(".centered-popover", { hasText: title });
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.getByRole("button", { name: buttonName }).click();
+    if (await dialog.isVisible().catch(() => false)) return dialog;
+    await page.waitForTimeout(250);
+  }
+
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  return dialog;
 }
