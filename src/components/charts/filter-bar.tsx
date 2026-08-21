@@ -2,7 +2,7 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import { Building2, ListTree, SlidersHorizontal, TrainFront, type LucideIcon } from "lucide-react";
-import { useEffect, useOptimistic, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export function FilterBar({
   const router = useRouter();
   const messages = dictionary.platform;
   const [isPending, startTransition] = useTransition();
-  const [optimisticLocationKind, setOptimisticLocationKind] = useOptimistic(locationKind);
+  const [displayLocationKind, setDisplayLocationKind] = useState<ReportLocationKind>(locationKind);
   const [open, setOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
@@ -57,7 +57,7 @@ export function FilterBar({
     lines: MetroLine[],
     range = selectedRange,
     carSeries = selectedCarSeries,
-    nextLocationKind = optimisticLocationKind,
+    nextLocationKind = displayLocationKind,
   ) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
@@ -68,11 +68,11 @@ export function FilterBar({
   }
 
   function selectLocationKind(nextLocationKind: ReportLocationKind) {
-    if (nextLocationKind === optimisticLocationKind) return;
+    if (nextLocationKind === displayLocationKind) return;
     setOpen(false);
     setNavigationOpen(false);
+    setDisplayLocationKind(nextLocationKind);
     startTransition(() => {
-      setOptimisticLocationKind(nextLocationKind);
       router.push(
         href(
           selectedLines,
@@ -91,8 +91,8 @@ export function FilterBar({
         href(
           draftLines,
           draftRange,
-          optimisticLocationKind === "car" ? draftCarSeries : [],
-          optimisticLocationKind,
+          displayLocationKind === "car" ? draftCarSeries : [],
+          displayLocationKind,
         ),
       );
     });
@@ -129,7 +129,7 @@ export function FilterBar({
   const selectedCarSeriesLabel = getSelectedCarSeriesLabel(selectedCarSeries, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
   const exploreSections =
-    optimisticLocationKind === "car"
+    displayLocationKind === "car"
       ? [
           { id: "line-evolution", label: dictionary.explore.modules.lineEvolution },
           { id: "total-reports", label: dictionary.explore.modules.totalReports },
@@ -158,13 +158,13 @@ export function FilterBar({
           <div className="flex flex-col gap-2.5">
             <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border">
               <LocationModeButton
-                active={optimisticLocationKind === "car"}
+                active={displayLocationKind === "car"}
                 icon={TrainFront}
                 label={messages.reportForm.carMode}
                 onClick={() => selectLocationKind("car")}
               />
               <LocationModeButton
-                active={optimisticLocationKind === "platform"}
+                active={displayLocationKind === "platform"}
                 icon={Building2}
                 label={messages.reportForm.platformMode}
                 onClick={() => selectLocationKind("platform")}
@@ -176,7 +176,7 @@ export function FilterBar({
                 <p className="truncate text-sm font-semibold">
                   {[
                     selectedLineLabel,
-                    optimisticLocationKind === "car" ? selectedCarSeriesLabel : null,
+                    displayLocationKind === "car" ? selectedCarSeriesLabel : null,
                     activeRangeLabel,
                   ]
                     .filter(Boolean)
@@ -270,7 +270,7 @@ export function FilterBar({
                 </div>
               </div>
 
-              {optimisticLocationKind === "car" && availableCarSeries.length > 0 ? (
+              {displayLocationKind === "car" && availableCarSeries.length > 0 ? (
                 <div className="mt-5">
                   <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
                   <div className="flex flex-wrap items-stretch gap-1.5">
@@ -305,7 +305,7 @@ export function FilterBar({
         </Popover.Portal>
       </Popover.Root>
 
-      {isPending ? <ExploreResultsSkeleton locationKind={optimisticLocationKind} /> : children}
+      {isPending ? <ExploreResultsSkeleton locationKind={displayLocationKind} /> : children}
     </>
   );
 }
