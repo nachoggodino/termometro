@@ -4,18 +4,16 @@ import * as Popover from "@radix-ui/react-popover";
 import { Building2, ListTree, SlidersHorizontal, TrainFront, type LucideIcon } from "lucide-react";
 import { useEffect, useOptimistic, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
+import { Button } from "@/components/ui/button";
 import type { CarSeriesSummary } from "@/lib/domain/dashboard";
+import { DEFAULT_DASHBOARD_RANGE } from "@/lib/domain/dashboard-query";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import type { ReportLocationKind } from "@/lib/domain/reports";
 import { TIME_RANGES, type TimeRange } from "@/lib/domain/ranges";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
-import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-shell";
-
-const DEFAULT_EXPLORE_RANGE: TimeRange = "month";
 
 export function FilterBar({
   availableCarSeries,
@@ -37,7 +35,7 @@ export function FilterBar({
   selectedRange: TimeRange;
 }) {
   const router = useRouter();
-  const messages = getPlatformMessages(locale);
+  const messages = dictionary.platform;
   const [isPending, startTransition] = useTransition();
   const [optimisticLocationKind, setOptimisticLocationKind] = useOptimistic(locationKind);
   const [open, setOpen] = useState(false);
@@ -64,7 +62,7 @@ export function FilterBar({
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
     if (nextLocationKind === "car" && carSeries.length > 0) params.set("serie", carSeries.join(","));
-    if (range !== DEFAULT_EXPLORE_RANGE) params.set("rango", range);
+    if (range !== DEFAULT_DASHBOARD_RANGE) params.set("rango", range);
     if (nextLocationKind === "platform") params.set("tipo", "anden");
     return `/${locale}/explorar${params.size ? `?${params.toString()}` : ""}`;
   }
@@ -103,7 +101,7 @@ export function FilterBar({
   function clearFilters() {
     setDraftLines([]);
     setDraftCarSeries([]);
-    setDraftRange(DEFAULT_EXPLORE_RANGE);
+    setDraftRange(DEFAULT_DASHBOARD_RANGE);
   }
 
   function toggleLine(line: MetroLine) {
@@ -313,7 +311,7 @@ export function FilterBar({
 }
 
 function ExploreResultsSkeleton({ locationKind }: { locationKind: ReportLocationKind }) {
-  const mainCardCount = locationKind === "car" ? 7 : 4;
+  const mainCardCount = locationKind === "car" ? 9 : 4;
 
   return (
     <div aria-busy="true" data-testid="explore-results-loading">

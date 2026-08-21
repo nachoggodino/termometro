@@ -133,12 +133,26 @@ export function getAgreement(reports: Array<{ state: HeatState }>) {
 
 export type Confidence = "low" | "medium" | "high";
 
-export function getConfidence(reports: Array<{ state: HeatState; createdAt: Date }>): Confidence {
-  if (reports.length < 3) return "low";
-  const agreement = getAgreement(reports);
-  if (reports.length >= 10 && agreement >= 0.7) return "high";
-  if (reports.length >= 5 && agreement >= 0.55) return "medium";
+export function getConfidenceFromCounts(
+  totalReports: number,
+  frescoReports: number,
+  heatReports: number,
+): Confidence {
+  if (totalReports < 3) return "low";
+  const agreement = Math.max(frescoReports, heatReports) / totalReports;
+  if (totalReports >= 10 && agreement >= 0.7) return "high";
+  if (totalReports >= 5 && agreement >= 0.55) return "medium";
   return "low";
+}
+
+export function getConfidence(reports: Array<{ state: HeatState; createdAt: Date }>): Confidence {
+  let frescoReports = 0;
+  let heatReports = 0;
+  for (const report of reports) {
+    if (report.state === "fresco") frescoReports += 1;
+    else heatReports += 1;
+  }
+  return getConfidenceFromCounts(reports.length, frescoReports, heatReports);
 }
 
 function getReportHeatValue(report: HeatIndexReport) {

@@ -1,10 +1,15 @@
 import { buildDashboardBuckets, type TrendPoint } from "@/lib/domain/dashboard";
-import type { Confidence, HeatState } from "@/lib/domain/heat";
-import type { Locale } from "@/lib/i18n/config";
+import {
+  getConfidenceFromCounts,
+  type Confidence,
+  type HeatState,
+} from "@/lib/domain/heat";
+import { isMetroLine, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
+import { getPlatformHeatReports } from "@/lib/domain/platforms";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import { getReportLocationKind, type Report } from "@/lib/domain/reports";
-import { isMetroLine, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import { getStationById, getStationName } from "@/lib/domain/stations";
+import type { Locale } from "@/lib/i18n/config";
 import { getMemoryReportsSnapshot, getSupabase } from "./reports-repository";
 
 export type PlatformSummary = {
@@ -33,18 +38,8 @@ export type PlatformExplorerSelection = {
   history: TrendPoint[];
 };
 
-export type PlatformLineSummary = {
-  line: MetroLine;
-  reports: number;
-  heatReports: number;
-  calorReports: number;
-  infiernoReports: number;
-  latestReportAt: Date | null;
-};
-
 export type PlatformDashboardData = {
   platformSummaries: PlatformSummary[];
-  platformLineSummaries: PlatformLineSummary[];
 };
 
 type PlatformSummaryRow = {
@@ -59,9 +54,17 @@ type PlatformSummaryRow = {
 };
 
 type PlatformHistoryRow = {
+  hour_start: string;
   line: string;
   state: HeatState;
-  created_at: string;
+  reports: number;
+};
+
+type NormalizedHistoryRow = {
+  hourStart: Date;
+  line: MetroLine;
+  state: HeatState;
+  reports: number;
 };
 
 export async function getPlatformDashboard(
@@ -92,16 +95,13 @@ export async function getPlatformDashboard(
         calorReports: row.calor_reports,
         infiernoReports: row.infierno_reports,
         heatReports,
-        confidence: confidenceFromCounts(row.reports, row.fresco_reports, heatReports),
+        confidence: getConfidenceFromCounts(row.reports, row.fresco_reports, heatReports),
         latestReportAt: row.latest_report_at ? new Date(row.latest_report_at) : null,
       };
     })
     .toSorted(comparePlatforms);
 
-  return {
-    platformSummaries,
-    platformLineSummaries: buildPlatformLineSummaries(platformSummaries),
-  };
+  return { platformSummaries };
 }
 
 export async function getPlatformDetail(
@@ -116,26 +116,23 @@ export async function getPlatformDetail(
 
   const window = getRangeWindow(range, now);
   const supabase = getSupabase();
-  let rows: Array<{ line: MetroLine; state: HeatState; createdAt: Date }>;
+  let rows: NormalizedHistoryRow[];
 
   if (supabase) {
-    const { data, error } = await supabase
-      .from("reports")
-      .select("line,state,created_at")
-      .eq("location_kind", "platform")
-      .eq("station_id", stationId)
-      .in("line", requestedLines)
-      .is("hidden_at", null)
-      .gte("created_at", window.start.toISOString())
-      .lt("created_at", window.end.toISOString())
-      .order("created_at", { ascending: true });
+    const { data, error } = await supabase.rpc("dashboard_platform_history_v1", {
+      input_start: window.start.toISOString(),
+      input_end: window.end.toISOString(),
+      input_lines: requestedLines,
+      input_station_id: stationId,
+    });
     if (error) throw error;
     rows = ((data ?? []) as PlatformHistoryRow[])
-      .filter((row) => isMetroLine(row.line))
+      .filter((row) => isMetroLine(row.line) && row.reports > 0)
       .map((row) => ({
+        hourStart: new Date(row.hour_start),
         line: row.line as MetroLine,
         state: row.state,
-        createdAt: new Date(row.created_at),
+        reports: row.reports,
       }));
   } else {
     rows = getMemoryReportsSnapshot()
@@ -149,15 +146,17 @@ export async function getPlatformDetail(
           report.createdAt < window.end,
       )
       .map((report) => ({
+        hourStart: report.createdAt,
         line: report.line,
         state: report.state,
-        createdAt: report.createdAt,
+        reports: 1,
       }));
   }
 
   if (rows.length === 0) return null;
   const counts = countStates(rows);
-  const heatReports = counts.calorReports + counts.infiernoReports;
+  const reports = counts.frescoReports + counts.calorReports + counts.infiernoReports;
+  const heatReports = getPlatformHeatReports(counts);
   const reportedLines = uniqueLines(rows.map((row) => row.line));
   const stationName =
     reportedLines
@@ -172,15 +171,19 @@ export async function getPlatformDetail(
     stationId,
     stationName,
     lines: reportedLines,
-    reports: rows.length,
+    reports,
     ...counts,
     heatReports,
-    confidence: confidenceFromCounts(rows.length, counts.frescoReports, heatReports),
+    confidence: getConfidenceFromCounts(reports, counts.frescoReports, heatReports),
     history: buildDashboardBuckets(now, range, locale).map((bucket) => ({
       label: bucket.label,
-      reports: rows.filter(
-        (report) => report.createdAt >= bucket.start && report.createdAt < bucket.end,
-      ).length,
+      reports: rows.reduce(
+        (total, report) =>
+          report.hourStart >= bucket.start && report.hourStart < bucket.end
+            ? total + report.reports
+            : total,
+        0,
+      ),
     })),
   };
 }
@@ -212,8 +215,8 @@ function buildMemoryPlatformDashboard(
     .map((group): PlatformSummary => {
       const first = group[0];
       const stationId = first.stationId!;
-      const counts = countStates(group);
-      const heatReports = counts.calorReports + counts.infiernoReports;
+      const counts = countStates(group.map((report) => ({ state: report.state, reports: 1 })));
+      const heatReports = getPlatformHeatReports(counts);
       return {
         line: first.line,
         stationId,
@@ -221,7 +224,7 @@ function buildMemoryPlatformDashboard(
         reports: group.length,
         ...counts,
         heatReports,
-        confidence: confidenceFromCounts(group.length, counts.frescoReports, heatReports),
+        confidence: getConfidenceFromCounts(group.length, counts.frescoReports, heatReports),
         latestReportAt:
           group.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.createdAt ??
           null,
@@ -229,66 +232,19 @@ function buildMemoryPlatformDashboard(
     })
     .toSorted(comparePlatforms);
 
-  return {
-    platformSummaries,
-    platformLineSummaries: buildPlatformLineSummaries(platformSummaries),
-  };
+  return { platformSummaries };
 }
 
-function countStates(reports: Array<{ state: HeatState }>) {
+function countStates(reports: Array<{ state: HeatState; reports: number }>) {
   let frescoReports = 0;
   let calorReports = 0;
   let infiernoReports = 0;
   for (const report of reports) {
-    if (report.state === "fresco") frescoReports += 1;
-    if (report.state === "calor") calorReports += 1;
-    if (report.state === "infierno") infiernoReports += 1;
+    if (report.state === "fresco") frescoReports += report.reports;
+    if (report.state === "calor") calorReports += report.reports;
+    if (report.state === "infierno") infiernoReports += report.reports;
   }
   return { frescoReports, calorReports, infiernoReports };
-}
-
-function confidenceFromCounts(
-  totalReports: number,
-  frescoReports: number,
-  heatReports: number,
-): Confidence {
-  if (totalReports < 3) return "low";
-  const agreement = Math.max(frescoReports, heatReports) / totalReports;
-  if (totalReports >= 10 && agreement >= 0.7) return "high";
-  if (totalReports >= 5 && agreement >= 0.55) return "medium";
-  return "low";
-}
-
-function buildPlatformLineSummaries(platforms: PlatformSummary[]) {
-  const byLine = new Map<MetroLine, PlatformLineSummary>();
-  for (const platform of platforms) {
-    const current = byLine.get(platform.line) ?? {
-      line: platform.line,
-      reports: 0,
-      heatReports: 0,
-      calorReports: 0,
-      infiernoReports: 0,
-      latestReportAt: null,
-    };
-    current.reports += platform.reports;
-    current.heatReports += platform.heatReports;
-    current.calorReports += platform.calorReports;
-    current.infiernoReports += platform.infiernoReports;
-    if (
-      platform.latestReportAt &&
-      (!current.latestReportAt ||
-        platform.latestReportAt.getTime() > current.latestReportAt.getTime())
-    ) {
-      current.latestReportAt = platform.latestReportAt;
-    }
-    byLine.set(platform.line, current);
-  }
-  return Array.from(byLine.values()).toSorted(
-    (a, b) =>
-      b.heatReports - a.heatReports ||
-      b.infiernoReports - a.infiernoReports ||
-      b.reports - a.reports,
-  );
 }
 
 function comparePlatforms(a: PlatformSummary, b: PlatformSummary) {

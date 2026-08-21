@@ -1,6 +1,6 @@
 # Termo de Madrid
 
-Mobile-first civic PWA for reporting and exploring Metro de Madrid AC conditions.
+Mobile-first civic PWA for reporting and exploring Metro de Madrid AC conditions in train cars and station platforms.
 
 ## Local Development
 
@@ -25,19 +25,22 @@ TERMO_ABUSE_SECRET=
 TERMO_ALLOW_MEMORY_STORE=
 ```
 
-Use a long random value for `TERMO_ABUSE_SECRET`; it salts private abuse keys and undo token hashes.
+Use a long random value for `TERMO_ABUSE_SECRET`; it salts private abuse-control keys and undo token hashes. Abuse-control fingerprints are kept server-side only and the current write path retains them in a private, self-pruning short-lived store rather than in dashboard-visible report data.
+
 Set `NEXT_PUBLIC_SITE_URL` to `https://termodemadrid.es` in production so social preview metadata uses absolute public URLs.
 
 ## Supabase
 
-When you create the Supabase project, apply every file in `supabase/migrations/` in filename order, then seed optional development data:
+Apply every pending file in `supabase/migrations/` in filename order before deploying application code that depends on it, then seed optional development data when needed:
 
 ```bash
-supabase/migrations/*.sql
-supabase/seed.sql
+supabase db push --dry-run
+supabase db push
 ```
 
-Dashboard and car-inventory reads run only on the server with the service-role key. Car codes are stored normalized as one uppercase letter plus 4 or 5 digits, for example `M1234`. The UI may display them as `M-1234`.
+Optional local seed data lives in `supabase/seed.sql`.
+
+Dashboard, station-catalogue, and car-inventory reads run only on the server with the service-role key. Car codes are stored normalized as one uppercase letter plus 4 or 5 digits, for example `M1234`; the UI may display them as `M-1234`.
 
 ## Verification
 
@@ -49,4 +52,4 @@ npm run build
 npm run test:ui
 ```
 
-The same verification suite runs in GitHub Actions. See `DEPLOYMENT.md` for Vercel Preview setup.
+GitHub Actions runs this same verification suite, including Playwright on mobile and desktop projects. See `DEPLOYMENT.md` for the deployment order and production checks.

@@ -41,6 +41,11 @@ test("captures primary surfaces", async ({ page }, testInfo) => {
   await expect(page.getByTestId("car-explorer-chart")).toBeVisible();
   await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-explorar.png` });
 
+  await page.goto("/es/explorar?tipo=anden");
+  await expect(page.getByText("Peores andenes")).toBeVisible();
+  await expect(page.getByText("Porcentaje de andenes sin AC")).toBeVisible();
+  await page.screenshot({ fullPage: true, path: `/tmp/termo-${project}-explorar-andenes.png` });
+
   await page.goto("/es/metodologia");
   await expect(page.getByRole("heading", { name: "Misión y Metodología" })).toBeVisible();
   await openPopover(page, "Secciones", "Ir a sección");

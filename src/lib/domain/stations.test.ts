@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { METRO_LINES, type MetroLine } from "./lines";
 import {
   getStationById,
   getStationsForLine,
@@ -26,5 +29,30 @@ describe("Metro station catalogue", () => {
     expect(isStationOnLine(sol, "L3")).toBe(true);
     expect(isStationOnLine(sol, "L4")).toBe(false);
     expect(getStationById("L2", sol)?.line).toBe("L2");
+  });
+
+  it("matches the SQL station catalogue entry for entry", () => {
+    const sql = readFileSync(
+      join(process.cwd(), "supabase/migrations/20260820052100_seed_platform_stations.sql"),
+      "utf8",
+    );
+    const sqlStations = Array.from(
+      sql.matchAll(/\('(L(?:1[0-2]|[1-9]))', '([^']+)', '((?:''|[^'])*)', (\d+)\)/g),
+    ).map((match) => ({
+      line: match[1] as MetroLine,
+      id: match[2],
+      name: match[3].replaceAll("''", "'"),
+      sortOrder: Number(match[4]),
+    }));
+    const appStations = METRO_LINES.flatMap((line) =>
+      getStationsForLine(line).map((station) => ({
+        line,
+        id: station.id,
+        name: station.name,
+        sortOrder: station.sortOrder,
+      })),
+    );
+
+    expect(sqlStations).toEqual(appStations);
   });
 });

@@ -23,6 +23,7 @@ export const DUPLICATE_WINDOW_MINUTES = 12;
 export const NO_CAR_ORIGIN_WINDOW_MINUTES = 30;
 export const RATE_LIMIT_WINDOW_MINUTES = 10;
 export const RATE_LIMIT_MAX_REPORTS = 4;
+export const RATE_LIMIT_NETWORK_MAX_REPORTS = 40;
 export const UNDO_WINDOW_SECONDS = 90;
 export const CAR_NOT_ON_LINE_REASON = "car_not_on_line";
 export const STATION_NOT_ON_LINE_REASON = "station_not_on_line";
@@ -97,21 +98,18 @@ export const reportInputSchema = z
     }
   });
 
+export type ReportInput = z.input<typeof reportInputSchema>;
+export type ParsedReportInput = z.output<typeof reportInputSchema>;
+
 export function getReportInputErrorReason(error: z.ZodError): ReportCreateFailureReason {
-  if (error.issues.some((issue) => issue.message === STATION_NOT_ON_LINE_REASON)) return STATION_NOT_ON_LINE_REASON;
-  if (error.issues.some((issue) => issue.message === CAR_NOT_ON_LINE_REASON)) return CAR_NOT_ON_LINE_REASON;
+  if (error.issues.some((issue) => issue.message === STATION_NOT_ON_LINE_REASON)) {
+    return STATION_NOT_ON_LINE_REASON;
+  }
+  if (error.issues.some((issue) => issue.message === CAR_NOT_ON_LINE_REASON)) {
+    return CAR_NOT_ON_LINE_REASON;
+  }
   return "invalid";
 }
-
-type ParsedReportInput = z.infer<typeof reportInputSchema>;
-
-export type ReportInput = Omit<
-  ParsedReportInput,
-  "locationKind" | "stationId"
-> & {
-  locationKind?: ReportLocationKind;
-  stationId?: string | null;
-};
 
 export function parseReportInput(input: unknown) {
   return reportInputSchema.safeParse(input);
@@ -144,7 +142,11 @@ export function isDuplicateCandidate(
   if (currentKind !== previousKind) return false;
 
   if (currentKind === "platform") {
-    return Boolean(current.stationId) && previous.state === current.state && previous.stationId === current.stationId;
+    return (
+      Boolean(current.stationId) &&
+      previous.state === current.state &&
+      previous.stationId === current.stationId
+    );
   }
 
   if (!current.car) {

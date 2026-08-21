@@ -28,6 +28,7 @@ export default defineConfig({
         "src/lib/i18n/app-copy.ts",
         "src/lib/i18n/config.ts",
         "src/lib/i18n/format.ts",
+        "src/lib/i18n/platform-messages.ts",
         "src/lib/i18n/messages/*.ts",
         "src/lib/server/report-security.ts",
       ],

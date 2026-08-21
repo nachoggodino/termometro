@@ -17,7 +17,7 @@ const platformMessages = {
       platformExplorerTitle: "Explorar andén",
       platformCoverageTitle: "Porcentaje de andenes sin AC",
       platformCoverageTakeaway:
-        "Un andén se considera sin AC cuando, en el rango seleccionado, los reportes de Calor e Infierno superan a los de Fresco por más de 5",
+        "Un andén se considera sin AC cuando, en el rango seleccionado, los reportes de Calor e Infierno superan a los de Fresco por más de {threshold}",
       heatReports: "reportes de calor",
       platformCoverageLabel: "de andenes sin AC",
       noPlatformReports: "No hay reportes de calor en andenes para este rango",
@@ -49,7 +49,7 @@ const platformMessages = {
       platformExplorerTitle: "Explore platform",
       platformCoverageTitle: "Percentage of platforms without AC",
       platformCoverageTakeaway:
-        "A platform counts as without AC when, in the selected range, Calor and Infierno reports exceed Fresco reports by more than 5",
+        "A platform counts as without AC when, in the selected range, Calor and Infierno reports exceed Fresco reports by more than {threshold}",
       heatReports: "heat reports",
       platformCoverageLabel: "of platforms without AC",
       noPlatformReports: "No platform heat reports in this range",

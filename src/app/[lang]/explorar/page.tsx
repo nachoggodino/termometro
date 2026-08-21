@@ -84,13 +84,15 @@ async function ExploreContent({
     lang,
     locationKind,
   );
-  const initialPlatform =
+  const initialStationId =
     locationKind === "platform" && search.anden
-      ? data.platformSummaries.find(
+      ? data.platformSummaries.some(
           (platform) =>
             platform.stationId === search.anden &&
             (selectedLines.length === 0 || selectedLines.includes(platform.line)),
-        ) ?? null
+        )
+        ? search.anden
+        : null
       : null;
 
   return (
@@ -175,11 +177,7 @@ async function ExploreContent({
                 <WorstPlatformsExplorerChartCards
                   data={data}
                   dictionary={dictionary}
-                  initialPlatform={
-                    initialPlatform
-                      ? { line: initialPlatform.line, stationId: initialPlatform.stationId }
-                      : null
-                  }
+                  initialStationId={initialStationId}
                   locale={lang}
                   rangeLabel={rangeLabel}
                   selectedRange={selectedRange}

@@ -10,34 +10,35 @@ import {
   YAxis,
   type TooltipContentProps,
 } from "recharts";
-import { Building2, Check, ChevronDown } from "lucide-react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { Building2, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { HeatReportCounts } from "@/components/report/heat-report-counts";
 import { Button } from "@/components/ui/button";
 import { InfoTooltip } from "@/components/ui/tooltip";
 import { LineBadge } from "@/components/ui/line-badge";
+import { SearchCombobox } from "@/components/ui/search-combobox";
 import { CHART_TOKENS } from "@/lib/design/tokens";
 import { DASHBOARD_LIMITS } from "@/lib/domain/dashboard";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
+import {
+  hasPlatformWithoutAcSignal,
+  PLATFORM_WITHOUT_AC_NET_HEAT_THRESHOLD,
+} from "@/lib/domain/platforms";
 import { getStationsForLine, normalizeStationSearch } from "@/lib/domain/stations";
 import type { TimeRange } from "@/lib/domain/ranges";
 import type { Locale } from "@/lib/i18n/config";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { formatNumber } from "@/lib/i18n/format";
-import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import type {
   PlatformDashboardData,
   PlatformExplorerSelection,
   PlatformSummary,
 } from "@/lib/server/platform-dashboard";
-import { cn } from "@/lib/utils";
 import { ChartCard } from "./chart-card";
 
-const PLATFORM_WITHOUT_AC_NET_HEAT_THRESHOLD = 5;
-
-type PlatformIdentity = { line: MetroLine; stationId: string };
-
 type ReportedStationOption = {
+  id: string;
+  label: string;
   stationId: string;
   stationName: string;
   lines: MetroLine[];
@@ -46,39 +47,32 @@ type ReportedStationOption = {
 export function WorstPlatformsExplorerChartCards({
   data,
   dictionary,
-  initialPlatform,
+  initialStationId,
   locale,
   rangeLabel,
   selectedRange,
 }: {
   data: Pick<PlatformDashboardData, "platformSummaries">;
   dictionary: Dictionary;
-  initialPlatform?: PlatformIdentity | null;
+  initialStationId?: string | null;
   locale: Locale;
   rangeLabel: string;
   selectedRange: TimeRange;
 }) {
-  const messages = getPlatformMessages(locale);
+  const messages = dictionary.platform;
   const options = data.platformSummaries;
   const initial =
-    (initialPlatform
-      ? options.find(
-          (platform) =>
-            platform.line === initialPlatform.line && platform.stationId === initialPlatform.stationId,
-        ) ??
-        options.find((platform) => platform.stationId === initialPlatform.stationId)
-      : null) ??
-    options[0] ??
-    null;
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformIdentity | null>(
-    initial ? { line: initial.line, stationId: initial.stationId } : null,
+    (initialStationId
+      ? options.find((platform) => platform.stationId === initialStationId)
+      : null) ?? options[0] ?? null;
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(
+    initial?.stationId ?? null,
   );
   const [activeSelection, setActiveSelection] = useState<PlatformExplorerSelection | null>(null);
   const [isChartPending, setIsChartPending] = useState(Boolean(initial));
   const [loadError, setLoadError] = useState(false);
   const [requestVersion, setRequestVersion] = useState(0);
 
-  const selectedStationId = selectedPlatform?.stationId ?? null;
   const selectedLineKey = useMemo(() => {
     if (!selectedStationId) return "";
     return uniqueLines(
@@ -112,11 +106,11 @@ export function WorstPlatformsExplorerChartCards({
     return () => controller.abort();
   }, [locale, requestVersion, selectedLineKey, selectedRange, selectedStationId]);
 
-  function selectPlatform(platform: PlatformIdentity) {
+  function selectStation(stationId: string) {
     setActiveSelection(null);
     setIsChartPending(true);
     setLoadError(false);
-    setSelectedPlatform(platform);
+    setSelectedStationId(stationId);
     setRequestVersion((version) => version + 1);
   }
 
@@ -132,8 +126,8 @@ export function WorstPlatformsExplorerChartCards({
           data={data}
           dictionary={dictionary}
           locale={locale}
-          onSelectPlatform={(platform) => {
-            selectPlatform(platform);
+          onSelectStation={(stationId) => {
+            selectStation(stationId);
             window.requestAnimationFrame(() => {
               document
                 .getElementById("platform-explorer")
@@ -157,8 +151,8 @@ export function WorstPlatformsExplorerChartCards({
           key={selectedStationId ?? "none"}
           loadError={loadError}
           locale={locale}
-          onSelectPlatform={selectPlatform}
-          selectedPlatform={selectedPlatform}
+          onSelectStation={selectStation}
+          selectedStationId={selectedStationId}
           selectedRange={selectedRange}
         />
       </ChartCard>
@@ -179,7 +173,7 @@ export function PlatformCoveragePanel({
   rangeLabel: string;
   selectedLines: MetroLine[];
 }) {
-  const messages = getPlatformMessages(locale);
+  const messages = dictionary.platform;
   const byLine = new Map<MetroLine, PlatformSummary[]>();
   for (const platform of data.platformSummaries) {
     const rows = byLine.get(platform.line) ?? [];
@@ -194,10 +188,7 @@ export function PlatformCoveragePanel({
   const summaries = lines
     .map((line) => {
       const platforms = byLine.get(line) ?? [];
-      const withoutAc = platforms.filter(
-        (platform) =>
-          platform.heatReports - platform.frescoReports > PLATFORM_WITHOUT_AC_NET_HEAT_THRESHOLD,
-      ).length;
+      const withoutAc = platforms.filter(hasPlatformWithoutAcSignal).length;
       const totalPlatforms = getStationsForLine(line).length;
       return {
         line,
@@ -218,6 +209,10 @@ export function PlatformCoveragePanel({
     expanded ? summaries.length : DASHBOARD_LIMITS.fleetCollapsedCount,
   );
   const canToggle = summaries.length > DASHBOARD_LIMITS.fleetCollapsedCount;
+  const coverageTakeaway = messages.explore.platformCoverageTakeaway.replace(
+    "{threshold}",
+    String(PLATFORM_WITHOUT_AC_NET_HEAT_THRESHOLD),
+  );
 
   return (
     <aside className="flex flex-col gap-4">
@@ -227,9 +222,7 @@ export function PlatformCoveragePanel({
       >
         <div className="flex items-center gap-2">
           <h2 className="text-base font-semibold">{messages.explore.platformCoverageTitle}</h2>
-          <InfoTooltip label={messages.explore.platformCoverageTitle}>
-            {messages.explore.platformCoverageTakeaway}
-          </InfoTooltip>
+          <InfoTooltip label={messages.explore.platformCoverageTitle}>{coverageTakeaway}</InfoTooltip>
         </div>
         <p className="mt-1 text-xs font-semibold text-muted">
           {dictionary.explore.moduleRange}: {rangeLabel}
@@ -242,8 +235,7 @@ export function PlatformCoveragePanel({
                   <LineBadge line={summary.line} />
                   <span className="text-right text-muted">
                     {summary.percentage}% {messages.explore.platformCoverageLabel} (
-                    {formatNumber(summary.withoutAc, locale)}/
-                    {formatNumber(summary.totalPlatforms, locale)})
+                    {formatNumber(summary.withoutAc, locale)}/{formatNumber(summary.totalPlatforms, locale)})
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-surface">
@@ -284,14 +276,14 @@ function WorstPlatformsList({
   data,
   dictionary,
   locale,
-  onSelectPlatform,
+  onSelectStation,
 }: {
   data: Pick<PlatformDashboardData, "platformSummaries">;
   dictionary: Dictionary;
   locale: Locale;
-  onSelectPlatform: (platform: PlatformIdentity) => void;
+  onSelectStation: (stationId: string) => void;
 }) {
-  const messages = getPlatformMessages(locale);
+  const messages = dictionary.platform;
   const [expanded, setExpanded] = useState(false);
   const platforms = data.platformSummaries
     .filter((platform) => platform.heatReports > 0)
@@ -314,7 +306,7 @@ function WorstPlatformsList({
           className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border border-border bg-surface p-3 text-left transition duration-200 ease-out hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           data-testid="worst-platform-row"
           key={`${platform.line}:${platform.stationId}`}
-          onClick={() => onSelectPlatform({ line: platform.line, stationId: platform.stationId })}
+          onClick={() => onSelectStation(platform.stationId)}
           type="button"
         >
           <div className="min-w-0">
@@ -369,8 +361,8 @@ function PlatformExplorer({
   isChartPending,
   loadError,
   locale,
-  onSelectPlatform,
-  selectedPlatform,
+  onSelectStation,
+  selectedStationId,
   selectedRange,
 }: {
   activeSelection: PlatformExplorerSelection | null;
@@ -379,17 +371,17 @@ function PlatformExplorer({
   isChartPending: boolean;
   loadError: boolean;
   locale: Locale;
-  onSelectPlatform: (platform: PlatformIdentity) => void;
-  selectedPlatform: PlatformIdentity | null;
+  onSelectStation: (stationId: string) => void;
+  selectedStationId: string | null;
   selectedRange: TimeRange;
 }) {
-  const messages = getPlatformMessages(locale);
+  const messages = dictionary.platform;
   const options = useMemo(
     () => buildReportedStationOptions(data.platformSummaries),
     [data.platformSummaries],
   );
-  const selected = selectedPlatform
-    ? options.find((option) => option.stationId === selectedPlatform.stationId) ?? null
+  const selected = selectedStationId
+    ? options.find((option) => option.stationId === selectedStationId) ?? null
     : null;
 
   if (options.length === 0) {
@@ -399,11 +391,9 @@ function PlatformExplorer({
   return (
     <div>
       <ReportedStationCombobox
+        invalidMessage={messages.explore.platformExplorer.invalid}
         label={messages.explore.platformExplorer.label}
-        locale={locale}
-        onSelect={(option) =>
-          onSelectPlatform({ line: option.lines[0], stationId: option.stationId })
-        }
+        onSelect={(option) => onSelectStation(option.stationId)}
         options={options}
         placeholder={messages.explore.platformExplorer.placeholder}
         selected={selected}
@@ -470,9 +460,7 @@ function PlatformExplorer({
                 />
                 <YAxis axisLine={false} allowDecimals={false} tickLine={false} />
                 <Tooltip
-                  content={
-                    <PlatformTooltip labelName={dictionary.common.reports} locale={locale} />
-                  }
+                  content={<PlatformTooltip labelName={dictionary.common.reports} locale={locale} />}
                   cursor={{ fill: "var(--surface)" }}
                 />
                 <Bar
@@ -492,25 +480,21 @@ function PlatformExplorer({
 }
 
 function ReportedStationCombobox({
+  invalidMessage,
   label,
-  locale,
   onSelect,
   options,
   placeholder,
   selected,
 }: {
+  invalidMessage: string;
   label: string;
-  locale: Locale;
   onSelect: (option: ReportedStationOption) => void;
   options: ReportedStationOption[];
   placeholder: string;
   selected: ReportedStationOption | null;
 }) {
   const [query, setQuery] = useState(selected?.stationName ?? "");
-  const [open, setOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [error, setError] = useState(false);
-  const listboxId = useId();
   const normalizedQuery = normalizeStationSearch(query);
   const results = useMemo(() => {
     if (!normalizedQuery) return options;
@@ -519,139 +503,37 @@ function ReportedStationCombobox({
     );
   }, [normalizedQuery, options]);
 
-  function choose(option: ReportedStationOption) {
-    setQuery(option.stationName);
-    setOpen(false);
-    setActiveIndex(0);
-    setError(false);
-    onSelect(option);
-  }
-
-  function handleBlur() {
-    const exact = options.find(
-      (option) => normalizeStationSearch(option.stationName) === normalizeStationSearch(query),
-    );
-    if (exact) {
-      choose(exact);
-      return;
-    }
-    window.setTimeout(() => setOpen(false), 0);
-  }
-
   return (
     <div>
       <label className="sr-only" htmlFor="platform-explorer-input">
         {label}
       </label>
-      <div className="relative">
-        <Building2
-          aria-hidden="true"
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
-        />
-        <input
-          aria-activedescendant={
-            open && results[activeIndex]
-              ? `${listboxId}-${results[activeIndex].stationId}`
-              : undefined
-          }
-          aria-autocomplete="list"
-          aria-controls={listboxId}
-          aria-expanded={open}
-          aria-invalid={error}
-          className="min-h-11 w-full rounded-md border border-border bg-background py-2 pl-9 pr-9 text-sm font-semibold outline-none transition duration-200 ease-out placeholder:text-muted focus-visible:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          id="platform-explorer-input"
-          onBlur={handleBlur}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setError(false);
-            setOpen(true);
-            setActiveIndex(0);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setOpen(true);
-              setActiveIndex((index) =>
-                Math.min(index + 1, Math.max(0, results.length - 1)),
-              );
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setOpen(true);
-              setActiveIndex((index) => Math.max(0, index - 1));
-            } else if (event.key === "Enter") {
-              event.preventDefault();
-              if (open && results[activeIndex]) {
-                choose(results[activeIndex]);
-              } else {
-                const exact = options.find(
-                  (option) =>
-                    normalizeStationSearch(option.stationName) === normalizeStationSearch(query),
-                );
-                if (exact) choose(exact);
-                else setError(true);
-              }
-            } else if (event.key === "Escape") {
-              setOpen(false);
-            }
-          }}
-          placeholder={placeholder}
-          role="combobox"
-          value={query}
-        />
-        {selected && normalizeStationSearch(query) === normalizeStationSearch(selected.stationName) ? (
-          <Check
+      <SearchCombobox
+        inputId="platform-explorer-input"
+        invalidMessage={invalidMessage}
+        leadingIcon={
+          <Building2
             aria-hidden="true"
-            className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-primary"
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted"
           />
-        ) : null}
-
-        {open && results.length > 0 ? (
-          <ul
-            className="absolute left-0 right-0 top-full z-[var(--z-popover)] mt-1 max-h-60 overflow-y-auto rounded-md border border-border bg-surface-raised p-1 shadow-[var(--shadow-popover)]"
-            id={listboxId}
-            role="listbox"
-          >
-            {results.map((option, index) => {
-              const active = index === activeIndex;
-              const isSelected = option.stationId === selected?.stationId;
-              return (
-                <li
-                  aria-selected={isSelected}
-                  className={cn(
-                    "flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2 transition",
-                    active ? "bg-surface text-foreground" : "text-foreground hover:bg-surface",
-                  )}
-                  id={`${listboxId}-${option.stationId}`}
-                  key={option.stationId}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    choose(option);
-                  }}
-                  role="option"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">
-                      {option.stationName}
-                    </span>
-                    <span className="mt-1 flex flex-wrap gap-1.5">
-                      {option.lines.map((line) => (
-                        <LineBadge line={line} key={line} />
-                      ))}
-                    </span>
-                  </span>
-                  {isSelected ? <Check aria-hidden="true" className="size-4 shrink-0 text-primary" /> : null}
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-      </div>
-      {error ? (
-        <p className="mt-2 text-[0.6875rem] font-semibold leading-4 text-danger">
-          {getPlatformMessages(locale).explore.platformExplorer.invalid}
-        </p>
-      ) : null}
+        }
+        onQueryChange={setQuery}
+        onSelect={onSelect}
+        options={results}
+        placeholder={placeholder}
+        query={query}
+        renderOption={(option) => (
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold">{option.stationName}</span>
+            <span className="mt-1 flex flex-wrap gap-1.5">
+              {option.lines.map((line) => (
+                <LineBadge line={line} key={line} />
+              ))}
+            </span>
+          </span>
+        )}
+        selectedId={selected?.stationId ?? null}
+      />
     </div>
   );
 }
@@ -715,6 +597,8 @@ function buildReportedStationOptions(platforms: PlatformSummary[]): ReportedStat
 
   return Array.from(grouped.values())
     .map((option) => ({
+      id: option.stationId,
+      label: option.stationName,
       stationId: option.stationId,
       stationName: option.stationName,
       lines: uniqueLines(Array.from(option.lines)),

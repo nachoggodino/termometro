@@ -21,7 +21,6 @@ import {
 import { getStationById } from "@/lib/domain/stations";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { Locale } from "@/lib/i18n/config";
-import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import { HeatSelector } from "./heat-selector";
 import { LinePicker } from "./line-picker";
 import { ReportLocationToggle } from "./report-location-toggle";
@@ -35,7 +34,7 @@ type ApiResponse =
 
 export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
   const router = useRouter();
-  const platformMessages = getPlatformMessages(locale);
+  const platformMessages = dictionary.platform;
   const [line, setLine] = useState<MetroLine>("L1");
   const [state, setState] = useState<HeatState>("calor");
   const [locationKind, setLocationKind] = useState<ReportLocationKind>("car");
@@ -79,8 +78,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       ? platformMessages.reportForm.stationNotOnLine
       : null;
   const busy = submitting || pending;
-  const invalidLocation =
-    locationKind === "car" ? Boolean(carError) : Boolean(stationError);
+  const invalidLocation = locationKind === "car" ? Boolean(carError) : Boolean(stationError);
 
   function handleLineChange(nextLine: MetroLine) {
     setLine(nextLine);
@@ -134,7 +132,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
       const payload = (await response.json()) as ApiResponse;
 
       if (!payload.ok) {
-        toast(getSubmissionErrorMessage(payload.reason, dictionary, locale));
+        toast(getSubmissionErrorMessage(payload.reason, dictionary));
         setSubmitting(false);
         return;
       }
@@ -304,11 +302,11 @@ function closeDialog(dialog: HTMLDialogElement | null) {
   dialog.removeAttribute("open");
 }
 
-function getSubmissionErrorMessage(reason: ApiErrorReason, dictionary: Dictionary, locale: Locale) {
+function getSubmissionErrorMessage(reason: ApiErrorReason, dictionary: Dictionary) {
   if (reason === "duplicate") return dictionary.reportForm.duplicate;
   if (reason === "rate_limited") return dictionary.reportForm.rateLimited;
   if (reason === CAR_NOT_ON_LINE_REASON) return dictionary.reportForm.carNotOnLine;
-  if (reason === STATION_NOT_ON_LINE_REASON) return getPlatformMessages(locale).reportForm.stationNotOnLine;
+  if (reason === STATION_NOT_ON_LINE_REASON) return dictionary.platform.reportForm.stationNotOnLine;
   if (reason === "invalid") return dictionary.reportForm.invalid;
   return dictionary.reportForm.submitFailed;
 }

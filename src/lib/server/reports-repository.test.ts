@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RATE_LIMIT_MAX_REPORTS } from "@/lib/domain/reports";
+import { RATE_LIMIT_MAX_REPORTS, RATE_LIMIT_NETWORK_MAX_REPORTS } from "@/lib/domain/reports";
 import { createReportForRequest } from "./reports-repository";
 
 describe("reports repository runtime safeguards", () => {
@@ -95,6 +95,31 @@ describe("reports repository runtime safeguards", () => {
       ),
     );
     const limited = await createReportForRequest({ line: "L1", state: "calor", car: "M2009" }, fingerprint, now);
+
+    expect(reports.every((report) => report.ok)).toBe(true);
+    expect(limited).toEqual({ ok: false, reason: "rate_limited" });
+  });
+
+  it("applies a shared network ceiling even when the User-Agent rotates", async () => {
+    vi.stubEnv("TERMO_ALLOW_MEMORY_STORE", "1");
+    vi.stubEnv("TERMO_ABUSE_SECRET", "test-abuse-secret");
+    const now = new Date("2026-08-10T12:00:00Z");
+    const ip = "203.0.113.99";
+
+    const reports = await Promise.all(
+      Array.from({ length: RATE_LIMIT_NETWORK_MAX_REPORTS }, (_, index) =>
+        createReportForRequest(
+          { line: "L2", state: "calor", car: `M${2100 + index}` },
+          { ip, userAgent: `rotating-browser-${index}` },
+          now,
+        ),
+      ),
+    );
+    const limited = await createReportForRequest(
+      { line: "L2", state: "calor", car: "M2199" },
+      { ip, userAgent: "one-more-browser" },
+      now,
+    );
 
     expect(reports.every((report) => report.ok)).toBe(true);
     expect(limited).toEqual({ ok: false, reason: "rate_limited" });

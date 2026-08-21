@@ -44,6 +44,45 @@ function getUniqueTestCar(projectName: string) {
   return `M${numericCode}`;
 }
 
+test("report flow submits a canonical platform and lands on platform explore", async ({ page }) => {
+  await page.route("**/api/reports", async (route) => {
+    if (route.request().method() !== "POST") {
+      await route.continue();
+      return;
+    }
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        report: { id: "platform-report" },
+        undoToken: "platform-undo",
+      }),
+    });
+  });
+  await page.goto("/es/reportar");
+
+  await page.getByRole("button", { name: "Andén", exact: true }).click();
+  const stationInput = page.getByPlaceholder("Escribe una estación…");
+  await stationInput.fill("Atocha");
+  await page.getByRole("option", { name: "Atocha", exact: true }).click();
+
+  const reportRequest = page.waitForRequest(
+    (request) => request.url().endsWith("/api/reports") && request.method() === "POST",
+  );
+  await page.getByTestId("submit-report").click();
+
+  expect((await reportRequest).postDataJSON()).toEqual({
+    line: "L1",
+    state: "calor",
+    locationKind: "platform",
+    stationId: "atocha",
+  });
+  await expect(page).toHaveURL(/\/es\/explorar\?/);
+  await expect(page).toHaveURL(/linea=L1/);
+  await expect(page).toHaveURL(/tipo=anden/);
+  await expect(page).toHaveURL(/anden=atocha/);
+});
+
 test("report flow blocks invalid car codes", async ({ page }) => {
   await page.goto("/es/reportar");
 
@@ -149,6 +188,19 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
   await expect(page.getByTestId("theme-toggle")).toBeVisible();
   await page.getByTestId("theme-toggle").getByRole("button", { name: "Oscuro" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
+});
+
+test("explore switches cleanly between car and platform modes", async ({ page }) => {
+  await page.goto("/es/explorar");
+
+  await page.getByRole("button", { name: "Andén", exact: true }).click();
+  await expect(page).toHaveURL(/tipo=anden/);
+  await expect(page.getByText("Peores andenes")).toBeVisible();
+  await expect(page.getByText("Porcentaje de andenes sin AC")).toBeVisible();
+
+  await page.getByRole("button", { name: "Coche", exact: true }).click();
+  await expect(page).not.toHaveURL(/tipo=anden/);
+  await expect(page.getByText("Peores coches")).toBeVisible();
 });
 
 test("explore lazily loads one car history and one line detail", async ({ page }) => {

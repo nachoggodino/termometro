@@ -37,6 +37,7 @@ export function getRequestFingerprint(request: Request): RequestFingerprint {
   };
 }
 
+// Keep the legacy derivation byte-for-byte compatible during rolling deploys.
 export function createAbuseKey(fingerprint: RequestFingerprint) {
   return createHash("sha256")
     .update(getAbuseSecret())
@@ -47,12 +48,25 @@ export function createAbuseKey(fingerprint: RequestFingerprint) {
     .digest("hex");
 }
 
+export function createNetworkAbuseKey(fingerprint: RequestFingerprint) {
+  return createHash("sha256")
+    .update(getAbuseSecret())
+    .update(":abuse-network:")
+    .update(fingerprint.ip)
+    .digest("hex");
+}
+
 export function createUndoToken() {
   return randomBytes(24).toString("base64url");
 }
 
+// Undo tokens created immediately before a deploy must remain verifiable after it.
 export function hashUndoToken(token: string) {
-  return createHash("sha256").update(getAbuseSecret()).update(":undo:").update(token).digest("hex");
+  return createHash("sha256")
+    .update(getAbuseSecret())
+    .update(":undo:")
+    .update(token)
+    .digest("hex");
 }
 
 export function verifyUndoToken(token: string, expectedHash: string | null | undefined) {
