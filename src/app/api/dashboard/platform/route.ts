@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { parseDashboardRange } from "@/lib/domain/dashboard-query";
-import { isMetroLine } from "@/lib/domain/lines";
+import { parseDashboardRange, parseSelectedLines } from "@/lib/domain/dashboard-query";
 import { isLocale } from "@/lib/i18n/config";
 import { getCachedPlatformDetail } from "@/lib/server/dashboard-cache";
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
-  const line = params.get("linea");
+  const lines = parseSelectedLines(params.get("linea"));
   const stationId = params.get("anden")?.trim() ?? "";
   const lang = params.get("lang") ?? "es";
 
-  if (!line || !isMetroLine(line) || !stationId) {
+  if (lines.length === 0 || !stationId) {
     return NextResponse.json({ selection: null, reason: "invalid" }, { status: 400 });
   }
   if (!isLocale(lang)) {
@@ -20,7 +19,7 @@ export async function GET(request: Request) {
   try {
     const selection = await getCachedPlatformDetail(
       parseDashboardRange(params.get("rango")),
-      line,
+      lines.join(","),
       stationId,
       lang,
     );

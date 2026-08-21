@@ -45,7 +45,9 @@ export async function getCachedExplorePageData(
   const baseSearch = { range: search.range, lines: search.lines };
   const now = new Date();
   const availableSeriesPromise = getCarSeriesModule(baseSearch, now);
-  const carSeriesPromise = search.carSeries?.length ? getCarSeriesModule(search, now) : availableSeriesPromise;
+  const carSeriesPromise = search.carSeries?.length
+    ? getCarSeriesModule(search, now)
+    : availableSeriesPromise;
   const overviewPromise =
     locationKind === "car"
       ? getCarOverview(
@@ -57,10 +59,12 @@ export async function getCachedExplorePageData(
           },
           now,
         )
-      : getPlatformGlobalOverview({ range: search.range, lines: search.lines, locale }, now).then((overview) => ({
-          ...overview,
-          worstHours: [],
-        }));
+      : getPlatformGlobalOverview({ range: search.range, lines: search.lines, locale }, now).then(
+          (overview) => ({
+            ...overview,
+            worstHours: [],
+          }),
+        );
 
   const [
     availableSeries,
@@ -92,7 +96,13 @@ export async function getCachedExplorePageData(
   };
 }
 
-export async function getCachedCarDetail(rangeKey: string, linesKey: string, carSeriesKey: string, car: string, locale: Locale) {
+export async function getCachedCarDetail(
+  rangeKey: string,
+  linesKey: string,
+  carSeriesKey: string,
+  car: string,
+  locale: Locale,
+) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(REPORTS_CACHE_TAG);
@@ -103,35 +113,51 @@ export async function getCachedCarDetail(rangeKey: string, linesKey: string, car
 
 export async function getCachedPlatformDetail(
   rangeKey: string,
-  line: MetroLine,
+  linesKey: string,
   stationId: string,
   locale: Locale,
 ) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(REPORTS_CACHE_TAG);
-  const range: DashboardRange = isTimeRange(rangeKey) ? rangeKey : "summer";
-  return getPlatformDetail(range, line, stationId, locale);
+  const range: DashboardRange = isTimeRange(rangeKey) ? rangeKey : "month";
+  return getPlatformDetail(range, parseSelectedLines(linesKey), stationId, locale);
 }
 
-export async function getCachedLineDetail(rangeKey: string, line: MetroLine, carSeriesKey: string) {
+export async function getCachedLineDetail(
+  rangeKey: string,
+  line: MetroLine,
+  carSeriesKey: string,
+) {
   "use cache";
   cacheLife({ stale: 60, revalidate: 60, expire: 600 });
   cacheTag(REPORTS_CACHE_TAG);
   const result = await getLineDetailsModule(parseSearch(rangeKey, line, carSeriesKey));
-  return result.lineCarReports.find((summary) => summary.line === line) ?? { line, totalCars: 0, cars: [] };
+  return (
+    result.lineCarReports.find((summary) => summary.line === line) ?? {
+      line,
+      totalCars: 0,
+      cars: [],
+    }
+  );
 }
 
 export function normalizeDashboardCacheKey(search: DashboardModuleSearch) {
   return {
     rangeKey: search.range,
     linesKey: [...new Set(search.lines)].toSorted().join(","),
-    carSeriesKey: [...new Set(search.carSeries ?? [])].toSorted((a, b) => a - b).join(","),
+    carSeriesKey: [...new Set(search.carSeries ?? [])]
+      .toSorted((a, b) => a - b)
+      .join(","),
   };
 }
 
-function parseSearch(rangeKey: string, linesKey: string, carSeriesKey: string): DashboardModuleSearch {
-  const range: DashboardRange = isTimeRange(rangeKey) ? rangeKey : "summer";
+function parseSearch(
+  rangeKey: string,
+  linesKey: string,
+  carSeriesKey: string,
+): DashboardModuleSearch {
+  const range: DashboardRange = isTimeRange(rangeKey) ? rangeKey : "month";
   const lines = parseSelectedLines(linesKey);
   const carSeries = parseSelectedCarSeries(carSeriesKey);
   return { range, lines, carSeries };

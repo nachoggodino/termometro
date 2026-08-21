@@ -3,7 +3,7 @@ import type { Confidence, HeatState } from "@/lib/domain/heat";
 import type { Locale } from "@/lib/i18n/config";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import { getReportLocationKind, type Report } from "@/lib/domain/reports";
-import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
+import { isMetroLine, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
 import { getStationById, getStationName } from "@/lib/domain/stations";
 import { getMemoryReportsSnapshot, getSupabase } from "./reports-repository";
 
@@ -20,7 +20,16 @@ export type PlatformSummary = {
   latestReportAt: Date | null;
 };
 
-export type PlatformExplorerSelection = Omit<PlatformSummary, "latestReportAt"> & {
+export type PlatformExplorerSelection = {
+  stationId: string;
+  stationName: string;
+  lines: MetroLine[];
+  reports: number;
+  frescoReports: number;
+  calorReports: number;
+  infiernoReports: number;
+  heatReports: number;
+  confidence: Confidence;
   history: TrendPoint[];
 };
 
@@ -50,6 +59,7 @@ type PlatformSummaryRow = {
 };
 
 type PlatformHistoryRow = {
+  line: string;
   state: HeatState;
   created_at: string;
 };
@@ -96,63 +106,81 @@ export async function getPlatformDashboard(
 
 export async function getPlatformDetail(
   range: DashboardRange,
-  line: MetroLine,
+  lines: MetroLine[],
   stationId: string,
   locale: Locale,
   now = new Date(),
 ): Promise<PlatformExplorerSelection | null> {
-  const station = getStationById(line, stationId);
-  if (!station) return null;
+  const requestedLines = uniqueLines(lines).filter((line) => Boolean(getStationById(line, stationId)));
+  if (requestedLines.length === 0) return null;
 
   const window = getRangeWindow(range, now);
   const supabase = getSupabase();
-  let rows: Array<{ state: HeatState; createdAt: Date }>;
+  let rows: Array<{ line: MetroLine; state: HeatState; createdAt: Date }>;
 
   if (supabase) {
     const { data, error } = await supabase
       .from("reports")
-      .select("state,created_at")
+      .select("line,state,created_at")
       .eq("location_kind", "platform")
-      .eq("line", line)
       .eq("station_id", stationId)
+      .in("line", requestedLines)
       .is("hidden_at", null)
       .gte("created_at", window.start.toISOString())
       .lt("created_at", window.end.toISOString())
       .order("created_at", { ascending: true });
     if (error) throw error;
-    rows = ((data ?? []) as PlatformHistoryRow[]).map((row) => ({
-      state: row.state,
-      createdAt: new Date(row.created_at),
-    }));
+    rows = ((data ?? []) as PlatformHistoryRow[])
+      .filter((row) => isMetroLine(row.line))
+      .map((row) => ({
+        line: row.line as MetroLine,
+        state: row.state,
+        createdAt: new Date(row.created_at),
+      }));
   } else {
     rows = getMemoryReportsSnapshot()
       .filter(
         (report) =>
           !report.hiddenAt &&
           getReportLocationKind(report) === "platform" &&
-          report.line === line &&
+          requestedLines.includes(report.line) &&
           report.stationId === stationId &&
           report.createdAt >= window.start &&
           report.createdAt < window.end,
       )
-      .map((report) => ({ state: report.state, createdAt: report.createdAt }));
+      .map((report) => ({
+        line: report.line,
+        state: report.state,
+        createdAt: report.createdAt,
+      }));
   }
 
   if (rows.length === 0) return null;
   const counts = countStates(rows);
   const heatReports = counts.calorReports + counts.infiernoReports;
+  const reportedLines = uniqueLines(rows.map((row) => row.line));
+  const stationName =
+    reportedLines
+      .map((line) => getStationName(line, stationId))
+      .find((name): name is string => Boolean(name)) ??
+    requestedLines
+      .map((line) => getStationName(line, stationId))
+      .find((name): name is string => Boolean(name)) ??
+    stationId;
 
   return {
-    line,
     stationId,
-    stationName: station.name,
+    stationName,
+    lines: reportedLines,
     reports: rows.length,
     ...counts,
     heatReports,
     confidence: confidenceFromCounts(rows.length, counts.frescoReports, heatReports),
     history: buildDashboardBuckets(now, range, locale).map((bucket) => ({
       label: bucket.label,
-      reports: rows.filter((report) => report.createdAt >= bucket.start && report.createdAt < bucket.end).length,
+      reports: rows.filter(
+        (report) => report.createdAt >= bucket.start && report.createdAt < bucket.end,
+      ).length,
     })),
   };
 }
@@ -194,7 +222,9 @@ function buildMemoryPlatformDashboard(
         ...counts,
         heatReports,
         confidence: confidenceFromCounts(group.length, counts.frescoReports, heatReports),
-        latestReportAt: group.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.createdAt ?? null,
+        latestReportAt:
+          group.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.createdAt ??
+          null,
       };
     })
     .toSorted(comparePlatforms);
@@ -217,7 +247,11 @@ function countStates(reports: Array<{ state: HeatState }>) {
   return { frescoReports, calorReports, infiernoReports };
 }
 
-function confidenceFromCounts(totalReports: number, frescoReports: number, heatReports: number): Confidence {
+function confidenceFromCounts(
+  totalReports: number,
+  frescoReports: number,
+  heatReports: number,
+): Confidence {
   if (totalReports < 3) return "low";
   const agreement = Math.max(frescoReports, heatReports) / totalReports;
   if (totalReports >= 10 && agreement >= 0.7) return "high";
@@ -242,14 +276,18 @@ function buildPlatformLineSummaries(platforms: PlatformSummary[]) {
     current.infiernoReports += platform.infiernoReports;
     if (
       platform.latestReportAt &&
-      (!current.latestReportAt || platform.latestReportAt.getTime() > current.latestReportAt.getTime())
+      (!current.latestReportAt ||
+        platform.latestReportAt.getTime() > current.latestReportAt.getTime())
     ) {
       current.latestReportAt = platform.latestReportAt;
     }
     byLine.set(platform.line, current);
   }
   return Array.from(byLine.values()).toSorted(
-    (a, b) => b.heatReports - a.heatReports || b.infiernoReports - a.infiernoReports || b.reports - a.reports,
+    (a, b) =>
+      b.heatReports - a.heatReports ||
+      b.infiernoReports - a.infiernoReports ||
+      b.reports - a.reports,
   );
 }
 
@@ -259,5 +297,11 @@ function comparePlatforms(a: PlatformSummary, b: PlatformSummary) {
     b.infiernoReports - a.infiernoReports ||
     (b.latestReportAt?.getTime() ?? 0) - (a.latestReportAt?.getTime() ?? 0) ||
     a.stationName.localeCompare(b.stationName)
+  );
+}
+
+function uniqueLines(lines: MetroLine[]) {
+  return [...new Set(lines)].toSorted(
+    (a, b) => METRO_LINES.indexOf(a) - METRO_LINES.indexOf(b),
   );
 }
