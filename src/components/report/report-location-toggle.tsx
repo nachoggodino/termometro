@@ -42,19 +42,30 @@ function LocationOption({
   const Icon = value === "car" ? TrainFront : Building2;
 
   return (
-    <button
-      aria-pressed={checked}
+    <label
       className={cn(
-        "selection-flow flex min-h-14 items-center justify-center gap-1 bg-surface-raised px-2 py-2 text-sm font-semibold transition duration-200 ease-out focus-visible:relative focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary",
+        "selection-flow flex min-h-14 cursor-pointer flex-col items-center justify-center gap-1 bg-surface-raised px-2 py-2 text-sm font-semibold transition duration-200 ease-out",
         checked ? "bg-surface text-foreground shadow-sm" : "text-muted hover:bg-surface hover:text-foreground",
       )}
-      onClick={onChange}
-      type="button"
+      style={
+        checked
+          ? {
+              animation:
+                "selection-settle var(--duration-base) var(--ease-out), selection-pulse 360ms var(--ease-out)",
+            }
+          : undefined
+      }
     >
-      <span className="flex flex-col items-center justify-center gap-1">
-        <Icon aria-hidden="true" className="size-5" />
-        {label}
-      </span>
-    </button>
+      <input
+        checked={checked}
+        className="sr-only"
+        name="report-location-kind"
+        onChange={onChange}
+        type="radio"
+        value={value}
+      />
+      <Icon aria-hidden="true" className="size-5" />
+      {label}
+    </label>
   );
 }
