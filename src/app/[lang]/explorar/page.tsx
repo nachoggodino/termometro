@@ -95,7 +95,7 @@ async function ExploreContent({
 
   return (
     <main className="min-h-dvh">
-      <div className="mx-auto max-w-5xl px-4 pb-5">
+      <div className="mx-auto max-w-5xl px-4 pb-4">
         <FilterBar
           availableCarSeries={data.availableCarSeries}
           dictionary={dictionary}
@@ -104,119 +104,119 @@ async function ExploreContent({
           selectedCarSeries={selectedCarSeries}
           selectedLines={selectedLines}
           selectedRange={selectedRange}
-        />
-
-        <div className="grid gap-4 pt-4 lg:grid-cols-[1fr_0.82fr]">
-          <div className="flex flex-col gap-4">
-            <LineEvolutionChartCard
-              data={data}
-              dictionary={dictionary}
-              locale={lang}
-              rangeLabel={rangeLabel}
-              selectedLines={selectedLines}
-              selectedRange={selectedRange}
-            />
-            <TotalReportsChartCard
-              data={data}
-              dictionary={dictionary}
-              locale={lang}
-              rangeLabel={rangeLabel}
-              selectedLines={selectedLines}
-              selectedRange={selectedRange}
-            />
-
-            {locationKind === "car" ? (
-              <>
-                <ReportVolumeChartCard
-                  data={{ lineSummaries: data.carLineSummaries }}
-                  dictionary={dictionary}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                  selectedLines={selectedLines}
-                />
-                <LineCarsChartCard
-                  data={{ lineSummaries: data.carLineSummaries }}
-                  dictionary={dictionary}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                  selectedLines={selectedLines}
-                />
-                <CarSeriesChartCard
-                  data={data}
-                  dictionary={dictionary}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                />
-                <WorstCarsExplorerChartCards
-                  carSeries={selectedCarSeries}
-                  data={data}
-                  dictionary={dictionary}
-                  initialCar={selectedCar}
-                  lines={selectedLines}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                  selectedRange={selectedRange}
-                />
-                <HeatTrendChartCard
-                  data={data}
-                  dictionary={dictionary}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                  selectedLines={selectedLines}
-                  selectedRange={selectedRange}
-                />
-                <WorstHoursChartCard
-                  data={data}
-                  dictionary={dictionary}
-                  locale={lang}
-                  rangeLabel={rangeLabel}
-                />
-              </>
-            ) : (
-              <WorstPlatformsExplorerChartCards
+        >
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
+            <div className="flex flex-col gap-4">
+              <LineEvolutionChartCard
                 data={data}
                 dictionary={dictionary}
-                initialPlatform={
-                  initialPlatform
-                    ? { line: initialPlatform.line, stationId: initialPlatform.stationId }
-                    : null
-                }
                 locale={lang}
                 rangeLabel={rangeLabel}
+                selectedLines={selectedLines}
                 selectedRange={selectedRange}
+              />
+              <TotalReportsChartCard
+                data={data}
+                dictionary={dictionary}
+                locale={lang}
+                rangeLabel={rangeLabel}
+                selectedLines={selectedLines}
+                selectedRange={selectedRange}
+              />
+
+              {locationKind === "car" ? (
+                <>
+                  <ReportVolumeChartCard
+                    data={{ lineSummaries: data.carLineSummaries }}
+                    dictionary={dictionary}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                    selectedLines={selectedLines}
+                  />
+                  <LineCarsChartCard
+                    data={{ lineSummaries: data.carLineSummaries }}
+                    dictionary={dictionary}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                    selectedLines={selectedLines}
+                  />
+                  <CarSeriesChartCard
+                    data={data}
+                    dictionary={dictionary}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                  />
+                  <WorstCarsExplorerChartCards
+                    carSeries={selectedCarSeries}
+                    data={data}
+                    dictionary={dictionary}
+                    initialCar={selectedCar}
+                    lines={selectedLines}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                    selectedRange={selectedRange}
+                  />
+                  <HeatTrendChartCard
+                    data={data}
+                    dictionary={dictionary}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                    selectedLines={selectedLines}
+                    selectedRange={selectedRange}
+                  />
+                  <WorstHoursChartCard
+                    data={data}
+                    dictionary={dictionary}
+                    locale={lang}
+                    rangeLabel={rangeLabel}
+                  />
+                </>
+              ) : (
+                <WorstPlatformsExplorerChartCards
+                  data={data}
+                  dictionary={dictionary}
+                  initialPlatform={
+                    initialPlatform
+                      ? { line: initialPlatform.line, stationId: initialPlatform.stationId }
+                      : null
+                  }
+                  locale={lang}
+                  rangeLabel={rangeLabel}
+                  selectedRange={selectedRange}
+                />
+              )}
+            </div>
+
+            {locationKind === "car" ? (
+              <ExploreFleetPanel
+                data={{ lineSummaries: data.carLineSummaries }}
+                dictionary={dictionary}
+                locale={lang}
+                rangeLabel={rangeLabel}
+                selectedLines={selectedLines}
+              />
+            ) : (
+              <PlatformCoveragePanel
+                data={data}
+                dictionary={dictionary}
+                locale={lang}
+                rangeLabel={rangeLabel}
+                selectedLines={selectedLines}
               />
             )}
           </div>
 
           {locationKind === "car" ? (
-            <ExploreFleetPanel
-              data={{ lineSummaries: data.carLineSummaries }}
+            <LineDetailCards
+              carSeries={selectedCarSeries}
+              cards={data.carLineSummaries}
               dictionary={dictionary}
               locale={lang}
-              rangeLabel={rangeLabel}
+              range={selectedRange}
               selectedLines={selectedLines}
             />
-          ) : (
-            <PlatformCoveragePanel
-              data={data}
-              dictionary={dictionary}
-              locale={lang}
-              rangeLabel={rangeLabel}
-              selectedLines={selectedLines}
-            />
-          )}
-        </div>
-
-        {locationKind === "car" ? (
-          <LineDetailCards
-            carSeries={selectedCarSeries}
-            cards={data.carLineSummaries}
-            dictionary={dictionary}
-            locale={lang}
-            range={selectedRange}
-            selectedLines={selectedLines}
-          />
-        ) : null}
+          ) : null}
+        </FilterBar>
       </div>
     </main>
   );

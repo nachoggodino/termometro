@@ -1,8 +1,8 @@
 export default function ExploreLoading() {
   return (
     <main className="min-h-dvh bg-[image:radial-gradient(circle_at_50%_-10%,var(--page-glow),transparent_32rem)]">
-      <div className="mx-auto max-w-5xl px-4 pb-5">
-        <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-3">
+      <div className="mx-auto max-w-5xl px-4 pb-4">
+        <div className="sticky top-[80px] z-[var(--z-sticky)] -mx-4 px-4 py-4">
           <div className="rounded-lg border border-border bg-[var(--drawer-surface)] px-3 py-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
             <div className="flex flex-col gap-2.5">
               <div className="h-10 animate-pulse rounded-md bg-surface" />
@@ -16,7 +16,7 @@ export default function ExploreLoading() {
             </div>
           </div>
         </div>
-        <div className="grid gap-4 pt-4 lg:grid-cols-[1fr_0.82fr]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
           <div className="flex flex-col gap-4">
             {Array.from({ length: 4 }, (_, index) => (
               <section className="rounded-md border border-border bg-surface-raised p-4" key={index}>
@@ -33,16 +33,14 @@ export default function ExploreLoading() {
             ))}
           </div>
           <aside className="flex flex-col gap-4">
-            {Array.from({ length: 2 }, (_, index) => (
-              <section className="rounded-md border border-border bg-surface-raised p-4" key={index}>
-                <div className="h-5 w-36 animate-pulse rounded-sm bg-surface" />
-                <div className="mt-4 flex flex-col gap-3">
-                  {Array.from({ length: 5 }, (_, row) => (
-                    <div className="h-12 animate-pulse rounded-sm bg-surface" key={row} />
-                  ))}
-                </div>
-              </section>
-            ))}
+            <section className="rounded-md border border-border bg-surface-raised p-4">
+              <div className="h-5 w-36 animate-pulse rounded-sm bg-surface" />
+              <div className="mt-4 flex flex-col gap-3">
+                {Array.from({ length: 5 }, (_, row) => (
+                  <div className="h-12 animate-pulse rounded-sm bg-surface" key={row} />
+                ))}
+              </div>
+            </section>
           </aside>
         </div>
       </div>

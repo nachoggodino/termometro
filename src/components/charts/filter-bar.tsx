@@ -2,7 +2,7 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import { Building2, ListTree, SlidersHorizontal, TrainFront, type LucideIcon } from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { CarSeriesSummary } from "@/lib/domain/dashboard";
 import { LINE_COLORS, METRO_LINES, type MetroLine } from "@/lib/domain/lines";
@@ -17,6 +17,7 @@ import { CenteredPopoverPanel, StickyUtilityBar } from "@/components/ui/popover-
 
 export function FilterBar({
   availableCarSeries,
+  children,
   dictionary,
   locale,
   locationKind,
@@ -25,6 +26,7 @@ export function FilterBar({
   selectedRange,
 }: {
   availableCarSeries: CarSeriesSummary[];
+  children: ReactNode;
   dictionary: Dictionary;
   locale: Locale;
   locationKind: ReportLocationKind;
@@ -35,6 +37,7 @@ export function FilterBar({
   const router = useRouter();
   const messages = getPlatformMessages(locale);
   const [isPending, startTransition] = useTransition();
+  const [optimisticLocationKind, setOptimisticLocationKind] = useOptimistic(locationKind);
   const [open, setOpen] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [draftLines, setDraftLines] = useState<MetroLine[]>(selectedLines);
@@ -54,7 +57,7 @@ export function FilterBar({
     lines: MetroLine[],
     range = selectedRange,
     carSeries = selectedCarSeries,
-    nextLocationKind = locationKind,
+    nextLocationKind = optimisticLocationKind,
   ) {
     const params = new URLSearchParams();
     if (lines.length > 0) params.set("linea", lines.join(","));
@@ -65,10 +68,11 @@ export function FilterBar({
   }
 
   function selectLocationKind(nextLocationKind: ReportLocationKind) {
-    if (nextLocationKind === locationKind) return;
+    if (nextLocationKind === optimisticLocationKind) return;
     setOpen(false);
     setNavigationOpen(false);
     startTransition(() => {
+      setOptimisticLocationKind(nextLocationKind);
       router.push(
         href(
           selectedLines,
@@ -87,8 +91,8 @@ export function FilterBar({
         href(
           draftLines,
           draftRange,
-          locationKind === "car" ? draftCarSeries : [],
-          locationKind,
+          optimisticLocationKind === "car" ? draftCarSeries : [],
+          optimisticLocationKind,
         ),
       );
     });
@@ -124,10 +128,8 @@ export function FilterBar({
   const selectedLineLabel = getSelectedLineLabel(selectedLines, dictionary);
   const selectedCarSeriesLabel = getSelectedCarSeriesLabel(selectedCarSeries, dictionary);
   const activeRangeLabel = dictionary.explore.ranges[selectedRange];
-  const locationLabel =
-    locationKind === "car" ? messages.reportForm.carMode : messages.reportForm.platformMode;
   const exploreSections =
-    locationKind === "car"
+    optimisticLocationKind === "car"
       ? [
           { id: "line-evolution", label: dictionary.explore.modules.lineEvolution },
           { id: "total-reports", label: dictionary.explore.modules.totalReports },
@@ -150,158 +152,208 @@ export function FilterBar({
         ];
 
   return (
-    <Popover.Root open={open} onOpenChange={handleOpenChange}>
-      <StickyUtilityBar>
-        <div className="flex flex-col gap-2.5">
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border">
-            <LocationModeButton
-              active={locationKind === "car"}
-              icon={TrainFront}
-              label={messages.reportForm.carMode}
-              onClick={() => selectLocationKind("car")}
-            />
-            <LocationModeButton
-              active={locationKind === "platform"}
-              icon={Building2}
-              label={messages.reportForm.platformMode}
-              onClick={() => selectLocationKind("platform")}
-            />
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
-              <p className="truncate text-sm font-semibold">
-                {[
-                  locationLabel,
-                  selectedLineLabel,
-                  locationKind === "car" ? selectedCarSeriesLabel : null,
-                  activeRangeLabel,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
+    <>
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
+        <StickyUtilityBar>
+          <div className="flex flex-col gap-2.5">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border">
+              <LocationModeButton
+                active={optimisticLocationKind === "car"}
+                icon={TrainFront}
+                label={messages.reportForm.carMode}
+                onClick={() => selectLocationKind("car")}
+              />
+              <LocationModeButton
+                active={optimisticLocationKind === "platform"}
+                icon={Building2}
+                label={messages.reportForm.platformMode}
+                onClick={() => selectLocationKind("platform")}
+              />
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Popover.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted">{dictionary.explore.filters.active}</p>
+                <p className="truncate text-sm font-semibold">
+                  {[
+                    selectedLineLabel,
+                    optimisticLocationKind === "car" ? selectedCarSeriesLabel : null,
+                    activeRangeLabel,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Popover.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
+                  <Popover.Trigger asChild>
+                    <Button
+                      aria-label={dictionary.explore.navigation.button}
+                      className="min-h-10 px-3 py-2"
+                      type="button"
+                      variant="secondary"
+                    >
+                      <ListTree aria-hidden="true" className="size-4" />
+                      <span className="hidden sm:inline">{dictionary.explore.navigation.button}</span>
+                    </Button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    {navigationOpen ? (
+                      <CenteredPopoverPanel
+                        closeLabel={dictionary.common.closeMenu}
+                        title={dictionary.explore.navigation.title}
+                      >
+                        <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
+                          {exploreSections.map((section) => (
+                            <Popover.Close asChild key={section.id}>
+                              <a
+                                className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                                href={`#${section.id}`}
+                              >
+                                {section.label}
+                              </a>
+                            </Popover.Close>
+                          ))}
+                        </nav>
+                      </CenteredPopoverPanel>
+                    ) : null}
+                  </Popover.Portal>
+                </Popover.Root>
                 <Popover.Trigger asChild>
-                  <Button
-                    aria-label={dictionary.explore.navigation.button}
-                    className="min-h-10 px-3 py-2"
-                    type="button"
-                    variant="secondary"
-                  >
-                    <ListTree aria-hidden="true" className="size-4" />
-                    <span className="hidden sm:inline">{dictionary.explore.navigation.button}</span>
+                  <Button className="min-h-10 px-3 py-2" type="button" variant="secondary">
+                    <SlidersHorizontal aria-hidden="true" className="size-4" />
+                    {dictionary.explore.filters.button}
                   </Button>
                 </Popover.Trigger>
-                <Popover.Portal>
-                  {navigationOpen ? (
-                    <CenteredPopoverPanel
-                      closeLabel={dictionary.common.closeMenu}
-                      title={dictionary.explore.navigation.title}
-                    >
-                      <nav aria-label={dictionary.explore.navigation.title} className="mt-4 grid gap-2">
-                        {exploreSections.map((section) => (
-                          <Popover.Close asChild key={section.id}>
-                            <a
-                              className="rounded-md border border-border bg-surface-raised px-3 py-2 text-sm font-semibold transition duration-200 ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                              href={`#${section.id}`}
-                            >
-                              {section.label}
-                            </a>
-                          </Popover.Close>
-                        ))}
-                      </nav>
-                    </CenteredPopoverPanel>
-                  ) : null}
-                </Popover.Portal>
-              </Popover.Root>
-              <Popover.Trigger asChild>
-                <Button className="min-h-10 px-3 py-2" type="button" variant="secondary">
-                  <SlidersHorizontal aria-hidden="true" className="size-4" />
-                  {dictionary.explore.filters.button}
-                </Button>
-              </Popover.Trigger>
+              </div>
             </div>
           </div>
-        </div>
-      </StickyUtilityBar>
-      <Popover.Portal>
-        {open ? (
-          <CenteredPopoverPanel
-            closeLabel={dictionary.common.closeMenu}
-            title={dictionary.explore.filters.title}
-            widthClass="w-[min(calc(100vw-2rem),24rem)]"
-          >
-            <div className="mt-4">
-              <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.range}</p>
-              <div className="flex flex-wrap items-stretch gap-1.5">
-                {TIME_RANGES.map((range) => (
-                  <button
-                    aria-pressed={draftRange === range}
-                    className={rangeClass(draftRange === range)}
-                    key={range}
-                    onClick={() => setDraftRange(range)}
-                    type="button"
-                  >
-                    {dictionary.explore.ranges[range]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
-              <div className="flex flex-wrap items-stretch gap-1.5">
-                <button className={allLinesClass(draftLines.length === 0)} onClick={() => setDraftLines([])} type="button">
-                  {dictionary.explore.allLines}
-                </button>
-                {METRO_LINES.map((line) => (
-                  <LineSwatch
-                    active={draftLines.includes(line)}
-                    key={line}
-                    label={line}
-                    line={line}
-                    onClick={() => toggleLine(line)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {locationKind === "car" && availableCarSeries.length > 0 ? (
-              <div className="mt-5">
-                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
+        </StickyUtilityBar>
+        <Popover.Portal>
+          {open ? (
+            <CenteredPopoverPanel
+              closeLabel={dictionary.common.closeMenu}
+              title={dictionary.explore.filters.title}
+              widthClass="w-[min(calc(100vw-2rem),24rem)]"
+            >
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.range}</p>
                 <div className="flex flex-wrap items-stretch gap-1.5">
-                  <SeriesSwatch
-                    active={draftCarSeries.length === 0}
-                    ariaLabel={dictionary.explore.allSeries}
-                    label={dictionary.explore.allSeries}
-                    onClick={() => setDraftCarSeries([])}
-                  />
-                  {availableCarSeries.map((item) => (
-                    <SeriesSwatch
-                      active={draftCarSeries.includes(item.series)}
-                      key={item.series}
-                      label={item.label}
-                      onClick={() => toggleCarSeries(item.series)}
+                  {TIME_RANGES.map((range) => (
+                    <button
+                      aria-pressed={draftRange === range}
+                      className={rangeClass(draftRange === range)}
+                      key={range}
+                      onClick={() => setDraftRange(range)}
+                      type="button"
+                    >
+                      {dictionary.explore.ranges[range]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.line}</p>
+                <div className="flex flex-wrap items-stretch gap-1.5">
+                  <button className={allLinesClass(draftLines.length === 0)} onClick={() => setDraftLines([])} type="button">
+                    {dictionary.explore.allLines}
+                  </button>
+                  {METRO_LINES.map((line) => (
+                    <LineSwatch
+                      active={draftLines.includes(line)}
+                      key={line}
+                      label={line}
+                      line={line}
+                      onClick={() => toggleLine(line)}
                     />
                   ))}
                 </div>
               </div>
-            ) : null}
 
-            <div className="mt-5 grid grid-cols-[auto_1fr] gap-2">
-              <Button disabled={isPending} onClick={clearFilters} type="button" variant="secondary">
-                {dictionary.explore.filters.clear}
-              </Button>
-              <Button disabled={isPending} onClick={applyFilters} type="button">
-                {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
-              </Button>
+              {optimisticLocationKind === "car" && availableCarSeries.length > 0 ? (
+                <div className="mt-5">
+                  <p className="mb-2 text-xs font-semibold text-muted">{dictionary.explore.filters.series}</p>
+                  <div className="flex flex-wrap items-stretch gap-1.5">
+                    <SeriesSwatch
+                      active={draftCarSeries.length === 0}
+                      ariaLabel={dictionary.explore.allSeries}
+                      label={dictionary.explore.allSeries}
+                      onClick={() => setDraftCarSeries([])}
+                    />
+                    {availableCarSeries.map((item) => (
+                      <SeriesSwatch
+                        active={draftCarSeries.includes(item.series)}
+                        key={item.series}
+                        label={item.label}
+                        onClick={() => toggleCarSeries(item.series)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-5 grid grid-cols-[auto_1fr] gap-2">
+                <Button disabled={isPending} onClick={clearFilters} type="button" variant="secondary">
+                  {dictionary.explore.filters.clear}
+                </Button>
+                <Button disabled={isPending} onClick={applyFilters} type="button">
+                  {isPending ? dictionary.explore.filters.applying : dictionary.explore.filters.apply}
+                </Button>
+              </div>
+            </CenteredPopoverPanel>
+          ) : null}
+        </Popover.Portal>
+      </Popover.Root>
+
+      {isPending ? <ExploreResultsSkeleton locationKind={optimisticLocationKind} /> : children}
+    </>
+  );
+}
+
+function ExploreResultsSkeleton({ locationKind }: { locationKind: ReportLocationKind }) {
+  const mainCardCount = locationKind === "car" ? 7 : 4;
+
+  return (
+    <div aria-busy="true" data-testid="explore-results-loading">
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.82fr]">
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: mainCardCount }, (_, index) => (
+            <section className="rounded-md border border-border bg-surface-raised p-4" key={index}>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="h-5 w-40 animate-pulse rounded-sm bg-surface" />
+                  <div className="mt-2 h-3 w-20 animate-pulse rounded-sm bg-surface" />
+                </div>
+                <div className="size-9 animate-pulse rounded-md bg-surface" />
+              </div>
+              <div className="h-56 animate-pulse rounded-md bg-surface" />
+              <div className="mt-4 h-4 w-2/3 animate-pulse rounded-sm bg-surface" />
+            </section>
+          ))}
+        </div>
+        <aside className="flex flex-col gap-4">
+          <section className="rounded-md border border-border bg-surface-raised p-4">
+            <div className="h-5 w-36 animate-pulse rounded-sm bg-surface" />
+            <div className="mt-4 flex flex-col gap-3">
+              {Array.from({ length: 5 }, (_, row) => (
+                <div className="h-12 animate-pulse rounded-sm bg-surface" key={row} />
+              ))}
             </div>
-          </CenteredPopoverPanel>
-        ) : null}
-      </Popover.Portal>
-    </Popover.Root>
+          </section>
+        </aside>
+      </div>
+
+      {locationKind === "car" ? (
+        <section className="pt-4">
+          <div className="mb-4 h-5 w-36 animate-pulse rounded-sm bg-surface" />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }, (_, index) => (
+              <div className="h-36 animate-pulse rounded-md border border-border bg-surface-raised" key={index} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </div>
   );
 }
 

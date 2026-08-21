@@ -10,7 +10,7 @@ export default async function ReportPage({ params }: { params: Promise<{ lang: s
 
   return (
     <main>
-      <section className="mx-auto max-w-xl px-4 pb-5 pt-6">
+      <section className="mx-auto max-w-xl px-4 pb-4 pt-4">
         <div className="rounded-lg border border-border bg-surface-raised p-4">
           <ReportForm dictionary={dictionary} locale={lang} />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TrainFront, TriangleAlert } from "lucide-react";
+import { TrainFront } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState, useTransition, type CSSProperties } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -170,7 +170,7 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <LinePicker label={dictionary.reportForm.line} onChange={handleLineChange} value={line} />
 
       <ReportLocationToggle
@@ -233,11 +233,6 @@ export function ReportForm({ dictionary, locale }: { dictionary: Dictionary; loc
           stationId={stationId}
         />
       )}
-
-      <p className="flex items-start gap-2 rounded-md border border-border bg-surface px-3 py-2 text-[0.6875rem] leading-4 text-muted/85">
-        <TriangleAlert aria-hidden="true" className="mt-0.5 size-3.5 shrink-0 text-muted/85" />
-        <span>{dictionary.reportForm.abuseReminder}</span>
-      </p>
 
       <Button
         className="home-report-action report-submit-action relative min-h-12 overflow-hidden"

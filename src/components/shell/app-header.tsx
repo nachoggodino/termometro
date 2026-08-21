@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 import { CircleHelp, Home } from "lucide-react";
+import { AppLogo } from "@/components/ui/app-logo";
 import { ExploreActionIcon, ReportActionIcon } from "@/components/ui/action-icons";
 import { LanguageRadioGroup } from "./language-switcher";
 import { ThemeSegmentedSwitch } from "./theme-toggle";
@@ -34,7 +35,10 @@ export function AppHeader({
       path: "/metodologia",
     },
   ];
-  const currentPageLabel = navItems.find((item) => item.path === pathname)?.label ?? dictionary.common.appName;
+  const currentPageLabel =
+    pathname === ""
+      ? dictionary.common.appName
+      : navItems.find((item) => item.path === pathname)?.label ?? dictionary.common.appName;
 
   useLayoutEffect(() => {
     const topHeight = topRowRef.current?.offsetHeight ?? 64;
@@ -61,7 +65,15 @@ export function AppHeader({
       >
         <div className="px-3 py-2" ref={topRowRef}>
           <div className="flex items-center gap-3">
-            <span className="min-w-0 flex-1 truncate px-1 text-base font-semibold leading-5 sm:text-lg">
+            <Link
+              aria-label={dictionary.common.home}
+              className="click-wave flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              href={`/${locale}`}
+              onClick={() => setIsOpen(false)}
+            >
+              <AppLogo />
+            </Link>
+            <span className="min-w-0 flex-1 truncate text-base font-semibold leading-5 sm:text-lg">
               {currentPageLabel}
             </span>
             <button
