@@ -62,7 +62,7 @@ test("report flow submits a canonical platform and lands on platform explore", a
   await page.goto("/es/reportar");
   await expectReportPage(page);
 
-  await page.getByRole("radio", { name: "Andén", exact: true }).click();
+  await page.getByText("Andén", { exact: true }).click();
   const stationInput = page.getByPlaceholder("Escribe una estación…");
   await stationInput.fill("Atocha");
   await page.getByRole("option", { name: "Atocha", exact: true }).click();
@@ -108,6 +108,7 @@ test("report flow blocks cars that do not exist on the selected line", async ({ 
   await expect(page.getByText("Este coche no existe en esa línea")).toBeVisible();
   await expect(page.getByTestId("submit-report")).toBeDisabled();
   await page.screenshot({
+    caret: "initial",
     fullPage: true,
     path: `/tmp/termo-${testInfo.project.name}-non-existing-car.png`,
   });
