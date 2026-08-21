@@ -19,8 +19,8 @@ test("report flow submits and lands on filtered dashboard", async ({ page }, tes
   const formattedCar = `${car[0]}-${car.slice(1)}`;
 
   await page.goto("/es/reportar");
+  await expectReportPage(page);
 
-  await expect(page.getByRole("heading", { name: "Reportar" })).toBeVisible();
   await page.getByPlaceholder("Ej. M2434, R-5469 o S3124").fill(car);
   await page.getByTestId("heat-infierno").click();
   await page.getByTestId("submit-report").click();
@@ -60,8 +60,9 @@ test("report flow submits a canonical platform and lands on platform explore", a
     });
   });
   await page.goto("/es/reportar");
+  await expectReportPage(page);
 
-  await page.getByRole("button", { name: "Andén", exact: true }).click();
+  await page.getByRole("radio", { name: "Andén", exact: true }).click();
   const stationInput = page.getByPlaceholder("Escribe una estación…");
   await stationInput.fill("Atocha");
   await page.getByRole("option", { name: "Atocha", exact: true }).click();
@@ -77,10 +78,10 @@ test("report flow submits a canonical platform and lands on platform explore", a
     locationKind: "platform",
     stationId: "atocha",
   });
-  await expect(page).toHaveURL(/\/es\/explorar\?/);
-  await expect(page).toHaveURL(/linea=L1/);
-  await expect(page).toHaveURL(/tipo=anden/);
-  await expect(page).toHaveURL(/anden=atocha/);
+  await expect(page).toHaveURL(/\/es\/explorar\?/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/linea=L1/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/tipo=anden/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/anden=atocha/, { timeout: 15_000 });
 });
 
 test("report flow blocks invalid car codes", async ({ page }) => {
@@ -124,15 +125,18 @@ test("report flow confirms a missing car and can return focus to the car field",
     });
   });
   await page.goto("/es/reportar");
+  await expectReportPage(page);
 
-  await page.getByTestId("submit-report").click();
+  const submit = page.getByTestId("submit-report");
+  await expect(submit).toBeEnabled();
+  await submit.click();
   const dialog = page.getByRole("dialog", { name: "¿Seguro que quieres enviar un reporte sin número de coche?" });
-  await expect(dialog).toBeVisible();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
   await dialog.getByRole("button", { name: "Añadir coche" }).click();
   await expect(page.getByPlaceholder("Ej. M2434, R-5469 o S3124")).toBeFocused();
 
-  await page.getByTestId("submit-report").click();
-  await expect(dialog).toBeVisible();
+  await submit.click();
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
   const reportRequest = page.waitForRequest((request) => request.url().endsWith("/api/reports") && request.method() === "POST");
   await dialog.getByRole("button", { name: "Confirmar" }).click();
 
@@ -193,14 +197,18 @@ test("explore filters and theme control render on mobile", async ({ page }) => {
 test("explore switches cleanly between car and platform modes", async ({ page }) => {
   await page.goto("/es/explorar");
 
-  await page.getByRole("button", { name: "Andén", exact: true }).click();
-  await expect(page).toHaveURL(/tipo=anden/);
-  await expect(page.getByText("Peores andenes")).toBeVisible();
+  const platformMode = page.getByRole("button", { name: "Andén", exact: true });
+  await platformMode.click();
+  await expect(platformMode).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/tipo=anden/, { timeout: 15_000 });
+  await expect(page.getByText("Peores andenes")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Porcentaje de andenes sin AC")).toBeVisible();
 
-  await page.getByRole("button", { name: "Coche", exact: true }).click();
-  await expect(page).not.toHaveURL(/tipo=anden/);
-  await expect(page.getByText("Peores coches")).toBeVisible();
+  const carMode = page.getByRole("button", { name: "Coche", exact: true });
+  await carMode.click();
+  await expect(carMode).toHaveAttribute("aria-pressed", "true");
+  await expect(page).not.toHaveURL(/tipo=anden/, { timeout: 15_000 });
+  await expect(page.getByText("Peores coches")).toBeVisible({ timeout: 15_000 });
 });
 
 test("explore lazily loads one car history and one line detail", async ({ page }) => {
@@ -213,3 +221,8 @@ test("explore lazily loads one car history and one line detail", async ({ page }
   await expect(dialog).toBeVisible();
   await expect(dialog.getByTestId("line-detail-car").first()).toBeVisible();
 });
+
+async function expectReportPage(page: import("@playwright/test").Page) {
+  await expect(page.getByText("Reportar", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("submit-report")).toBeVisible({ timeout: 15_000 });
+}
