@@ -1,6 +1,8 @@
+import { createHash } from "crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createAbuseKey,
+  createNetworkAbuseKey,
   createUndoToken,
   getRateLimitStart,
   getRequestFingerprint,
@@ -15,12 +17,41 @@ describe("report security helpers", () => {
     vi.unstubAllEnvs();
   });
 
+  it("keeps legacy origin and undo hashes compatible across rolling deploys", () => {
+    vi.stubEnv("TERMO_ABUSE_SECRET", "test-abuse-secret");
+    const fingerprint = { ip: "203.0.113.8", userAgent: "test-browser" };
+    const expectedOrigin = createHash("sha256")
+      .update("test-abuse-secret")
+      .update(":abuse:")
+      .update(fingerprint.ip)
+      .update(":")
+      .update(fingerprint.userAgent)
+      .digest("hex");
+    const expectedUndo = createHash("sha256")
+      .update("test-abuse-secret")
+      .update(":undo:")
+      .update("undo-token")
+      .digest("hex");
+
+    expect(createAbuseKey(fingerprint)).toBe(expectedOrigin);
+    expect(hashUndoToken("undo-token")).toBe(expectedUndo);
+  });
+
   it("derives stable private abuse keys without exposing raw request data", () => {
     const fingerprint = { ip: "203.0.113.8", userAgent: "test-browser" };
 
     expect(createAbuseKey(fingerprint)).toBe(createAbuseKey(fingerprint));
     expect(createAbuseKey(fingerprint)).not.toContain(fingerprint.ip);
     expect(createAbuseKey(fingerprint)).not.toContain(fingerprint.userAgent);
+    expect(createNetworkAbuseKey(fingerprint)).not.toContain(fingerprint.ip);
+  });
+
+  it("keeps a network ceiling stable when the User-Agent rotates", () => {
+    const first = { ip: "203.0.113.8", userAgent: "browser-a" };
+    const second = { ip: "203.0.113.8", userAgent: "browser-b" };
+
+    expect(createAbuseKey(first)).not.toBe(createAbuseKey(second));
+    expect(createNetworkAbuseKey(first)).toBe(createNetworkAbuseKey(second));
   });
 
   it("creates and verifies undo token hashes", () => {

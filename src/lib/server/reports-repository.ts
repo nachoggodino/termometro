@@ -1,21 +1,40 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getCarSeries, isCarAllowedOnLine } from "@/lib/domain/cars";
-import { buildCarExplorerSelection, buildDashboardData, DASHBOARD_LIMITS, DASHBOARD_TIME } from "@/lib/domain/dashboard";
+import {
+  getCarSeries,
+  isCarAllowedOnLine,
+  MAX_EXISTING_CAR_SERIES,
+  MIN_EXISTING_CAR_SERIES,
+} from "@/lib/domain/cars";
+import {
+  buildCarExplorerSelection,
+  buildDashboardData,
+  DASHBOARD_LIMITS,
+  DASHBOARD_TIME,
+} from "@/lib/domain/dashboard";
+import { ESTIMATED_TOTAL_CARS } from "@/lib/domain/fleet-estimates";
+import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
 import { getRangeWindow, type DashboardRange } from "@/lib/domain/ranges";
 import {
-  CAR_NOT_ON_LINE_REASON,
   DUPLICATE_WINDOW_MINUTES,
+  getReportInputErrorReason,
+  getReportLocationKind,
   isDuplicateCandidate,
   NO_CAR_ORIGIN_WINDOW_MINUTES,
+  parseReportInput,
   RATE_LIMIT_MAX_REPORTS,
+  RATE_LIMIT_NETWORK_MAX_REPORTS,
+  STATION_NOT_ON_LINE_REASON,
+  type ParsedReportInput,
   type Report,
   type ReportCreateFailureReason,
   type ReportInput,
+  type ReportLocationKind,
 } from "@/lib/domain/reports";
-import { ESTIMATED_TOTAL_CARS } from "@/lib/domain/fleet-estimates";
-import { isMetroLine, type MetroLine } from "@/lib/domain/lines";
+import { isStationOnLine } from "@/lib/domain/stations";
+import type { Locale } from "@/lib/i18n/config";
 import {
   createAbuseKey,
+  createNetworkAbuseKey,
   createUndoToken,
   getRateLimitStart,
   getRequestFingerprint,
@@ -26,7 +45,6 @@ import {
   type RequestFingerprint,
 } from "./report-security";
 import { seedReports } from "./seed-data";
-import type { Locale } from "@/lib/i18n/config";
 
 type CreateResult =
   | { ok: true; report: Report; undoToken: string }
@@ -38,7 +56,9 @@ type CreateReportRpcRow = {
   id: string | null;
   line: MetroLine | null;
   car: string | null;
-  state: ReportInput["state"] | null;
+  location_kind: ReportLocationKind | null;
+  station_id: string | null;
+  state: ParsedReportInput["state"] | null;
   created_at: string | null;
   hidden_at: string | null;
 };
@@ -63,7 +83,9 @@ type HomeSnapshotRow = {
     id: string;
     line: MetroLine;
     car: string | null;
-    state: ReportInput["state"];
+    location_kind?: ReportLocationKind | null;
+    station_id?: string | null;
+    state: ParsedReportInput["state"];
     created_at: string;
   }> | null;
 };
@@ -74,6 +96,7 @@ const globalForReports = globalThis as typeof globalThis & {
 
 type MemoryReport = Report & {
   abuseKey?: string | null;
+  networkAbuseKey?: string | null;
   undoTokenHash?: string | null;
   undoExpiresAt?: Date | null;
 };
@@ -83,6 +106,10 @@ function getMemoryReports() {
     globalForReports.termoReports = seedReports.map((report) => ({ ...report }));
   }
   return globalForReports.termoReports;
+}
+
+export function getMemoryReportsSnapshot() {
+  return getMemoryReports().map((report) => ({ ...report }));
 }
 
 let supabaseServiceClient: SupabaseClient | null = null;
@@ -119,23 +146,67 @@ export function getMemoryDashboard(options: DashboardOptions) {
   const { start, end } = getRangeWindow(options.range, now);
   const summerStart = getRangeWindow("summer", now).start;
   const queryStart = summerStart < start ? summerStart : start;
-  const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
+  const selectedLines = options.lines?.length
+    ? options.lines
+    : isMetroLine(options.line)
+      ? [options.line]
+      : null;
   const selectedCarSeries = normalizeCarSeries(options.carSeries);
   const reports = getMemoryReports()
     .filter((report) => report.createdAt >= queryStart && report.createdAt <= end)
-    .filter((report) => !selectedLines || selectedLines.includes(report.line))
-    .filter((report) => matchesCarSeries(report, selectedCarSeries));
-  return buildDashboardData(reports, now, ESTIMATED_TOTAL_CARS, options.range, options.locale ?? "es");
+    .filter((report) => !selectedLines || selectedLines.includes(report.line));
+
+  if (selectedCarSeries) {
+    return buildDashboardData(
+      reports.filter((report) => matchesCarSeries(report, selectedCarSeries)),
+      now,
+      ESTIMATED_TOTAL_CARS,
+      options.range,
+      options.locale ?? "es",
+    );
+  }
+
+  const carDashboard = buildDashboardData(
+    reports.filter((report) => getReportLocationKind(report) === "car"),
+    now,
+    ESTIMATED_TOTAL_CARS,
+    options.range,
+    options.locale ?? "es",
+  );
+  const globalDashboard = buildDashboardData(
+    reports,
+    now,
+    ESTIMATED_TOTAL_CARS,
+    options.range,
+    options.locale ?? "es",
+  );
+
+  return {
+    ...carDashboard,
+    lineEvolution: globalDashboard.lineEvolution,
+    totalReportsTrend: globalDashboard.totalReportsTrend,
+    worstHours: globalDashboard.worstHours,
+    recentReports: globalDashboard.recentReports,
+    reportsLastDay: globalDashboard.reportsLastDay,
+  };
 }
 
 function normalizeCarSeries(series: number[] | null | undefined) {
   if (!series?.length) return null;
-  return new Set(series.filter((item) => Number.isInteger(item) && item >= 0));
+  return new Set(
+    series.filter(
+      (item) =>
+        Number.isInteger(item) &&
+        item >= MIN_EXISTING_CAR_SERIES &&
+        item <= MAX_EXISTING_CAR_SERIES &&
+        item % 1000 === 0,
+    ),
+  );
 }
 
 function matchesCarSeries(report: Report, selectedCarSeries: Set<number> | null) {
   if (!selectedCarSeries) return true;
-  if (!report.car) return false;
+  if (getReportLocationKind(report) !== "car" || !report.car) return false;
   const series = getCarSeries(report.car);
   return series !== null && selectedCarSeries.has(series);
 }
@@ -143,20 +214,35 @@ function matchesCarSeries(report: Report, selectedCarSeries: Set<number> | null)
 export function getMemoryCarDetail(options: DashboardOptions & { car: string }) {
   const now = options.now ?? new Date();
   const window = getRangeWindow(options.range, now);
-  const selectedLines = options.lines?.length ? options.lines : isMetroLine(options.line) ? [options.line] : null;
+  const selectedLines = options.lines?.length
+    ? options.lines
+    : isMetroLine(options.line)
+      ? [options.line]
+      : null;
   const selectedCarSeries = normalizeCarSeries(options.carSeries);
-  const reports = getMemoryReports().filter((report) =>
-    !report.hiddenAt &&
-    report.createdAt >= window.start &&
-    report.createdAt <= window.end &&
-    (!selectedLines || selectedLines.includes(report.line)) &&
-    matchesCarSeries(report, selectedCarSeries),
+  const reports = getMemoryReports().filter(
+    (report) =>
+      !report.hiddenAt &&
+      report.createdAt >= window.start &&
+      report.createdAt <= window.end &&
+      getReportLocationKind(report) === "car" &&
+      (!selectedLines || selectedLines.includes(report.line)) &&
+      matchesCarSeries(report, selectedCarSeries),
   );
-  return buildCarExplorerSelection(options.car, reports, now, options.range, undefined, options.locale ?? "es");
+  return buildCarExplorerSelection(
+    options.car,
+    reports,
+    now,
+    options.range,
+    undefined,
+    options.locale ?? "es",
+  );
 }
 
 export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
-  const start = new Date(now.getTime() - DASHBOARD_TIME.hoursPerDay * DASHBOARD_TIME.millisecondsPerHour);
+  const start = new Date(
+    now.getTime() - DASHBOARD_TIME.hoursPerDay * DASHBOARD_TIME.millisecondsPerHour,
+  );
   const supabase = getSupabase();
 
   if (!supabase) {
@@ -170,7 +256,7 @@ export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
   }
 
   const { data, error } = await supabase
-    .rpc("dashboard_home_snapshot", {
+    .rpc("dashboard_home_snapshot_v2", {
       input_start: start.toISOString(),
       input_end: now.toISOString(),
       input_limit: DASHBOARD_LIMITS.recentReportCount,
@@ -185,6 +271,8 @@ export async function getHomeSnapshot(now = new Date()): Promise<HomeSnapshot> {
       id: report.id,
       line: report.line,
       car: report.car,
+      locationKind: report.location_kind ?? "car",
+      stationId: report.station_id ?? null,
       state: report.state,
       createdAt: new Date(report.created_at),
       hiddenAt: null,
@@ -197,12 +285,28 @@ export async function createReportForRequest(
   fingerprint: RequestFingerprint | Request | null,
   now = new Date(),
 ): Promise<CreateResult> {
-  if (input.car && !isCarAllowedOnLine(input.car, input.line)) {
-    return { ok: false, reason: CAR_NOT_ON_LINE_REASON };
+  const parsed = parseReportInput(input);
+  if (!parsed.success) {
+    return { ok: false, reason: getReportInputErrorReason(parsed.error) };
+  }
+  const normalizedInput = parsed.data;
+  const { locationKind, stationId } = normalizedInput;
+
+  if (locationKind === "platform" && (!stationId || !isStationOnLine(stationId, normalizedInput.line))) {
+    return { ok: false, reason: STATION_NOT_ON_LINE_REASON };
+  }
+  if (
+    locationKind === "car" &&
+    normalizedInput.car &&
+    !isCarAllowedOnLine(normalizedInput.car, normalizedInput.line)
+  ) {
+    return { ok: false, reason: "car_not_on_line" };
   }
 
-  const requestFingerprint = fingerprint instanceof Request ? getRequestFingerprint(fingerprint) : fingerprint;
+  const requestFingerprint =
+    fingerprint instanceof Request ? getRequestFingerprint(fingerprint) : fingerprint;
   const abuseKey = requestFingerprint ? createAbuseKey(requestFingerprint) : null;
+  const networkAbuseKey = requestFingerprint ? createNetworkAbuseKey(requestFingerprint) : null;
   const undoToken = createUndoToken();
   const undoTokenHash = hashUndoToken(undoToken);
   const undoExpiresAt = getUndoExpiresAt(now);
@@ -210,31 +314,56 @@ export async function createReportForRequest(
 
   if (!supabase) {
     const memoryReports = getMemoryReports();
+    const rateLimitStart = getRateLimitStart(now);
     if (abuseKey) {
-      const rateLimitStart = getRateLimitStart(now);
-      const recentReports = memoryReports.filter((report) => report.abuseKey === abuseKey && report.createdAt >= rateLimitStart);
-      if (recentReports.length >= RATE_LIMIT_MAX_REPORTS) return { ok: false, reason: "rate_limited" };
-
-      const noCarWindowStart = new Date(now.getTime() - NO_CAR_ORIGIN_WINDOW_MINUTES * 60_000);
-      const hasRecentNoCarReport = memoryReports.some(
-        (report) => !report.car && report.abuseKey === abuseKey && report.createdAt >= noCarWindowStart && !report.hiddenAt,
+      const originReports = memoryReports.filter(
+        (report) => report.abuseKey === abuseKey && report.createdAt >= rateLimitStart,
       );
-      if (!input.car && hasRecentNoCarReport) {
-        return { ok: false, reason: "duplicate" };
+      if (originReports.length >= RATE_LIMIT_MAX_REPORTS) {
+        return { ok: false, reason: "rate_limited" };
+      }
+    }
+    if (networkAbuseKey) {
+      const networkReports = memoryReports.filter(
+        (report) =>
+          report.networkAbuseKey === networkAbuseKey && report.createdAt >= rateLimitStart,
+      );
+      if (networkReports.length >= RATE_LIMIT_NETWORK_MAX_REPORTS) {
+        return { ok: false, reason: "rate_limited" };
       }
     }
 
-    const recentDuplicate = memoryReports.find((report) => isDuplicateCandidate(input, report, now));
+    if (locationKind === "car" && !normalizedInput.car && abuseKey) {
+      const noCarWindowStart = new Date(
+        now.getTime() - NO_CAR_ORIGIN_WINDOW_MINUTES * 60_000,
+      );
+      const hasRecentNoCarReport = memoryReports.some(
+        (report) =>
+          getReportLocationKind(report) === "car" &&
+          !report.car &&
+          report.abuseKey === abuseKey &&
+          report.createdAt >= noCarWindowStart &&
+          !report.hiddenAt,
+      );
+      if (hasRecentNoCarReport) return { ok: false, reason: "duplicate" };
+    }
+
+    const recentDuplicate = memoryReports.find((report) =>
+      isDuplicateCandidate(normalizedInput, report, now),
+    );
     if (recentDuplicate) return { ok: false, reason: "duplicate" };
 
     const report: MemoryReport = {
       id: crypto.randomUUID(),
-      line: input.line,
-      car: input.car ?? null,
-      state: input.state,
+      line: normalizedInput.line,
+      car: locationKind === "car" ? normalizedInput.car : null,
+      locationKind,
+      stationId: locationKind === "platform" ? stationId : null,
+      state: normalizedInput.state,
       createdAt: now,
       hiddenAt: null,
       abuseKey,
+      networkAbuseKey,
       undoTokenHash,
       undoExpiresAt,
     };
@@ -242,18 +371,24 @@ export async function createReportForRequest(
     return { ok: true, report, undoToken };
   }
 
-  const duplicateWindowStart = new Date(now.getTime() - DUPLICATE_WINDOW_MINUTES * 60_000);
+  const duplicateWindowStart = new Date(
+    now.getTime() - DUPLICATE_WINDOW_MINUTES * 60_000,
+  );
   const { data: rpcData, error } = await supabase
-    .rpc("create_report", {
-      input_line: input.line,
-      input_car: input.car,
-      input_state: input.state,
-      input_abuse_key: abuseKey,
+    .rpc("create_report_v3", {
+      input_line: normalizedInput.line,
+      input_car: locationKind === "car" ? normalizedInput.car : null,
+      input_location_kind: locationKind,
+      input_station_id: locationKind === "platform" ? stationId : null,
+      input_state: normalizedInput.state,
+      input_origin_abuse_key: abuseKey,
+      input_network_abuse_key: networkAbuseKey,
       input_undo_token_hash: undoTokenHash,
       input_undo_expires_at: undoExpiresAt.toISOString(),
       input_now: now.toISOString(),
       input_rate_limit_start: getRateLimitStart(now).toISOString(),
       input_rate_limit_max: RATE_LIMIT_MAX_REPORTS,
+      input_network_rate_limit_max: RATE_LIMIT_NETWORK_MAX_REPORTS,
       input_duplicate_window_start: duplicateWindowStart.toISOString(),
     })
     .single();
@@ -264,7 +399,7 @@ export async function createReportForRequest(
     return { ok: false, reason: data.reason as ReportCreateFailureReason };
   }
 
-  if (!data.id || !data.line || !data.state || !data.created_at) {
+  if (!data.id || !data.line || !data.state || !data.created_at || !data.location_kind) {
     throw new Error("Report creation returned an incomplete row.");
   }
 
@@ -275,6 +410,8 @@ export async function createReportForRequest(
       id: data.id,
       line: data.line,
       car: data.car,
+      locationKind: data.location_kind,
+      stationId: data.station_id,
       state: data.state,
       createdAt: new Date(data.created_at),
       hiddenAt: data.hidden_at ? new Date(data.hidden_at) : null,
@@ -331,7 +468,9 @@ export async function getCarSuggestions(line: string) {
     return (data ?? []).map((car) => car.code);
   }
 
-  const reports = getMemoryReports().filter((report) => report.line === line && report.car);
+  const reports = getMemoryReports().filter(
+    (report) => report.line === line && getReportLocationKind(report) === "car" && report.car,
+  );
   const counts = new Map<string, number>();
   for (const report of reports) {
     counts.set(report.car!, (counts.get(report.car!) ?? 0) + 1);

@@ -19,12 +19,12 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
 
   return (
     <main>
-      <section className="mx-auto flex max-w-5xl flex-col px-4 pb-5 pt-7 sm:pt-12">
-        <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+      <section className="mx-auto flex max-w-5xl flex-col px-4 pb-4 pt-4">
+        <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
           <TrainSilhouette />
           <p className="mx-auto max-w-md text-center text-pretty text-sm leading-5 text-muted sm:text-base sm:leading-6">{dictionary.home.mission}</p>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Button asChild className="home-report-action min-h-0 justify-between rounded-md py-1.5 pl-3 pr-6 text-left text-white [&_*]:text-white" data-testid="home-report" variant="primary">
               <Link href={`/${lang}/reportar`}>
                 <span>
@@ -88,16 +88,16 @@ async function HomeReports({ dictionary, locale }: { dictionary: Awaited<ReturnT
             <div className="mt-3 flex items-center gap-x-3 overflow-hidden whitespace-nowrap">
               {topRecentLines.map(({ line, reports }) => (
                 <span
-                    className="inline-flex items-center font-mono text-xs font-semibold tabular-nums"
+                  className="inline-flex items-center font-mono text-xs font-semibold tabular-nums"
                   key={line}
                   style={{
                     color: LINE_COLORS[line].fill,
                   }}
-                  >
-                    {line}
-                    <span className="mx-0.5 text-muted">·</span>
-                    {reports}
-                  </span>
+                >
+                  {line}
+                  <span className="mx-0.5 text-muted">·</span>
+                  {reports}
+                </span>
               ))}
             </div>
             <div className="mt-3 flex max-h-[28rem] flex-col divide-y divide-border overflow-y-auto pr-1">
@@ -146,7 +146,7 @@ function HomeReportsSkeleton({ dictionary }: { dictionary: Awaited<ReturnType<ty
 }
 
 function TrainSilhouette() {
-  return <span aria-hidden="true" className="home-train-silhouette mx-auto mb-1 h-16 w-48 text-muted opacity-35" />;
+  return <span aria-hidden="true" className="home-train-silhouette mx-auto h-16 w-48 text-muted opacity-35" />;
 }
 
 function getTopRecentLines(reports: Report[]) {

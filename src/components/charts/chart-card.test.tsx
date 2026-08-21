@@ -3,7 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { messages as esMessages } from "@/lib/i18n/messages/es";
+import { getPlatformMessages } from "@/lib/i18n/platform-messages";
 import { ChartCard } from "./chart-card";
+
+const dictionary = { ...esMessages, platform: getPlatformMessages("es") };
 
 describe("ChartCard", () => {
   it("falls back to sharing text when image export is unavailable", async () => {
@@ -15,7 +18,7 @@ describe("ChartCard", () => {
 
     render(
       <TooltipProvider>
-        <ChartCard dictionary={esMessages} rangeLabel="Hoy" title="Modulo de prueba">
+        <ChartCard dictionary={dictionary} rangeLabel="Hoy" title="Modulo de prueba">
           <p>Contenido</p>
         </ChartCard>
       </TooltipProvider>,
@@ -44,7 +47,7 @@ describe("ChartCard", () => {
 
     render(
       <TooltipProvider>
-        <ChartCard dictionary={esMessages} rangeLabel="Hoy" title="Modulo de prueba">
+        <ChartCard dictionary={dictionary} rangeLabel="Hoy" title="Modulo de prueba">
           <p>Contenido</p>
         </ChartCard>
       </TooltipProvider>,

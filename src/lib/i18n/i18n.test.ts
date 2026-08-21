@@ -4,6 +4,7 @@ import { DEFAULT_LOCALE, isLocale, LOCALES, localeNames } from "./config";
 import { formatNumber, formatRelativeReportAge, formatReportTime, getIntlLocale } from "./format";
 import { messages as enMessages } from "./messages/en";
 import { messages as esMessages } from "./messages/es";
+import { getPlatformMessages } from "./platform-messages";
 
 describe("i18n configuration", () => {
   it("keeps Spanish as the default locale and supports English", () => {
@@ -21,6 +22,12 @@ describe("i18n configuration", () => {
     expect(Object.keys(esMessages.reportForm.submit)).toEqual(Object.keys(enMessages.reportForm.submit));
     expect(Object.keys(esMessages.reportForm.missingCar)).toEqual(Object.keys(enMessages.reportForm.missingCar));
     expect(Object.keys(esMessages.explore.ranges)).toEqual(Object.keys(enMessages.explore.ranges));
+    expect(Object.keys(getPlatformMessages("es").reportForm)).toEqual(
+      Object.keys(getPlatformMessages("en").reportForm),
+    );
+    expect(Object.keys(getPlatformMessages("es").explore.platformExplorer)).toEqual(
+      Object.keys(getPlatformMessages("en").explore.platformExplorer),
+    );
   });
 
   it("uses default app copy from the Spanish dictionary", () => {

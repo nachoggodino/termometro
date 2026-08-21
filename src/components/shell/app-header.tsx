@@ -35,6 +35,10 @@ export function AppHeader({
       path: "/metodologia",
     },
   ];
+  const currentPageLabel =
+    pathname === ""
+      ? dictionary.common.appName
+      : navItems.find((item) => item.path === pathname)?.label ?? dictionary.common.appName;
 
   useLayoutEffect(() => {
     const topHeight = topRowRef.current?.offsetHeight ?? 64;
@@ -63,13 +67,15 @@ export function AppHeader({
           <div className="flex items-center gap-3">
             <Link
               aria-label={dictionary.common.home}
-              className="click-wave flex min-w-0 flex-1 items-center gap-2 rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="click-wave flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               href={`/${locale}`}
               onClick={() => setIsOpen(false)}
             >
               <AppLogo />
-              <span className="min-w-0 truncate text-base font-semibold leading-5 sm:text-lg">{dictionary.common.appName}</span>
             </Link>
+            <span className="min-w-0 flex-1 truncate text-base font-semibold leading-5 sm:text-lg">
+              {currentPageLabel}
+            </span>
             <button
               aria-controls="app-navigation-drawer"
               aria-expanded={isOpen}
