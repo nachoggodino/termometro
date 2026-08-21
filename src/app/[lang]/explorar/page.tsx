@@ -101,6 +101,7 @@ async function ExploreContent({
         <FilterBar
           availableCarSeries={data.availableCarSeries}
           dictionary={dictionary}
+          key={locationKind}
           locale={lang}
           locationKind={locationKind}
           selectedCarSeries={selectedCarSeries}
