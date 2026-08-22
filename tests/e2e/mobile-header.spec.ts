@@ -20,6 +20,38 @@ test("mobile header hides on downward scroll and returns on upward scroll", asyn
   await expect.poll(() => utilityBar.evaluate((element) => getComputedStyle(element).top)).toBe("72px");
 });
 
+test("navigation backdrop remains fixed to the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/es/explorar");
+  await page.waitForLoadState("networkidle");
+
+  await page.evaluate(() => window.scrollTo(0, 700));
+  await expect(page.getByTestId("app-header")).toHaveAttribute("data-hidden", "true");
+  await page.evaluate(() => window.scrollBy(0, -60));
+  await expect(page.getByTestId("app-header")).toHaveAttribute("data-hidden", "false");
+
+  await page.getByRole("button", { name: "Menú" }).click();
+  const backdrop = page.getByTestId("app-navigation-backdrop");
+  await expect(backdrop).toBeVisible();
+
+  const geometry = await backdrop.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      position: getComputedStyle(element).position,
+      top: rect.top,
+      left: rect.left,
+      right: window.innerWidth - rect.right,
+      bottom: window.innerHeight - rect.bottom,
+    };
+  });
+
+  expect(geometry.position).toBe("fixed");
+  expect(Math.abs(geometry.top)).toBeLessThan(1);
+  expect(Math.abs(geometry.left)).toBeLessThan(1);
+  expect(Math.abs(geometry.right)).toBeLessThan(1);
+  expect(Math.abs(geometry.bottom)).toBeLessThan(1);
+});
+
 test("theme color follows the in-app theme instead of the system theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/es");
