@@ -6,7 +6,10 @@ import { useId, type ReactNode } from "react";
 
 export function StickyUtilityBar({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky top-[72px] z-[var(--z-sticky)] -mx-4 px-4 py-4">
+    <div
+      className="sticky top-[var(--app-header-offset,72px)] z-[var(--z-sticky)] -mx-4 px-4 py-4 transition-[top] duration-200 ease-out motion-reduce:transition-none"
+      data-testid="sticky-utility-bar"
+    >
       <div className="rounded-lg border border-border bg-[var(--drawer-surface)] p-2 shadow-[var(--shadow-popover)] backdrop-blur-2xl supports-[backdrop-filter]:bg-[var(--drawer-surface)]">
         {children}
       </div>
