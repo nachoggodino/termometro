@@ -35,6 +35,7 @@ export function AppHeader({
   const downwardDistanceRef = useRef(0);
   const upwardDistanceRef = useRef(0);
   const frameRef = useRef<number | null>(null);
+  const headerHidden = isHeaderHidden && !isOpen;
   const navItems = [
     { href: `/${locale}`, label: dictionary.common.home, icon: Home, path: "" },
     { href: `/${locale}/reportar`, label: dictionary.common.report, icon: ReportActionIcon, path: "/reportar", iconClassName: "text-heat-infierno" },
@@ -51,6 +52,11 @@ export function AppHeader({
       ? dictionary.common.appName
       : navItems.find((item) => item.path === pathname)?.label ?? dictionary.common.appName;
 
+  const closeMenu = () => {
+    setIsHeaderHidden(false);
+    setIsOpen(false);
+  };
+
   useLayoutEffect(() => {
     const topHeight = topRowRef.current?.offsetHeight ?? 64;
     const drawerHeight = drawerBodyRef.current?.scrollHeight ?? 0;
@@ -60,9 +66,9 @@ export function AppHeader({
   useLayoutEffect(() => {
     document.documentElement.style.setProperty(
       "--app-header-offset",
-      isHeaderHidden ? "0px" : `${HEADER_OFFSET_PX}px`,
+      headerHidden ? "0px" : `${HEADER_OFFSET_PX}px`,
     );
-  }, [isHeaderHidden]);
+  }, [headerHidden]);
 
   useEffect(() => {
     const mobileQuery = window.matchMedia(MOBILE_HEADER_QUERY);
@@ -71,7 +77,6 @@ export function AppHeader({
       lastScrollYRef.current = Math.max(0, window.scrollY);
       downwardDistanceRef.current = 0;
       upwardDistanceRef.current = 0;
-      setIsHeaderHidden(false);
     };
 
     const updateHeaderVisibility = () => {
@@ -83,7 +88,7 @@ export function AppHeader({
       if (!mobileQuery.matches || isOpen || scrollY <= HEADER_ALWAYS_VISIBLE_UNTIL_PX) {
         downwardDistanceRef.current = 0;
         upwardDistanceRef.current = 0;
-        setIsHeaderHidden(false);
+        if (isHeaderHidden) setIsHeaderHidden(false);
         return;
       }
 
@@ -112,7 +117,10 @@ export function AppHeader({
       frameRef.current = window.requestAnimationFrame(updateHeaderVisibility);
     };
 
-    const handleViewportChange = () => resetScrollTracking();
+    const handleViewportChange = () => {
+      resetScrollTracking();
+      setIsHeaderHidden(false);
+    };
 
     resetScrollTracking();
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -126,15 +134,15 @@ export function AppHeader({
         frameRef.current = null;
       }
     };
-  }, [isOpen, pathname]);
+  }, [isHeaderHidden, isOpen, pathname]);
 
   return (
     <header
       className={cn(
         "sticky top-0 z-[var(--z-modal)] px-4 pt-4 transition-transform duration-200 ease-out motion-reduce:transition-none",
-        isHeaderHidden ? "-translate-y-full" : "translate-y-0",
+        headerHidden ? "-translate-y-full" : "translate-y-0",
       )}
-      data-hidden={isHeaderHidden ? "true" : "false"}
+      data-hidden={headerHidden ? "true" : "false"}
       data-testid="app-header"
       onFocusCapture={() => setIsHeaderHidden(false)}
     >
@@ -144,7 +152,7 @@ export function AppHeader({
           isOpen ? "pointer-events-auto bg-background/70 opacity-100 backdrop-blur-sm" : "pointer-events-none bg-transparent opacity-0 backdrop-blur-0",
         )}
         aria-hidden={!isOpen}
-        onClick={() => setIsOpen(false)}
+        onClick={closeMenu}
       >
         <span className="sr-only">{dictionary.common.closeMenu}</span>
       </div>
@@ -159,7 +167,7 @@ export function AppHeader({
               aria-label={dictionary.common.home}
               className="click-wave flex size-10 shrink-0 items-center justify-center rounded-md outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               href={`/${locale}`}
-              onClick={() => setIsOpen(false)}
+              onClick={closeMenu}
             >
               <AppLogo />
             </Link>
@@ -171,7 +179,10 @@ export function AppHeader({
               aria-expanded={isOpen}
               aria-label={isOpen ? dictionary.common.closeMenu : dictionary.common.menu}
               className="click-wave group relative flex size-10 shrink-0 items-center justify-center rounded-md text-foreground transition duration-[var(--duration-drawer)] ease-out hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              onClick={() => setIsOpen((current) => !current)}
+              onClick={() => {
+                setIsHeaderHidden(false);
+                setIsOpen((current) => !current);
+              }}
               type="button"
             >
               <span className="sr-only">{isOpen ? dictionary.common.closeMenu : dictionary.common.menu}</span>
@@ -215,7 +226,7 @@ export function AppHeader({
                   )}
                   href={item.href}
                   key={item.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={closeMenu}
                 >
                   <span className="flex size-5 shrink-0 items-center justify-center">
                     <Icon
