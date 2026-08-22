@@ -1,6 +1,6 @@
 export const THEME_COLORS = {
-  lightBackground: "oklch(1 0 0)",
-  darkBackground: "oklch(0.105 0 0)",
+  lightBackground: "#fdfaf1",
+  darkBackground: "#010a19",
 } as const;
 
 export const CHART_TOKENS = {
