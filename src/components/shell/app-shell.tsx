@@ -22,7 +22,12 @@ export function AppShell({
 
   return (
     <>
-      <AppHeader dictionary={dictionary} locale={locale} pathname={localPathname} />
+      <AppHeader
+        dictionary={dictionary}
+        key={`${locale}:${localPathname}`}
+        locale={locale}
+        pathname={localPathname}
+      />
       {children}
       <CreatorCredit dictionary={dictionary} />
     </>
