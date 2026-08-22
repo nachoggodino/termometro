@@ -138,13 +138,11 @@ export function AppHeader({
 
   return (
     <header
-      className={cn(
-        "sticky top-0 z-[var(--z-modal)] px-4 pt-4 transition-transform duration-200 ease-out motion-reduce:transition-none",
-        headerHidden ? "-translate-y-full" : "translate-y-0",
-      )}
+      className="sticky z-[var(--z-modal)] px-4 pt-4 transition-[top] duration-200 ease-out motion-reduce:transition-none"
       data-hidden={headerHidden ? "true" : "false"}
       data-testid="app-header"
       onFocusCapture={() => setIsHeaderHidden(false)}
+      style={{ top: headerHidden ? `-${HEADER_OFFSET_PX}px` : "0px" }}
     >
       <div
         className={cn(
@@ -152,6 +150,7 @@ export function AppHeader({
           isOpen ? "pointer-events-auto bg-background/70 opacity-100 backdrop-blur-sm" : "pointer-events-none bg-transparent opacity-0 backdrop-blur-0",
         )}
         aria-hidden={!isOpen}
+        data-testid="app-navigation-backdrop"
         onClick={closeMenu}
       >
         <span className="sr-only">{dictionary.common.closeMenu}</span>
